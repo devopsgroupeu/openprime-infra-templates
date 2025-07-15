@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: alb-dummy-default-ingress
+  namespace: kube-system
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/group.name: default
+    alb.ingress.kubernetes.io/actions.response-503: >
+      {"type":"fixed-response","fixedResponseConfig":{"contentType":"text/plain","statusCode":"503","messageBody":"dummy ingress"}}
+spec:
+  ingressClassName: alb
+  rules:
+  - host: dummy.eks.devopsgroup.com
+    http:
+      paths:
+      - path: /dummy-503
+        pathType: Prefix
+        backend:
+          service:
+            name: response-503
+            port:
+              name: use-annotation

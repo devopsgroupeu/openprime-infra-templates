@@ -1,0 +1,34 @@
+{%- if argocd.enable -%}
+{%- if nginx_ingress_controller.enable -%}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx-ingress-controller
+  namespace: argocd
+  # annotations:
+  # argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://kubernetes.github.io/ingress-nginx
+      chart: ingress-nginx
+      targetRevision: 4.12.2
+      helm:
+        valueFiles:
+          - $values/helm/nginx-ingress-controller/values.yaml
+    - repoURL: {{ argocd.git_repo_url }}
+      targetRevision: {{ argocd.target_revision }}
+      ref: values
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: ingress-nginx
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+{%- endif -%}
+{%- endif -%}

@@ -1,0 +1,42 @@
+terraform {
+  required_version = "~> 1.11"
+
+  {% if backend %}
+  {% if backend.s3 %}
+  backend "s3" {
+    bucket         = "{{ backend.s3.bucket }}"
+    key            = "aws.tfstate"
+    {% if not backend.s3.use_lockfile  %}
+    dynamodb_table = "{{ backend.s3.dynamodb_table }}"
+    {% endif %}
+    region         = "{{ backend.s3.region }}"
+    encrypt        = {{ backend.s3.encrypt | default(false) | lower}}
+    {% if backend.s3.use_lockfile  %}
+    use_lockfile   = {{ backend.s3.use_lockfile | default(false) | lower}}
+    {% endif %}
+  }
+
+  {% endif %}
+  {% endif %}
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 5.46"
+    }
+    local = {
+      source  = "hashicorp/local"
+      version = "2.2.3"
+    }
+  }
+}
+
+provider "aws" {
+  region = var.region
+
+  default_tags {
+    tags = merge({
+      "customer"  = "DevOpsGroup"
+      "terraform" = "true"
+    }, var.global_tags)
+  }
+}

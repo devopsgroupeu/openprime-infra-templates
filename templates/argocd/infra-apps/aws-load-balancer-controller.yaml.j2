@@ -1,0 +1,34 @@
+{%- if argocd.enable -%}
+{%- if aws_load_balancer_controller.enable -%}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: aws-load-balancer-controller
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: default
+  sources:
+    - repoURL: https://aws.github.io/eks-charts
+      chart: aws-load-balancer-controller
+      targetRevision: 1.13.2
+      helm:
+        valueFiles:
+          - $values/helm/aws-load-balancer-controller/values.yaml
+    - repoURL: {{ argocd.git_repo_url }}
+      targetRevision: {{ argocd.target_revision }}
+      ref: values
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+{%- endif -%}
+{%- endif -%}

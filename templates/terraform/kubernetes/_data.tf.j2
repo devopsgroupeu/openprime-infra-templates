@@ -1,0 +1,20 @@
+{%- if backend -%}
+{%- if backend.s3 -%}
+data "terraform_remote_state" "aws" {
+  backend = "s3"
+  
+  config = {
+    bucket         = "{{ backend.s3.bucket }}"
+    key            = "aws.tfstate"
+    {% if backend.s3.dynamodb_table  %}
+    dynamodb_table = "{{ backend.s3.dynamodb_table }}"
+    {% endif %}
+    region         = "{{ backend.s3.region }}"
+    encrypt        = {{ backend.s3.encrypt | default(false) | lower}}
+    {% if backend.s3.use_lockfile  %}
+    use_lockfile   = {{ backend.s3.use_lockfile | default(false) | lower}}
+    {% endif %}
+  }
+}
+{%- endif -%}
+{%- endif -%}

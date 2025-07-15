@@ -1,0 +1,55 @@
+# -------------------------------------------------------------------
+# COMMON
+# -------------------------------------------------------------------
+
+variable "region" {
+  type        = string
+  description = "The AWS region, where networking infrastructure will be created (e.g. 'eu-west-1')"
+  default     = "eu-west-1"
+}
+
+variable "global_prefix" {
+  type        = string
+  description = "Global prefix to be used in almost every resource name created by this code"
+  default     = "u"
+}
+
+variable "environment" {
+  description = "Name of the environment"
+  type        = string
+  default     = "development"
+}
+
+
+variable "environment_short" {
+  description = "Short name of the environment (e.g., dev)"
+  type        = string
+  default     = "dev"
+}
+
+
+variable "global_tags" {
+  type        = map(string)
+  description = "Global tags to be used in almost every resource created by this code"
+  default     = {}
+}
+
+# -------------------------------------------------------------------
+# ARGOCD
+# -------------------------------------------------------------------
+
+variable "selfhosted_git_server_fingerprint" {
+  type        = string
+  description = "Fingerprint of the self-hosted Git server. Can be retrieved by running `ssh-keyscan -t rsa your.gitlab.com`"
+}
+
+variable "git_repo_url" {
+  type        = string
+  description = "SSH URL of the Git repository to be used by ArgoCD"
+}
+
+variable "git_repo_private_key" {
+  type        = string
+  description = "Private key to access the Git repository. Public one is configured in the repository settings as deploy key"
+  sensitive   = true
+}
