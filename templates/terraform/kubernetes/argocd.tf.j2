@@ -38,10 +38,10 @@ resource "helm_release" "argocd" {
     EOT
   ]
 
-  set_sensitive {
+  set_sensitive = [{
     name  = "configs.repositories.dog-gitlab-repo.sshPrivateKey"
     value = var.git_repo_private_key
-  }
+  }]
 }
 
 # Using 'gavinbunney/kubectl' instead of official Kubernetes provider to allow applying manifest without checking for CRDs during plan
@@ -60,7 +60,7 @@ resource "kubectl_manifest" "infra_apps" {
       project: default
       source:
         repoURL: ${var.git_repo_url}
-        targetRevision: argo
+        targetRevision: ${var.git_target_revision}
         path: argocd/infra-apps
         directory:
           recurse: true
@@ -93,7 +93,7 @@ resource "kubectl_manifest" "support_resources" {
       project: default
       source:
         repoURL: ${var.git_repo_url}
-        targetRevision: argo
+        targetRevision: ${var.git_target_revision}
         path: argocd/support-resources
         directory:
           recurse: true

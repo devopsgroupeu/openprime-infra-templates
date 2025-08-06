@@ -49,7 +49,7 @@ resource "random_password" "aurora_password" {
 {% if rds.enable %}
 module "rds" {
   source  = "terraform-aws-modules/rds/aws"
-  version = "~> 6.11"
+  version = "~> 6.12"
 
   identifier = local.rds_identifier
 
