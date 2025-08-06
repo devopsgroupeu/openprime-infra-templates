@@ -6,7 +6,7 @@ data "terraform_remote_state" "aws" {
   config = {
     bucket         = "{{ backend.s3.bucket }}"
     key            = "aws.tfstate"
-    {% if backend.s3.dynamodb_table  %}
+    {% if not backend.s3.use_lockfile  %}
     dynamodb_table = "{{ backend.s3.dynamodb_table }}"
     {% endif %}
     region         = "{{ backend.s3.region }}"

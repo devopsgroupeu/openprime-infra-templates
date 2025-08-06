@@ -15,16 +15,16 @@ locals {
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 5.21"
+  version = "~> 6.0"
 
   name = "${var.global_prefix}vpc-${var.environment_short}"
   cidr = var.vpc_cidr
 
   azs              = local.azs
-  private_subnets  = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k)]
-  public_subnets   = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k + 4)]
-  database_subnets = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k + 8)]
-  intra_subnets    = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k + 12)]
+  private_subnets  = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 4, k)]
+  public_subnets   = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k + 48)]
+  intra_subnets    = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k + 52)]
+  database_subnets = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k + 56)]
 
   enable_dns_hostnames   = {{ vpc.enable_dns_hostnames | default(true) | lower}}
   enable_dns_support     = {{ vpc.enable_dns_support | default(true) | lower}}
