@@ -4,8 +4,6 @@ locals {
   general_name = "${data.aws_caller_identity.current.account_id}-${lower(local.cluster_name)}-loki"
 }
 
-data "aws_caller_identity" "current" {}
-
 variable "loki_buckets" {
   type    = list(string)
   default = ["chunk", "ruler"]

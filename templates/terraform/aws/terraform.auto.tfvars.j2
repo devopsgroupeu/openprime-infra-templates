@@ -2,15 +2,15 @@
 # GLOBAL
 # -------------------------------------------------------------------
 
-global_prefix = "{{ global.global_prefix }}"
-{% if global.environment        %}environment = "{{ global.environment }}"{% endif %}
+global_prefix                                       = "{{ global.global_prefix }}"
+{% if global.environment        %}environment       = "{{ global.environment }}"{% endif %}
 {% if global.environment_short  %}environment_short = "{{ global.environment_short }}"{% endif %}
 
 # -------------------------------------------------------------------
 # VPC
 # -------------------------------------------------------------------
 
-vpc_cidr = "{{ vpc.vpc_cidr }}"
+vpc_cidr                                                   = "{{ vpc.vpc_cidr }}"
 {% if vpc.az_count                  %}az_count             = "{{ vpc.az_count }}"{% endif %}
 {% if vpc.nat_gateway_strategy      %}nat_gateway_strategy = "{{ vpc.nat_gateway_strategy }}"{% endif %}
 {% if vpc.public_subnet_tags        %}public_subnet_tags   = {{ vpc.public_subnet_tags | tojson }}{% endif %}
@@ -34,5 +34,11 @@ rds_engine_version       = "15"
 rds_major_engine_version = "15"
 rds_family               = "postgres15"
 
-aurora_engine          = "aurora-postgresql"
-aurora_engine_version  = "15.8"
+aurora_engine            = "aurora-postgresql"
+aurora_engine_version    = "15.8"
+
+# -------------------------------------------------------------------
+# OpenSearch
+# -------------------------------------------------------------------
+
+opensearch_custom_endpoint_enabled = "{{ opensearch.custom_endpoint_enabled }}"
