@@ -3,19 +3,26 @@
 # -------------------------------------------------------------------
 
 global_prefix                                       = "{{ global.global_prefix }}"
-{% if global.environment        %}environment       = "{{ global.environment }}"{% endif %}
-{% if global.environment_short  %}environment_short = "{{ global.environment_short }}"{% endif %}
+{% if global.environment        %}environment       = "{{ global.environment }}"
+{% endif -%}
+{% if global.environment_short  %}environment_short = "{{ global.environment_short }}"
+{% endif -%}
 
 # -------------------------------------------------------------------
 # VPC
 # -------------------------------------------------------------------
 
 vpc_cidr                                                   = "{{ vpc.vpc_cidr }}"
-{% if vpc.az_count                  %}az_count             = "{{ vpc.az_count }}"{% endif %}
-{% if vpc.nat_gateway_strategy      %}nat_gateway_strategy = "{{ vpc.nat_gateway_strategy }}"{% endif %}
-{% if vpc.public_subnet_tags        %}public_subnet_tags   = {{ vpc.public_subnet_tags | tojson }}{% endif %}
-{% if vpc.private_subnet_tags       %}private_subnet_tags  = {{ vpc.private_subnet_tags | tojson }}{% endif %}
-{% if vpc.database_subnet_tags      %}database_subnet_tags = {{ vpc.database_subnet_tags | tojson }}{% endif %}
+{% if vpc.az_count                  %}az_count             = "{{ vpc.az_count }}"
+{% endif -%}
+{% if vpc.nat_gateway_strategy      %}nat_gateway_strategy = "{{ vpc.nat_gateway_strategy }}"
+{% endif -%}
+{% if vpc.public_subnet_tags        %}public_subnet_tags   = {{ vpc.public_subnet_tags | tojson }}
+{% endif -%}
+{% if vpc.private_subnet_tags       %}private_subnet_tags  = {{ vpc.private_subnet_tags | tojson }}
+{% endif -%}
+{% if vpc.database_subnet_tags      %}database_subnet_tags = {{ vpc.database_subnet_tags | tojson }}
+{% endif -%}
 
 # -------------------------------------------------------------------
 # EKS
