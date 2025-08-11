@@ -4,7 +4,7 @@ module "opensearch" {
   source  = "terraform-aws-modules/opensearch/aws"
   version = "~> 2.0"
 
-  domain_name          = var.domain_name
+  domain_name          = var.opensearch_domain_name
   engine_version       = var.opensearch_version
   create_access_policy = true
   ip_address_type      = "dualstack"

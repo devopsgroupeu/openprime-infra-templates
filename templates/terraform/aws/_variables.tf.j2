@@ -26,7 +26,6 @@ variable "environment_short" {
   default     = "dev"
 }
 
-
 variable "global_tags" {
   type        = map(string)
   description = "Global tags to be used in almost every resource created by this code"
@@ -206,11 +205,6 @@ variable "aurora_instance_class" {
 # OpenSearch
 # -------------------------------------------------------------------
 
-variable "domain_name" {
-  type        = string
-  description = "Domain name to use"
-}
-
 variable "opensearch_acm_certificate_arn" {
   type        = string
   description = "ACM certificate ARN for your custom endpoint. This variable is required if custom_endpoint_enabled is set to true."
@@ -241,7 +235,7 @@ variable "opensearch_custom_endpoint_enabled" {
   default     = false
 }
 
-variable "domain_name" {
+variable "opensearch_domain_name" {
   type        = string
   description = "Name of the Opensearch domain."
   default     = "opensearch"
