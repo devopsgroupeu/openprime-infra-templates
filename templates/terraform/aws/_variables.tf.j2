@@ -211,18 +211,6 @@ variable "opensearch_acm_certificate_arn" {
   default     = ""
 }
 
-variable "opensearch_advanced_security_options_enabled" {
-  type        = bool
-  description = "Enable advanced security options."
-  default     = true
-}
-
-variable "opensearch_availability_zone_count" {
-  type        = number
-  description = "Number of Availability Zones for the domain."
-  default     = 3
-}
-
 variable "opensearch_custom_endpoint" {
   type        = string
   description = "Fully qualified domain for your custom endpoint. This variable is required if custom_endpoint_enabled is set to true."
@@ -259,24 +247,6 @@ variable "opensearch_ebs_volume_size" {
   default     = 64
 }
 
-variable "opensearch_encrypt_at_rest_enabled" {
-  type        = bool
-  description = "Enable encrypt at rest."
-  default     = true
-}
-
-variable "opensearch_auto_software_update_enabled" {
-  type        = bool
-  description = "Enable auto software update. Defaults to 'true'"
-  default     = true
-}
-
-variable "opensearch_enforce_https" {
-  type        = bool
-  description = "Whether or not to require HTTPS."
-  default     = true
-}
-
 variable "opensearch_instance_count" {
   type        = number
   description = "Number of instances in the cluster."
@@ -287,12 +257,6 @@ variable "opensearch_instance_type" {
   type        = string
   description = "Instance type of data nodes in the cluster."
   default     = "m7g.medium.search"
-}
-
-variable "opensearch_internal_user_database_enabled" {
-  type        = bool
-  description = "Enable internal user database."
-  default     = true
 }
 
 variable "opensearch_master_user_name" {
@@ -307,20 +271,8 @@ variable "opensearch_master_user_password" {
   default     = ""
 }
 
-variable "opensearch_node_to_node_encryption_enabled" {
-  type        = bool
-  description = "Enable node-to-node encryption."
-  default     = true
-}
-
 variable "opensearch_version" {
   type        = string
   description = "Version of OpenSearch."
   default     = "OpenSearch_2.19"
-}
-
-variable "opensearch_zone_awareness_enabled" {
-  type        = bool
-  description = "Enable zone awareness with more Availability Zone."
-  default     = true
 }

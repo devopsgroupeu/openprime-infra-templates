@@ -17,7 +17,7 @@ output "eks_certificate_authority_data" {
 {%- if opensearch -%}
 {%- if opensearch.enable -%}
 output "opensearch_master_user_password" {
-  value       = try(var.opensearch_master_user_password != "" ? var.opensearch_master_user_password : random_password.password.result, "")
+  value       = try(var.opensearch_master_user_password != "" ? var.opensearch_master_user_password : random_password.opensearch_master_user_password.result, "")
   description = "Master password."
   sensitive   = true
 }
