@@ -11,13 +11,13 @@ locals {
 
 module "ebs_csi_irsa_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.55"
+  version = "~> 5.59"
 
   role_name             = "${local.cluster_name}-ebs-csi"
   attach_ebs_csi_policy = true
 
   oidc_providers = {
-    ex = {
+    default = {
       provider_arn               = module.eks.oidc_provider_arn
       namespace_service_accounts = ["${local.service_account_namespace}:${local.ebs_csi_service_account_name}"]
     }
@@ -26,13 +26,13 @@ module "ebs_csi_irsa_role" {
 
 module "efs_csi_irsa_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.55"
+  version = "~> 5.59"
 
   role_name             = "${local.cluster_name}-efs-csi"
   attach_efs_csi_policy = true
 
   oidc_providers = {
-    ex = {
+    default = {
       provider_arn               = module.eks.oidc_provider_arn
       namespace_service_accounts = ["${local.service_account_namespace}:${local.efs_csi_service_account_name}"]
     }
@@ -41,14 +41,14 @@ module "efs_csi_irsa_role" {
 
 module "vpc_cni_irsa_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.55"
+  version = "~> 5.59"
 
   role_name             = "${local.cluster_name}-vpc-cni"
   attach_vpc_cni_policy = true
   vpc_cni_enable_ipv4   = true
 
   oidc_providers = {
-    ex = {
+    default = {
       provider_arn               = module.eks.oidc_provider_arn
       namespace_service_accounts = ["${local.service_account_namespace}:${local.vpc_cni_service_account_name}"]
     }
@@ -59,13 +59,13 @@ module "vpc_cni_irsa_role" {
 {% if aws_load_balancer_controller.enable %}
 module "alb_controller_irsa_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.55"
+  version = "~> 5.59"
 
   role_name                              = "${local.cluster_name}-aws-lb-controller"
   attach_load_balancer_controller_policy = true
 
   oidc_providers = {
-    ex = {
+    default = {
       provider_arn               = module.eks.oidc_provider_arn
       namespace_service_accounts = ["${local.service_account_namespace}:${local.aws_lb_service_account_name}"]
     }
@@ -76,24 +76,24 @@ module "alb_controller_irsa_role" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 20.36"
+  version = "~> 21.0"
 
-  cluster_name = local.cluster_name
-
-  cluster_version = "{{ eks.cluster_version | default ("1.31") }}"
+  name = local.cluster_name
+  kubernetes_version  = "{{ eks.kubernetes_version  | default ("1.33") }}"
 
   enable_cluster_creator_admin_permissions = {{ eks.enable_cluster_creator_admin_permissions | default(true) | lower }}
-  cluster_endpoint_public_access           = {{ eks.cluster_endpoint_public_access | default(true) | lower }}
+  endpoint_public_access                   = {{ eks.endpoint_public_access | default(true) | lower }}
   authentication_mode                      = "API"
 
   enable_irsa = {{ eks.enable_irsa | default(true) | lower }}
 
-  cluster_addons = {
+  addons = {
     coredns = {
       most_recent = true
     }
     eks-pod-identity-agent = {
       most_recent = true
+      before_compute = true
     }
     kube-proxy = {
       most_recent = true
@@ -101,6 +101,7 @@ module "eks" {
     vpc-cni = {
       service_account_role_arn = module.vpc_cni_irsa_role.iam_role_arn
       most_recent              = true
+      before_compute           = true
     }
     aws-ebs-csi-driver = {
       service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
@@ -116,19 +117,16 @@ module "eks" {
   subnet_ids               = module.vpc.private_subnets
   control_plane_subnet_ids = module.vpc.intra_subnets
 
-  eks_managed_node_group_defaults = {
-    iam_role_additional_policies = {
-      AmazonEBSCSIDriverPolicy = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
-    }
-  }
-
   eks_managed_node_groups = {
     default = {
       ami_type                       = var.default_node_group_ami_type
       instance_types                 = [var.default_node_group_instance_type]
       capacity_type                  = var.default_node_group_capacity_type
-      cluster_version                = "{{ eks.cluster_version | default ("1.31") }}"
       use_latest_ami_release_version = true
+      
+      iam_role_additional_policies = {
+        AmazonEBSCSIDriverPolicy = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+      }
 
       min_size     = 1
       max_size     = var.default_node_group_nodes_count

@@ -26,7 +26,6 @@ variable "environment_short" {
   default     = "dev"
 }
 
-
 variable "global_tags" {
   type        = map(string)
   description = "Global tags to be used in almost every resource created by this code"
@@ -200,4 +199,80 @@ variable "aurora_instance_class" {
   type        = string
   default     = "serverless.v2"
   description = "The instance class for the Aurora serverless database (e.g., serverless.v2)"
+}
+
+# -------------------------------------------------------------------
+# OpenSearch
+# -------------------------------------------------------------------
+
+variable "opensearch_acm_certificate_arn" {
+  type        = string
+  description = "ACM certificate ARN for your custom endpoint. This variable is required if custom_endpoint_enabled is set to true."
+  default     = ""
+}
+
+variable "opensearch_custom_endpoint" {
+  type        = string
+  description = "Fully qualified domain for your custom endpoint. This variable is required if custom_endpoint_enabled is set to true."
+  default     = ""
+}
+
+variable "opensearch_custom_endpoint_enabled" {
+  type        = bool
+  description = "Whether to enable custom endpoint for the Opensearch domain."
+  default     = false
+}
+
+variable "opensearch_domain_name" {
+  type        = string
+  description = "Name of the Opensearch domain."
+  default     = "opensearch"
+}
+
+variable "opensearch_ebs_enabled" {
+  type        = bool
+  description = "Whether EBS volumes are attached to data nodes in the domain."
+  default     = true
+}
+
+variable "opensearch_ebs_volume_type" {
+  type        = string
+  description = "Type of EBS volumes attached to data nodes."
+  default     = "gp3"
+}
+
+variable "opensearch_ebs_volume_size" {
+  type        = number
+  description = "Size of EBS volumes attached to data nodes (in GiB)."
+  default     = 64
+}
+
+variable "opensearch_instance_count" {
+  type        = number
+  description = "Number of instances in the cluster."
+  default     = 3
+}
+
+variable "opensearch_instance_type" {
+  type        = string
+  description = "Instance type of data nodes in the cluster."
+  default     = "m7g.medium.search"
+}
+
+variable "opensearch_master_user_name" {
+  type        = string
+  description = "Main user's username."
+  default     = "admin"
+}
+
+variable "opensearch_master_user_password" {
+  type        = string
+  description = "Main user's passsword."
+  default     = ""
+}
+
+variable "opensearch_version" {
+  type        = string
+  description = "Version of OpenSearch."
+  default     = "OpenSearch_2.19"
 }

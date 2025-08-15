@@ -6,7 +6,7 @@ terraform {
   backend "s3" {
     bucket         = "{{ backend.s3.bucket }}"
     key            = "kubernetes.tfstate"
-    {% if backend.s3.dynamodb_table  %}
+    {% if not backend.s3.use_lockfile  %}
     dynamodb_table = "{{ backend.s3.dynamodb_table }}"
     {% endif %}
     region         = "{{ backend.s3.region }}"
@@ -21,15 +21,15 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 5.46"
+      version = ">= 6.0"
     }
     helm = {
       source  = "hashicorp/helm"
-      version = ">= 2.16"
+      version = ">= 3.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = ">= 2.36.0"
+      version = ">= 2.38"
     }
     kubectl = {
       source  = "gavinbunney/kubectl"
@@ -50,7 +50,7 @@ provider "aws" {
 }
 
 provider "helm" {
-  kubernetes {
+  kubernetes = {
     host                   = data.terraform_remote_state.aws.outputs.eks_cluster_endpoint
     cluster_ca_certificate = base64decode(data.terraform_remote_state.aws.outputs.eks_certificate_authority_data)
     token                  = data.aws_eks_cluster_auth.eks.token

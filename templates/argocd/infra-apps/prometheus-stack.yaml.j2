@@ -20,7 +20,7 @@ spec:
           - $values/helm/prometheus-stack/enable-loki.yaml
           - $values/helm/prometheus-stack/additional-prometheus-rules.yaml
     - repoURL: {{ argocd.git_repo_url }}
-      targetRevision: {{ argocd.target_revision }}
+      targetRevision: {{ argocd.git_target_revision }}
       ref: values
   destination:
     server: "https://kubernetes.default.svc"
