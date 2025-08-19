@@ -2,13 +2,13 @@
 {%- if karpenter.enable -%}
 module "karpenter" {
   source  = "terraform-aws-modules/eks/aws//modules/karpenter"
-  version = "~> 20.36"
+  version = "~> 21.0"
 
   cluster_name          = module.eks.cluster_name
-  enable_v1_permissions = true
 
+  node_iam_role_use_name_prefix   = false
+  node_iam_role_name              = "${data.aws_caller_identity.current.account_id}-${lower(local.cluster_name)}-karpenter"
   create_pod_identity_association = true
-  create_instance_profile         = true
 
   # Used to attach additional IAM policies to the Karpenter node IAM role
   node_iam_role_additional_policies = {

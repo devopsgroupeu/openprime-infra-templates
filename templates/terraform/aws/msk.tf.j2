@@ -24,7 +24,7 @@ module "msk" {
 
 module "security_group" {
   source  = "terraform-aws-modules/security-group/aws"
-  version = "~> 5.0"
+  version = "~> 5.3"
 
   name        = "${local.msk_cluster_name}-sg"
   description = "Security group for ${local.msk_cluster_name}"

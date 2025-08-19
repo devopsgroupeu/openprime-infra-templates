@@ -48,6 +48,11 @@ variable "git_repo_url" {
   description = "SSH URL of the Git repository to be used by ArgoCD"
 }
 
+variable "git_target_revision" {
+  type        = string
+  description = "Target branch to sync from"
+}
+
 variable "git_repo_private_key" {
   type        = string
   description = "Private key to access the Git repository. Public one is configured in the repository settings as deploy key"
