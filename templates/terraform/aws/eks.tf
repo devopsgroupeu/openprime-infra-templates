@@ -1,5 +1,4 @@
-{%- if eks -%}
-{%- if eks.enable -%}
+# @section eks.enable begin
 locals {
   cluster_name                 = "${var.global_prefix}eks-${var.environment_short}"
   service_account_namespace    = "kube-system"
@@ -55,8 +54,7 @@ module "vpc_cni_irsa_role" {
   }
 }
 
-{% if aws_load_balancer_controller %}
-{% if aws_load_balancer_controller.enable %}
+# @section aws_load_balancer_controller.enable begin
 module "alb_controller_irsa_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version = "~> 5.59"
@@ -71,28 +69,31 @@ module "alb_controller_irsa_role" {
     }
   }
 }
-{% endif %}
-{% endif %}
+# @section aws_load_balancer_controller.enable end
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 21.0"
 
   name = local.cluster_name
-  kubernetes_version  = "{{ eks.kubernetes_version  | default ("1.33") }}"
+  # @param eks.kubernetes_version
+  kubernetes_version = "1.33"
 
-  enable_cluster_creator_admin_permissions = {{ eks.enable_cluster_creator_admin_permissions | default(true) | lower }}
-  endpoint_public_access                   = {{ eks.endpoint_public_access | default(true) | lower }}
-  authentication_mode                      = "API"
+  # @param eks.enable_cluster_creator_admin_permissions
+  enable_cluster_creator_admin_permissions = true
+  # @param eks.endpoint_public_access
+  endpoint_public_access = true
+  authentication_mode    = "API"
 
-  enable_irsa = {{ eks.enable_irsa | default(true) | lower }}
+  # @param eks.enable_irsa
+  enable_irsa = true
 
   addons = {
     coredns = {
       most_recent = true
     }
     eks-pod-identity-agent = {
-      most_recent = true
+      most_recent    = true
       before_compute = true
     }
     kube-proxy = {
@@ -123,7 +124,7 @@ module "eks" {
       instance_types                 = [var.default_node_group_instance_type]
       capacity_type                  = var.default_node_group_capacity_type
       use_latest_ami_release_version = true
-      
+
       iam_role_additional_policies = {
         AmazonEBSCSIDriverPolicy = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
       }
@@ -133,7 +134,7 @@ module "eks" {
       desired_size = var.default_node_group_nodes_count
 
       labels = {
-        Name                      = "default"
+        Name = "default"
         # Used to ensure Karpenter runs on nodes that it does not manage
         "karpenter.sh/controller" = "true"
       }
@@ -151,5 +152,4 @@ module "eks" {
     "karpenter.sh/discovery" = local.cluster_name
   }
 }
-{%- endif -%}
-{%- endif -%}
+# @section eks.enable end

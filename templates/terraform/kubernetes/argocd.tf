@@ -38,10 +38,10 @@ resource "helm_release" "argocd" {
     EOT
   ]
 
-  set_sensitive = [{
+  set_sensitive {
     name  = "configs.repositories.dog-gitlab-repo.sshPrivateKey"
     value = var.git_repo_private_key
-  }]
+  }
 }
 
 # Using 'gavinbunney/kubectl' instead of official Kubernetes provider to allow applying manifest without checking for CRDs during plan

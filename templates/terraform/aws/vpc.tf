@@ -1,5 +1,4 @@
-{%- if vpc -%}
-{%- if vpc.enable -%}
+# @section vpc begin
 data "aws_availability_zones" "available" {
   state = "available"
 }
@@ -26,13 +25,16 @@ module "vpc" {
   intra_subnets    = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k + 52)]
   database_subnets = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k + 56)]
 
-  enable_dns_hostnames   = {{ vpc.enable_dns_hostnames | default(true) | lower}}
-  enable_dns_support     = {{ vpc.enable_dns_support | default(true) | lower}}
+  # @param vpc.enable_dns_hostnames
+  enable_dns_hostnames = true
+  # @param vpc.enable_dns_support
+  enable_dns_support     = true
   enable_nat_gateway     = local.nat_gateway.enable_nat_gateway
   single_nat_gateway     = local.nat_gateway.single_nat_gateway
   one_nat_gateway_per_az = local.nat_gateway.one_nat_gateway_per_az
 
-  create_database_subnet_group = {{ vpc.create_database_subnet_group | default(true) | lower}}
+  # @param vpc.create_database_subnet_group
+  create_database_subnet_group = true
 
   public_subnet_tags = merge({
     "kubernetes.io/cluster/${local.cluster_name}" = "shared"
@@ -47,5 +49,4 @@ module "vpc" {
 
   database_subnet_tags = var.database_subnet_tags
 }
-{%- endif -%}
-{%- endif -%}
+# @section vpc end

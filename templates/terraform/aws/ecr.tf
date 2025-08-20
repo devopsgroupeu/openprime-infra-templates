@@ -1,5 +1,4 @@
-{%- if ecr -%}
-{%- if ecr.enable -%}
+# @section ecr begin
 locals {
   ecr_repositories = [
     "${var.global_prefix}example-app",
@@ -34,5 +33,4 @@ module "ecr" {
     ]
   })
 }
-{%- endif -%}
-{%- endif -%}
+# @section ecr end

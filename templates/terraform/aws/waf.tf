@@ -1,5 +1,4 @@
-{%- if waf -%}
-{%- if waf.enable -%}
+# @section waf begin
 resource "aws_wafv2_web_acl" "waf" {
   name        = "waf"
   description = "Default AWS WAF Managed rule set"
@@ -103,5 +102,4 @@ resource "aws_wafv2_web_acl" "waf" {
     sampled_requests_enabled   = true
   }
 }
-{%- endif -%}
-{%- endif -%}
+# @section waf end

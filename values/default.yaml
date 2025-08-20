@@ -1,0 +1,94 @@
+global:
+  global_prefix: "openprime-"
+
+backend:
+  s3:
+    bucket: "my-terraform-state-bucket"
+    # dynamodb_table: "terraform-state-lock" # DynamoDB state locking
+    region: "eu-west-1"
+    encrypt: true
+    use_lockfile: true # S3 native locking
+
+---
+vpc:
+  enable: true
+  vpc_cidr: "10.0.0.0/16"
+
+  # OPTIONAL PARAMETERS
+  # -------------------
+  # az_count: 2
+  # nat_gateway_strategy: "SINGLE"
+  # public_subnet_tags: {}
+  # private_subnet_tags: {}
+  # database_subnet_tags: {}
+
+eks:
+  enable: true
+  default_node_group_ami_type: "BOTTLEROCKET_ARM_64"
+
+argocd:
+  enable: true
+  git_repo_url: ""
+  targetRevision: HEAD
+
+nginx_ingress_controller:
+  enable: true
+
+rds:
+  enable: false
+
+---
+ecr:
+  enable: false
+
+karpenter:
+  enable: true
+
+aurora:
+  enable: false
+
+aws_load_balancer_controller:
+  enable: true
+
+msk:
+  enable: false
+
+  # OPTIONAL PARAMETERS
+  # -------------------
+  # kafka_version: "3.5.1"
+  # number_of_broker_nodes: 2
+  # broker_node_instance_type: "kafka.t3.small"
+
+opensearch:
+  enable: false
+
+prometheus:
+  enable: true
+
+grafana:
+  enable: true
+
+alertmanager:
+  enable: true
+
+---
+generic_helm_chart:
+  enable: false
+
+promtail:
+  enable: true
+
+loki:
+  enable: true
+
+alerts:
+  common_alerts: true
+  slack: true
+  email: true
+
+cicd_pipeline:
+  enable: false
+
+---
+waf:
+  enable: false

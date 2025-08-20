@@ -1,32 +1,32 @@
-{%- if argocd.enable -%}
-{%- if karpenter.enable -%}
+# @section loki begin
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: karpenter
+  name: loki
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   sources:
-    - repoURL: public.ecr.aws
-      chart: karpenter/karpenter
-      targetRevision: 1.4.0
+    - repoURL: https://grafana.github.io/helm-charts
+      chart: loki
+      targetRevision: 6.30.0
       helm:
         valueFiles:
-          - $values/helm/karpenter/values.yaml
-    - repoURL: {{ argocd.git_repo_url }}
-      targetRevision: {{ argocd.git_target_revision }}
+          - $values/helm/loki/values.yaml
+    # @param argocd.git_repo_url
+    - repoURL: git@github.com:myorg/my-argocd-repo.git
+      # @param argocd.git_target_revision
+      targetRevision: main
       ref: values
   destination:
     server: "https://kubernetes.default.svc"
-    namespace: kube-system
+    namespace: monitoring
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-{%- endif -%}
-{%- endif -%}
+# @section loki end

@@ -1,8 +1,7 @@
 locals {
   helm_charts = {
 
-    {% if karpenter %}
-    {% if karpenter.enable %}
+    # @section karpenter begin
     karpenter = {
       template_values_file = "${path.module}/../../helm/karpenter/values.yaml.tftpl"
       values = {
@@ -11,39 +10,33 @@ locals {
         queue_name       = module.karpenter.queue_name
       }
     }
-    {% endif %}
-    {% endif %}
+    # @section karpenter end
 
-    {% if promtail %}
-    {% if promtail.enable %}
+    # @section promtail begin
     promtail = {
       template_values_file = "${path.module}/../../helm/promtail/values.yaml.tftpl"
       values = {
         logLevel = "info"
       }
     }
-    {% endif %}
-    {% endif %}
+    # @section promtail end
 
-    {% if aws_load_balancer_controller %}
-    {% if aws_load_balancer_controller.enable %}
+    # @section aws_load_balancer_controller begin
     aws_load_balancer_controller = {
       template_values_file = "${path.module}/../../helm/aws-load-balancer-controller/values.yaml.tftpl"
       values = {
-        service_account_name  = local.aws_lb_service_account_name
-        alb_role_arn          = module.alb_controller_irsa_role.iam_role_arn
-        cluster_name          = module.eks.cluster_name
-        region                = var.region
-        vpc_id                = module.vpc.vpc_id
-        replica_count         = var.aws_lb_replica_count
-        pdb_max_unavailable   = var.aws_lb_pdb_max_unavailable
+        service_account_name = local.aws_lb_service_account_name
+        alb_role_arn         = module.alb_controller_irsa_role.iam_role_arn
+        cluster_name         = module.eks.cluster_name
+        region               = var.region
+        vpc_id               = module.vpc.vpc_id
+        replica_count        = var.aws_lb_replica_count
+        pdb_max_unavailable  = var.aws_lb_pdb_max_unavailable
       }
     }
-    {% endif %}
-    {% endif %}
+    # @section aws_load_balancer_controller end
 
-    {% if karpenter %}
-    {% if karpenter.enable %}
+    # @section loki begin
     loki = {
       template_values_file = "${path.module}/../../helm/loki/values.yaml.tftpl"
       values = {
@@ -54,8 +47,7 @@ locals {
         s3_bucket_ruler      = module.loki_s3_buckets["ruler"].s3_bucket_id
       }
     }
-    {% endif %}
-    {% endif %}
+    # @section loki end
   }
 }
 

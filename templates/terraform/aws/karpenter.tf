@@ -1,10 +1,9 @@
-{%- if karpenter -%}
-{%- if karpenter.enable -%}
+# @section karpenter begin
 module "karpenter" {
   source  = "terraform-aws-modules/eks/aws//modules/karpenter"
   version = "~> 21.0"
 
-  cluster_name          = module.eks.cluster_name
+  cluster_name = module.eks.cluster_name
 
   node_iam_role_use_name_prefix   = false
   node_iam_role_name              = "${data.aws_caller_identity.current.account_id}-${lower(local.cluster_name)}-karpenter"
@@ -28,5 +27,4 @@ resource "local_file" "karpenter" {
   )
   filename = trimsuffix("${path.module}/../../argocd/support-resources/karpenter.yaml.tftpl", ".tftpl")
 }
-{%- endif -%}
-{%- endif -%}
+# @section karpenter end

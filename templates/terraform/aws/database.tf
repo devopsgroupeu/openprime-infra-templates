@@ -1,28 +1,23 @@
 locals {
-  {% if rds %}
-  {% if rds.enable %}
-  rds_identifier       = "${var.global_prefix}rds-${var.environment_short}"
-  rds_db_name          = "${var.global_prefix}db${var.environment_short}"
-  rds_username         = "${var.global_prefix}rdsuser${var.environment_short}"
-  rds_sg_vpc_rule_name = var.rds_engine == "postgres" ? "postgresql-tcp" : "mysql-tcp"
-  rds_port             = var.rds_engine == "postgres" ? 5432 : 3306
+  # @section rds begin
+  rds_identifier          = "${var.global_prefix}rds-${var.environment_short}"
+  rds_db_name             = "${var.global_prefix}db${var.environment_short}"
+  rds_username            = "${var.global_prefix}rdsuser${var.environment_short}"
+  rds_sg_vpc_rule_name    = var.rds_engine == "postgres" ? "postgresql-tcp" : "mysql-tcp"
+  rds_port                = var.rds_engine == "postgres" ? 5432 : 3306
   cloudwatch_logs_exports = var.rds_engine == "postgres" ? ["postgresql"] : ["error", "general", "slowquery"]
-  {% endif %}
-  {% endif %}
+  # @section rds end
 
-  {% if aurora %}
-  {% if aurora.enable %}
+  # @section aurora begin
   aurora_name             = "${var.global_prefix}auroradb${var.environment_short}"
   aurora_database_name    = "${var.global_prefix}auroradb${var.environment_short}"
   aurora_username         = "${var.global_prefix}aurorauser${var.environment_short}"
   aurora_sg_vpc_rule_name = var.aurora_engine == "aurora-postgresql" ? "postgresql-tcp" : "mysql-tcp"
   aurora_port             = var.aurora_engine == "aurora-postgresql" ? 5432 : 3306
-  {% endif %}
-  {% endif %}
+  # @section aurora end
 }
 
-{% if rds %}
-{% if rds.enable %}
+# @section rds begin
 resource "random_password" "rds_password" {
   length  = 16
   upper   = true
@@ -30,23 +25,19 @@ resource "random_password" "rds_password" {
   numeric = true
   special = false
 }
-{% endif %}
-{% endif %}
+# @section rds end
 
-{% if aurora %}
-{% if aurora.enable %}
+# @section aurora begin
 resource "random_password" "aurora_password" {
   length  = 16
   upper   = true
   lower   = true
-  numeric  = true
+  numeric = true
   special = false
 }
-{% endif %}
-{% endif %}
+# @section aurora end
 
-{% if rds %}
-{% if rds.enable %}
+# @section rds begin
 module "rds" {
   source  = "terraform-aws-modules/rds/aws"
   version = "~> 6.12"
@@ -55,7 +46,7 @@ module "rds" {
 
   subnet_ids             = module.vpc.database_subnets
   create_db_subnet_group = true
-  vpc_security_group_ids = [module.rds_sg.security_group_id] 
+  vpc_security_group_ids = [module.rds_sg.security_group_id]
 
   apply_immediately         = false
   deletion_protection       = false
@@ -115,11 +106,9 @@ module "rds_sg" {
     }
   ]
 }
-{% endif %}
-{% endif %}
+# @section rds end
 
-{% if aurora %}
-{% if aurora.enable %}
+# @section aurora begin
 module "aurora" {
   source  = "terraform-aws-modules/rds-aurora/aws"
   version = "~> 9.13"
@@ -187,5 +176,4 @@ module "aurora_sg" {
     }
   ]
 }
-{% endif %}
-{% endif %}
+# @section aurora end

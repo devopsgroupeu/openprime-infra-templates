@@ -1,5 +1,4 @@
-{%- if loki -%}
-{%- if loki.enable -%}
+# @section loki begin
 locals {
   general_name = "${data.aws_caller_identity.current.account_id}-${lower(local.cluster_name)}-loki"
 }
@@ -72,5 +71,4 @@ data "aws_iam_policy_document" "loki_policy" {
     ])
   }
 }
-{%- endif -%}
-{%- endif -%}
+# @section loki end

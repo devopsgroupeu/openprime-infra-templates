@@ -1,23 +1,20 @@
 terraform {
   required_version = "~> 1.11"
 
-  {% if backend %}
-  {% if backend.s3 %}
+  # @section backend begin
   backend "s3" {
-    bucket         = "{{ backend.s3.bucket }}"
+    # @param backend.s3.bucket
+    bucket         = "my-terraform-state-bucket"
     key            = "kubernetes.tfstate"
-    {% if not backend.s3.use_lockfile  %}
-    dynamodb_table = "{{ backend.s3.dynamodb_table }}"
-    {% endif %}
-    region         = "{{ backend.s3.region }}"
-    encrypt        = {{ backend.s3.encrypt | default(false) | lower}}
-    {% if backend.s3.use_lockfile  %}
-    use_lockfile   = {{ backend.s3.use_lockfile | default(false) | lower}}
-    {% endif %}
+    # @param backend.s3.region
+    region         = "eu-west-1"
+    # @param backend.s3.encrypt
+    encrypt        = true
+    # @param backend.s3.use_lockfile
+    use_lockfile   = false
   }
+  # @section backend end
 
-  {% endif %}
-  {% endif %}
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -50,7 +47,7 @@ provider "aws" {
 }
 
 provider "helm" {
-  kubernetes = {
+  kubernetes {
     host                   = data.terraform_remote_state.aws.outputs.eks_cluster_endpoint
     cluster_ca_certificate = base64decode(data.terraform_remote_state.aws.outputs.eks_certificate_authority_data)
     token                  = data.aws_eks_cluster_auth.eks.token

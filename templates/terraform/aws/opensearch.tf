@@ -1,5 +1,4 @@
-{%- if opensearch -%}
-{%- if opensearch.enable -%}
+# @section opensearch begin
 module "opensearch" {
   source  = "terraform-aws-modules/opensearch/aws"
   version = "~> 2.0"
@@ -50,5 +49,4 @@ resource "random_password" "opensearch_master_user_password" {
   min_numeric = 1
   min_special = 1
 }
-{% endif %}
-{% endif %}
+# @section opensearch end
