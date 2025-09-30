@@ -48,6 +48,30 @@ variable "az_count" {
   default     = 2
 }
 
+variable "create_public_subnets" {
+  description = "Wether to create public subnets"
+  type        = bool
+  default     = true
+}
+
+variable "create_private_subnets" {
+  description = "Wether to create private subnets"
+  type        = bool
+  default     = true
+}
+
+variable "create_intra_subnets" {
+  description = "Wether to create intra subnets"
+  type        = bool
+  default     = false
+}
+
+variable "create_database_subnets" {
+  description = "Wether to create database subnets"
+  type        = bool
+  default     = false
+}
+
 variable "nat_gateway_strategy" {
   description = "Strategy for creating NAT gateways. Available options are `NO_NAT`, `SINGLE`, `ONE_PER_SUBNET` or `ONE_PER_AZ`. Default is `ONE_PER_SUBNET`"
   type        = string
