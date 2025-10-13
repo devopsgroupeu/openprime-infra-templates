@@ -1,0 +1,30 @@
+# @section karpenter begin
+module "karpenter" {
+  source  = "terraform-aws-modules/eks/aws//modules/karpenter"
+  version = "~> 21.0"
+
+  cluster_name = module.eks.cluster_name
+
+  node_iam_role_use_name_prefix   = false
+  node_iam_role_name              = "${data.aws_caller_identity.current.account_id}-${lower(local.cluster_name)}-karpenter"
+  create_pod_identity_association = true
+
+  # Used to attach additional IAM policies to the Karpenter node IAM role
+  node_iam_role_additional_policies = {
+    AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  }
+}
+
+resource "local_file" "karpenter" {
+  content = templatefile(
+    "${path.module}/../../argocd/support-resources/karpenter.yaml.tftpl",
+    {
+      cluster_name       = module.eks.cluster_name
+      node_iam_role_name = module.karpenter.node_iam_role_name
+      arch               = var.karpenter_nodepool_arch
+      capacity_type      = var.karpenter_nodepool_capacity_type
+    }
+  )
+  filename = trimsuffix("${path.module}/../../argocd/support-resources/karpenter.yaml.tftpl", ".tftpl")
+}
+# @section karpenter end

@@ -1,0 +1,12 @@
+serviceAccount:
+  name: ${service_account_name}
+  annotations:
+    eks.amazonaws.com/role-arn: ${alb_role_arn}
+
+clusterName: ${cluster_name}
+region: ${region}
+vpcId: ${vpc_id}
+
+replicaCount: ${replica_count}
+podDisruptionBudget:
+  maxUnavailable: ${pdb_max_unavailable}

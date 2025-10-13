@@ -1,0 +1,37 @@
+# @section prometheus begin
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus-stack
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: kube-prometheus-stack
+      targetRevision: 72.6.2
+      helm:
+        skipSchemaValidation: true
+        valueFiles:
+          - $values/helm/prometheus-stack/values.yaml
+          - $values/helm/prometheus-stack/enable-loki.yaml
+          - $values/helm/prometheus-stack/additional-prometheus-rules.yaml
+    # @param argocd.git_repo_url
+    - repoURL: git@github.com:myorg/my-argocd-repo.git
+      # @param argocd.git_target_revision
+      targetRevision: main
+      ref: values
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - Validate=false
+      - CreateNamespace=true
+      - ServerSideApply=true
+# @section prometheus end

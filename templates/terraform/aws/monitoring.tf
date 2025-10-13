@@ -1,0 +1,74 @@
+# @section loki begin
+locals {
+  general_name = "${data.aws_caller_identity.current.account_id}-${lower(local.cluster_name)}-loki"
+}
+
+variable "loki_buckets" {
+  type    = list(string)
+  default = ["chunk", "ruler"]
+}
+
+module "loki_s3_buckets" {
+  source  = "terraform-aws-modules/s3-bucket/aws"
+  version = "~> 5.3"
+
+  for_each = toset(var.loki_buckets)
+
+  bucket        = "${local.general_name}-${each.value}"
+  force_destroy = true
+
+  server_side_encryption_configuration = {
+    rule = {
+      apply_server_side_encryption_by_default = {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+}
+
+module "loki_role" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "~> 5.59"
+
+  role_name = local.general_name
+
+  role_policy_arns = {
+    LokiPolicy = module.loki_policy.arn
+  }
+
+  oidc_providers = {
+    default = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["monitoring:loki-sa"]
+    }
+  }
+}
+
+module "loki_policy" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-policy"
+  version = "~> 5.59"
+
+  name = local.general_name
+  path = "/"
+
+  policy = data.aws_iam_policy_document.loki_policy.json
+}
+
+data "aws_iam_policy_document" "loki_policy" {
+  statement {
+    actions = [
+      "s3:ListBucket",
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:DeleteObject",
+    ]
+    effect = "Allow"
+    resources = flatten([
+      for bucket in module.loki_s3_buckets : [
+        "arn:aws:s3:::${bucket.s3_bucket_id}",
+        "arn:aws:s3:::${bucket.s3_bucket_id}/*"
+      ]
+    ])
+  }
+}
+# @section loki end
