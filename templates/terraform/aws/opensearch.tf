@@ -1,4 +1,4 @@
-# @section opensearch begin
+# @section opensearch.enabled begin
 module "opensearch" {
   source  = "terraform-aws-modules/opensearch/aws"
   version = "~> 2.0"
@@ -49,4 +49,4 @@ resource "random_password" "opensearch_master_user_password" {
   min_numeric = 1
   min_special = 1
 }
-# @section opensearch end
+# @section opensearch.enabled end

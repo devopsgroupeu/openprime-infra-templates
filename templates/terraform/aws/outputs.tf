@@ -1,4 +1,4 @@
-# @section eks begin
+# @section eks.enabled begin
 output "eks_cluster_name" {
   value = module.eks.cluster_name
 }
@@ -10,9 +10,9 @@ output "eks_cluster_endpoint" {
 output "eks_certificate_authority_data" {
   value = module.eks.cluster_certificate_authority_data
 }
-# @section eks end
+# @section eks.enabled end
 
-# @section opensearch begin
+# @section opensearch.enabled begin
 output "opensearch_master_user_password" {
   value       = try(var.opensearch_master_user_password != "" ? var.opensearch_master_user_password : random_password.opensearch_master_user_password.result, "")
   description = "Master password."
@@ -49,4 +49,4 @@ output "opensearch_endpoint" {
   value       = try(module.opensearch.endpoint, "")
   description = "Domain-specific endpoint used to submit index, search, and data upload requests."
 }
-# @section opensearch end
+# @section opensearch.enabled end
