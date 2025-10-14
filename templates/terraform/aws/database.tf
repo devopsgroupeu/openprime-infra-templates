@@ -150,12 +150,13 @@ module "aurora" {
   enabled_cloudwatch_logs_exports = local.cloudwatch_logs_exports
   create_cloudwatch_log_group     = true
 
-  # DEV
+  # @param services.rds.applyImmediately
   apply_immediately        = true
   deletion_protection      = false
   skip_final_snapshot      = true
   delete_automated_backups = true
-  # backup_retention_period  = 7
+  # @param services.rds.backupRetentionPeriod
+  backup_retention_period = 7
 }
 
 module "aurora_sg" {

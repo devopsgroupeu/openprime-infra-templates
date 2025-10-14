@@ -9,7 +9,7 @@ module "karpenter" {
   node_iam_role_name              = "${data.aws_caller_identity.current.account_id}-${lower(local.cluster_name)}-karpenter"
   create_pod_identity_association = true
 
-  # Used to attach additional IAM policies to the Karpenter node IAM role
+  ## Used to attach additional IAM policies to the Karpenter node IAM role
   node_iam_role_additional_policies = {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   }
