@@ -1,4 +1,4 @@
-# @section ecr.enabled begin
+# @section services.ecr.enabled begin
 locals {
   ecr_repositories = [
     "${var.global_prefix}example-app",
@@ -33,4 +33,4 @@ module "ecr" {
     ]
   })
 }
-# @section ecr.enabled end
+# @section services.ecr.enabled end

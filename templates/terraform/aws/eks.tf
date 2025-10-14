@@ -1,4 +1,4 @@
-# @section eks.enabled begin
+# @section services.eks.enabled begin
 locals {
   cluster_name                 = "${var.global_prefix}eks-${var.environment_short}"
   service_account_namespace    = "kube-system"
@@ -152,4 +152,4 @@ module "eks" {
     "karpenter.sh/discovery" = local.cluster_name
   }
 }
-# @section eks.enabled end
+# @section services.eks.enabled end

@@ -1,4 +1,4 @@
-# @section msk.enabled begin
+# @section services.msk.enabled begin
 locals {
   msk_cluster_name = "${var.global_prefix}msk-${var.environment_short}"
 }
@@ -38,4 +38,4 @@ module "security_group" {
     "kafka-broker-tls-tcp"
   ]
 }
-# @section msk.enabled end
+# @section services.msk.enabled end
