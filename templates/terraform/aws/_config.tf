@@ -10,8 +10,8 @@ terraform {
     region = "eu-west-1"
     # @param backend.s3.encrypt
     encrypt = true
-    # @param backend.s3.useLockFile
-    use_lockfile = false
+    # @param backend.s3.useLockfile
+    use_lockfile = true
   }
   # @section backend end
 
