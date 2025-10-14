@@ -76,17 +76,15 @@ module "eks" {
   version = "~> 21.0"
 
   name = local.cluster_name
-  # @param eks.kubernetes_version
+  # @param services.eks.kubernetesVersion
   kubernetes_version = "1.33"
 
-  # @param eks.enable_cluster_creator_admin_permissions
+  # @param services.eks.enableClusterCreatorAdminPermissions
   enable_cluster_creator_admin_permissions = true
-  # @param eks.endpoint_public_access
+  # @param services.eks.endpointPublicAccess
   endpoint_public_access = true
   authentication_mode    = "API"
-
-  # @param eks.enable_irsa
-  enable_irsa = true
+  enable_irsa            = true
 
   addons = {
     coredns = {

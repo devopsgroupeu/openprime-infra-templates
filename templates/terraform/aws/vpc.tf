@@ -1,4 +1,4 @@
-# @section vpc begin
+# @section services.vpc begin
 data "aws_availability_zones" "available" {
   state = "available"
 }
@@ -25,9 +25,9 @@ module "vpc" {
   intra_subnets    = var.create_intra_subnets ? [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k + 52)] : []
   database_subnets = var.create_database_subnets ? [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k + 56)] : []
 
-  # @param vpc.enable_dns_hostnames
+  # @param vpc.enableDnsHostnames
   enable_dns_hostnames = true
-  # @param vpc.enable_dns_support
+  # @param vpc.enableDnsSupport
   enable_dns_support     = true
   enable_nat_gateway     = local.nat_gateway.enable_nat_gateway
   single_nat_gateway     = local.nat_gateway.single_nat_gateway
@@ -49,4 +49,4 @@ module "vpc" {
 
   database_subnet_tags = var.database_subnet_tags
 }
-# @section vpc end
+# @section services.vpc end

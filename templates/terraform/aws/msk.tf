@@ -8,13 +8,13 @@ module "msk" {
   version = "~> 2.13"
 
   name = local.msk_cluster_name
-  # @param msk.kafka_version
+  # @param msk.kafkaVersion
   kafka_version = "3.5.1"
-  # @param msk.number_of_broker_nodes
+  # @param msk.numberOfBrokerNodes
   number_of_broker_nodes = 2
 
   broker_node_client_subnets = module.vpc.private_subnets
-  # @param msk.broker_node_instance_type
+  # @param msk.brokerNodeInstanceType
   broker_node_instance_type   = "kafka.t3.small"
   broker_node_security_groups = [module.security_group.security_group_id]
 
