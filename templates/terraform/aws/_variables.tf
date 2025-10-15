@@ -175,6 +175,60 @@ variable "ecr_repositories" {
   default     = []
 }
 
+variable "ecr_image_tag_mutability" {
+  description = "Set the mutability of image tags. Valid values are 'MUTABLE' and 'IMMUTABLE'"
+  type        = string
+  validation {
+    condition     = contains(["MUTABLE", "IMMUTABLE"], var.ecr_image_tag_mutability)
+    error_message = "Must be either 'MUTABLE' or 'IMMUTABLE'"
+  }
+  default = "IMMUTABLE"
+}
+
+variable "ecr_enable_scanning" {
+  description = "Enable image scanning on push for ECR repositories"
+  type        = bool
+  default     = true
+}
+
+variable "ecr_scan_type" {
+  description = "The type of scanning to perform on images. Valid values are 'BASIC' and 'ENHANCED'"
+  type        = string
+  validation {
+    condition     = contains(["BASIC", "ENHANCED"], var.ecr_scan_type)
+    error_message = "Must be either 'BASIC' or 'ENHANCED'"
+  }
+  default = "BASIC"
+}
+
+variable "ecr_enable_replication" {
+  description = "Enable ECR replication configuration"
+  type        = bool
+  default     = false
+}
+
+variable "ecr_repository_type" {
+  description = "Set repository type. Valid values are 'private' or 'public'"
+  type        = string
+  validation {
+    condition     = contains(["private", "public"], var.ecr_repository_type)
+    error_message = "Must be either 'private' or 'public'"
+  }
+  default = "private"
+}
+
+variable "ecr_replication_destinations" {
+  description = "List of destination regions for ECR replication"
+  type        = list(string)
+  default     = []
+}
+
+variable "ecr_create_lifecycle_policy" {
+  description = "Enable lifecycle policy for ECR repositories"
+  type        = bool
+  default     = true
+}
+
 # -------------------------------------------------------------------
 # RDS
 # -------------------------------------------------------------------

@@ -60,3 +60,24 @@ aurora_engine_version = "15.8"
 
 # @param services.opensearch.customEndpointEnabled
 opensearch_custom_endpoint_enabled = false
+
+# -------------------------------------------------------------------
+# ECR
+# -------------------------------------------------------------------
+
+# @param services.ecr.repositories
+ecr_repositories = ["example-app"]
+# @param services.ecr.repositoryType
+ecr_repository_type = "private"
+# @param services.ecr.imageTagMutability
+ecr_image_tag_mutability = "IMMUTABLE"
+# @param services.ecr.createLifecyclePolicy
+ecr_create_lifecycle_policy = true
+# @param services.ecr.enableScanning
+ecr_enable_scanning = true
+# @param services.ecr.scanType
+ecr_scan_type = "BASIC"
+# @param services.ecr.enableReplication
+ecr_enable_replication = false
+# @param services.ecr.replicationDestinations
+ecr_replication_destinations = []
