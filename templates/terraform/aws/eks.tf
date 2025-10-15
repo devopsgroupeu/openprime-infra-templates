@@ -119,7 +119,7 @@ module "eks" {
   eks_managed_node_groups = {
     default = {
       ami_type                       = var.default_node_group_ami_type
-      instance_types                 = [var.default_node_group_instance_type]
+      instance_types                 = var.default_node_group_instance_types
       capacity_type                  = var.default_node_group_capacity_type
       use_latest_ami_release_version = true
 

@@ -32,8 +32,8 @@ database_subnet_tags = {}
 
 # @param services.eks.defaultNodeGroupAmiType
 default_node_group_ami_type = "BOTTLEROCKET_ARM_64"
-# @param services.eks.defaultNodeGroupInstanceType
-default_node_group_instance_type = "t4g.large"
+# @param services.eks.defaultNodeGroupInstanceTypes
+default_node_group_instance_types = ["t4g.large"]
 
 # -------------------------------------------------------------------
 # KARPENTER

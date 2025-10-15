@@ -117,10 +117,10 @@ variable "default_node_group_ami_type" {
   default     = "BOTTLEROCKET_x86_64"
 }
 
-variable "default_node_group_instance_type" {
-  type        = string
+variable "default_node_group_instance_types" {
+  type        = list(string)
   description = "Instance type of default node group"
-  default     = "m5.large"
+  default     = ["t3.medium"]
 }
 
 variable "default_node_group_nodes_count" {
