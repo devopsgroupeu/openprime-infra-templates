@@ -78,7 +78,7 @@ module "ecr_registry" {
   registry_scan_rules = var.ecr_enable_scanning ? [
     {
       scan_frequency = "SCAN_ON_PUSH"
-      repository_filters = [{
+      filter = [{
         filter      = "*"
         filter_type = "WILDCARD"
       }]

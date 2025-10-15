@@ -1,4 +1,4 @@
-# @section services.waf begin
+# @section services.waf.enabled begin
 resource "aws_wafv2_web_acl" "waf" {
   name        = "waf"
   description = "Default AWS WAF Managed rule set"
@@ -102,4 +102,4 @@ resource "aws_wafv2_web_acl" "waf" {
     sampled_requests_enabled   = true
   }
 }
-# @section services.waf end
+# @section services.waf.enabled end
