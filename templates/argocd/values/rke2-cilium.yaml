@@ -1,0 +1,60 @@
+extraObjects:
+- apiVersion: helm.cattle.io/v1
+  kind: HelmChartConfig
+  metadata:
+    name: rke2-cilium
+    namespace: kube-system
+  spec:
+    valuesContent: |-
+      operator:
+        replicas: 1
+      prometheus:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+          interval: 60s
+          labels:
+            release: kube-prometheus-stack
+      hubble:
+        enabled: true
+        relay:
+          enabled: true
+          prometheus:
+            enabled: true
+            serviceMonitor:
+              enabled: true
+              interval: 60s
+              labels:
+                release: kube-prometheus-stack
+        ui:
+          enabled: true
+          ingress:
+            enabled: true
+            className: nginx
+            # oauth2-google BEGIN
+            # annotations:
+            #   nginx.ingress.kubernetes.io/auth-signin: https://oauth2-google.openprime.io/oauth2/start?rd=$scheme://$http_host$request_uri
+            #   nginx.ingress.kubernetes.io/auth-url: https://oauth2-google.openprime.io/oauth2/auth
+            # oauth2-google END
+            hosts:
+              - hubble.openprime.io
+        metrics:
+          enableOpenMetrics: true
+          serviceMonitor:
+            enabled: true
+            interval: 60s
+            labels:
+              release: kube-prometheus-stack
+          enabled:
+            - dns
+            - drop
+            - tcp
+            - icmp
+            - "flow:sourceContext=workload-name|reserved-identity;destinationContext=workload-name|reserved-identity"
+            - "kafka:labelsContext=source_namespace,source_workload,destination_namespace,destination_workload,traffic_direction;sourceContext=workload-name|reserved-identity;destinationContext=workload-name|reserved-identity"
+            - "httpV2:exemplars=true;labelsContext=source_ip,source_namespace,source_workload,destination_ip,destination_namespace,destination_workload,traffic_direction;sourceContext=workload-name|reserved-identity;destinationContext=workload-name|reserved-identity"
+          dashboards:
+            enabled: true
+            namespace: monitoring
+            annotations:
+              grafana_folder: "Hubble"

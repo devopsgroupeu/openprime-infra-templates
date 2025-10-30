@@ -1,0 +1,114 @@
+deploymentMode: SimpleScalable
+
+global:
+  dnsService: rke2-coredns-rke2-coredns
+  extraEnv:
+    - name: S3_ENDPOINT
+      valueFrom:
+        secretKeyRef:
+          name: monitoring-s3
+          key: endpoint
+    - name: S3_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: monitoring-s3
+          key: accessKeyID
+    - name: S3_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: monitoring-s3
+          key: secretAccessKey
+
+    - name: S3_BUCKET
+      valueFrom:
+        secretKeyRef:
+          name: monitoring-s3
+          key: S3_BUCKET
+
+    - name: AWS_S3_FORCE_PATH_STYLE
+      value: "true"
+
+gateway:
+  enabled: false
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  hosts:
+    - loki.openprime.io
+resultsCache:
+  allocatedMemory: 256
+  maxItemMemory:   4
+  resources:
+    requests: { cpu: 50m,  memory: 300Mi }
+    limits:   { cpu: 200m, memory: 300Mi }
+
+chunksCache:
+  allocatedMemory: 1024
+  maxItemMemory:   8
+  resources:
+    requests: { cpu: 100m, memory: 1200Mi }
+    limits:   { cpu: 300m, memory: 1200Mi }
+loki:
+  commonConfig:
+    replication_factor: 1
+
+  schemaConfig:
+    configs:
+      - from: 2024-04-01
+        store: tsdb
+        object_store: s3
+        schema: v13
+        index:
+          prefix: loki_index_
+          period: 24h
+
+  auth_enabled: false
+
+  storage:
+    bucketNames:
+      chunks: ${S3_BUCKET}
+      ruler:  ${S3_BUCKET}
+      admin:  ${S3_BUCKET}
+
+    type: s3
+    s3:
+      region: auto
+      endpoint:        ${S3_ENDPOINT}
+      accessKeyId:     ${S3_ACCESS_KEY_ID}
+      secretAccessKey: ${S3_SECRET_ACCESS_KEY}
+      s3ForcePathStyle: true
+
+  rulerConfig:
+    alertmanager_url: http://alertmanager-operated.monitoring.svc.cluster.local:9093
+    rule_path: /rules
+    wal:
+      dir: /tmp/ruler-wal
+    storage:
+      type: local
+      local:
+        directory: /rules
+    remote_write:
+      enabled: true
+      client:
+        url: http://prometheus-operated.monitoring.svc.cluster.local:9090/api/v1/write
+backend:
+  replicas: 1
+  persistence:
+    storageClass: openebs-hostpath
+    enableStatefulSetAutoDeletePVC: false
+  extraArgs: [ "-config.expand-env=true" ]
+
+write:
+  replicas: 1
+  persistence:
+    storageClass: openebs-hostpath
+  extraArgs: [ "-config.expand-env=true" ]
+
+read:
+  replicas: 1
+  persistence:
+    storageClass: openebs-hostpath
+  extraArgs: [ "-config.expand-env=true" ]
+lokiCanary: { enabled: false }
+test:       { enabled: false }

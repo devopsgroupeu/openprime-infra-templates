@@ -1,0 +1,103 @@
+globals:
+  repoURL: git@github.com:devopsgroupeu/openprime-app-of-apps.git
+  
+appProjects:
+  - namespace: kube-system
+    applications:
+      - name: rke2-cilium
+        path: external/lukas-pastva/helm-chartie/1.0.8
+  - namespace: opentelemetry
+    applications:
+      - name: opentelemetry-operator
+        path: external/opentelemetry-helm/opentelemetry-operator/0.91.1
+      - name: opentelemetry-collector
+        path: external/lukas-pastva/helm-chartie/1.0.8
+  - namespace: rancher
+    applications:
+      - name: rancher
+        path: external/rancher-stable/rancher/2.11.3
+  - namespace: openebs
+    applications:
+      - name: openebs
+        path: external/openebs/openebs/4.3.2
+  - namespace: metallb-system
+    applications:
+      - name: metallb
+        path: external/metallb/metallb/0.15.2
+      - name: metallb-iap
+        path: external/lukas-pastva/helm-chartie/1.0.8
+  - namespace: monitoring
+    applications:
+      - name: kube-prometheus-stack-crds
+        path: external/prometheus-community/kube-prometheus-stack/75.9.0/charts/crds
+        replace: true
+        autoSync: true
+      - name: kube-prometheus-stack
+        path: external/prometheus-community/kube-prometheus-stack/75.9.0
+        skipCrds: true
+      - name: promtail
+        path: external/grafana/promtail/6.17.0
+      - name: loki
+        path: external/grafana/loki/6.30.1
+      - name: thanos
+        path: external/bitnami/thanos/17.2.1
+      - name: tempo
+        path: external/grafana/tempo-distributed/1.45.0
+  - namespace: ingress-nginx
+    applications:
+      - name: ingress-nginx-extra
+        path: external/lukas-pastva/helm-chartie/1.0.8
+      - name: ingress-nginx
+        path: external/ingress-nginx/ingress-nginx/4.13.0
+  - namespace: oauth2-google
+    applications:
+      - name: oauth2-google
+        path: external/oauth2-proxy/oauth2-proxy/7.9.0
+  - namespace: argocd
+    applications:
+      - name: argo-cd
+        path: external/argo/argo-cd/8.2.5
+  - namespace: argo-workflows
+    applications:
+      - name: argo-events
+        path: external/argo/argo-events/2.4.15
+      - name: argo-workflows
+        path: external/argo/argo-workflows/0.45.19
+      - name: argo-workflows-ui
+        path: external/lukas-pastva/helm-chartie/1.0.8
+      - name: event-backup-gl
+        path: internal/events
+      - name: event-backup-gh
+        path: internal/events
+      - name: event-backup-k8s
+        path: internal/events
+      - name: event-stop
+        path: internal/events
+      - name: event-deploy
+        path: internal/events
+      - name: event-install
+        path: internal/events
+      - name: event-upgrade
+        path: internal/events
+      - name: event-download
+        path: internal/events
+      - name: event-delete
+        path: internal/events
+      - name: argo-app-manager
+        path: external/lukas-pastva/helm-chartie/1.0.8
+  - namespace: cert-manager
+    applications:
+      - name: cert-manager
+        path: external/cert-manager/cert-manager/1.18.2
+  - namespace: ingress-browser
+    applications:
+      - name: ingress-browser
+        path: external/lukas-pastva/helm-chartie/1.0.8
+  - namespace: web-example
+    applications:
+      - name: web-example
+        path: external/lukas-pastva/helm-chartie/1.0.8
+  - namespace: web-init-openprime
+    applications:
+      - name: web-init-openprime
+        path: external/lukas-pastva/helm-chartie/1.0.8

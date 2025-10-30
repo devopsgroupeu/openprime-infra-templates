@@ -1,0 +1,35 @@
+ingress:
+  enabled: true
+  hosts:
+    - oauth2-google.openprime.io
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  tls:
+    - secretName: cert-oauth2-google
+      hosts:
+        - oauth2-google.openprime.io
+  className: "nginx"
+resources:
+  limits:
+    memory: 100Mi
+  requests:
+    cpu: 50m
+    memory: 60Mi
+config:
+  existingSecret: "oauth2-google"
+  configFile: |-
+    upstreams = [ "file:///dev/null" ]
+    cookie_domains = ".openprime.io"
+    email_domains = [ "devopsgroup.sk" ]
+    scope = "openid profile email"
+    whitelist_domains = ".openprime.io"
+    pass_authorization_header = true
+    pass_access_token = true
+    pass_user_headers = true
+    set_authorization_header = true
+    set_xauthrequest = true
+    cookie_refresh = "1h"
+    cookie_expire = "168h"
+serviceAccount:
+  enabled: true
+  name: oauth2-google

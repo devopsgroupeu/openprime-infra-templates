@@ -1,0 +1,100 @@
+extraObjects:
+- apiVersion: opentelemetry.io/v1alpha1
+  kind: OpenTelemetryCollector
+  metadata:
+    name: opentelemetry
+    namespace: opentelemetry
+  spec:
+    mode: "deployment"
+    replicas: 1
+    config: |
+      receivers:
+        otlp:
+          protocols:
+            grpc:
+              endpoint: 0.0.0.0:4317
+            http:
+              endpoint: 0.0.0.0:4318
+      exporters:
+        debug:
+          verbosity: normal
+        otlp:
+          endpoint: tempo-distributor.monitoring.svc.cluster.local:4317
+          tls:
+            insecure: true
+      processors:
+        batch: {}
+        memory_limiter:
+          check_interval: 5s
+          limit_mib: 409
+          spike_limit_mib: 128
+      service:
+        telemetry:
+          logs:
+            encoding: console
+            level: debug
+          metrics:
+            readers:
+              - pull:
+                  exporter:
+                    prometheus:
+                      host: 0.0.0.0
+                      port: 8888
+        pipelines:
+          traces:
+            exporters:
+              - debug
+              - otlp
+            processors:
+              - memory_limiter
+              - batch
+            receivers:
+              - otlp
+
+- apiVersion: opentelemetry.io/v1alpha1
+  kind: OpenTelemetryCollector
+  metadata:
+    name: opentelemetry-sidecar
+    namespace: opentelemetry
+  spec:
+    mode: sidecar
+    config: |
+      receivers:
+        otlp:
+          protocols:
+            grpc:
+              endpoint: 0.0.0.0:4317
+            http:
+              endpoint: 0.0.0.0:4318
+      exporters:
+        debug:
+          verbosity: normal
+        otlp:
+          endpoint: tempo-gateway.monitoring.svc.cluster.local:4317
+          tls:
+            insecure: true
+      processors:
+        batch: {}
+        memory_limiter:
+          check_interval: 5s
+          limit_mib: 128
+          spike_limit_mib: 32
+      service:
+        telemetry:
+          metrics:
+            readers:
+              - pull:
+                  exporter:
+                    prometheus:
+                      host: 0.0.0.0
+                      port: 8888
+        pipelines:
+          traces:
+            exporters:
+              - otlp
+              - debug
+            processors:
+              - memory_limiter
+              - batch
+            receivers:
+              - otlp

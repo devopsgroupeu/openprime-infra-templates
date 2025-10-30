@@ -1,0 +1,99 @@
+extraObjects:
+
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    labels:
+      app.kubernetes.io/name: openprime-init
+    name: openprime-init
+    namespace: openprime-init
+  spec:
+    replicas: 1
+    revisionHistoryLimit: 1
+    selector:
+      matchLabels:
+        app.kubernetes.io/name: openprime-init
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/name: openprime-init
+      spec:
+        automountServiceAccountToken: false
+        imagePullSecrets:
+          - name: init-openprime-registry
+        containers:
+          - env:
+              - name: DEBUG_ZIP
+                value: '1'
+              - name: GIT_REPO_SSH
+                value: git@github.com:devopsgroupeu/openprime-app-of-apps.git
+              - name: GIT_BRANCH
+                value: main
+              - name: GIT_SSH_KEY
+                valueFrom:
+                  secretKeyRef:
+                    key: GIT_REPO_SSH
+                    name: init-openprime
+              - name: REPO_TOKEN_INPUT
+                value: git@github.com:devopsgroupeu/openprime-app-of-apps.git
+              - name: DOMAIN_TOKEN_INPUT
+                value: openprime.io
+              - name: APPS_GLOB
+                value: applications.yaml
+              - name: VALUES_SUBDIR
+                value: values
+            image: ghcr.io/devopsgroupeu/openprime-init:40cab0d0ea366ac0cd85e696a9cba3e2d43e6722
+            imagePullPolicy: Always
+            name: openprime-init
+            ports:
+              - containerPort: 8080
+                name: http
+                protocol: TCP
+            resources:
+              limits:
+                memory: 400Mi
+              requests:
+                cpu: 100m
+                memory: 100Mi
+ 
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app.kubernetes.io/name: openprime-init
+    name: openprime-init
+    namespace: openprime-init
+  spec:
+    ports:
+      - name: http
+        port: 8080
+        protocol: TCP
+        targetPort: 8080
+    selector:
+      app.kubernetes.io/name: openprime-init
+    type: ClusterIP
+
+- apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    name: openprime-init
+    namespace: openprime-init
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+  spec:
+    ingressClassName: nginx
+    rules:
+      - host: init.openprime.io
+        http:
+          paths:
+            - backend:
+                service:
+                  name: openprime-init
+                  port:
+                    number: 8080
+              path: /
+              pathType: Prefix
+    tls:
+    - hosts:
+      - init.openprime.io
+      secretName: init-openprime-io

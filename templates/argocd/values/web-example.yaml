@@ -1,0 +1,163 @@
+deployments:
+
+  web-example-sql:
+    image: mariadb:11.3
+    ports:
+      - name: http
+        port: 3306
+    extraServiceAccounts:
+      event-backup-k8s:
+        namespace: argo-workflows
+    roleRules:
+      - apiGroups: [""]
+        resources: ["pods"]
+        verbs: ["list", "get"]
+      - apiGroups: [""]
+        resources: ["pods/exec"]
+        verbs: ["create", "get"]
+    env:
+    - name: MARIADB_DATABASE
+      value: "web-example"
+    - name: MARIADB_USER
+      value: "web-example"
+    - name: MARIADB_PASSWORD
+      value: "web-example-password"
+    - name: MARIADB_ROOT_PASSWORD
+      value: "web-example-root-password"
+
+  web-example:
+    image: lukaspastva/web-baby:202108b3855453e39a66eca8bda05fe3fc671f76
+    annotations:
+      sidecar.opentelemetry.io/inject: "true"
+      instrumentation.opentelemetry.io/inject-nodejs: "web-example/opentelemetry"
+    resources:
+      limits:
+        memory: 200Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+    extraServiceAccounts:
+      event-backup-k8s:
+        namespace: argo-workflows
+    roleRules:
+      - apiGroups: [""]
+        resources: ["pods"]
+        verbs: ["list", "get"]
+      - apiGroups: [""]
+        resources: ["pods/exec"]
+        verbs: ["create", "get"]
+    ports:
+      - name: http
+        port: 8080
+        domains:
+          - "openprime.io"
+          - "www.openprime.io"
+        paths:
+          - "/"
+    env:
+      - name: DB_NAME
+        value: "web-example"
+      - name: DB_USER
+        value: "web-example"
+      - name: DB_PASSWORD
+        value: "web-example-password"
+      - name: DB_HOST
+        value: web-example-sql.web-example.svc.cluster.local
+
+extraObjects:
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: argo-event-role
+    rules:
+      - apiGroups:
+          - apps
+        resources:
+          - deployments
+        verbs:
+          - get
+          - list
+          - watch
+          - patch
+          - create
+          - update
+          - delete
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: argo-event-role
+    subjects:
+      - kind: ServiceAccount
+        name: event-stop
+        namespace: argo-workflows
+      - kind: ServiceAccount
+        name: event-deploy
+        namespace: argo-workflows
+    roleRef:
+      kind: Role
+      name: argo-event-role
+      apiGroup: rbac.authorization.k8s.io
+
+  # otel
+  - apiVersion: opentelemetry.io/v1alpha1
+    kind: Instrumentation
+    metadata:
+      name: opentelemetry
+      namespace: web-example
+      annotations:
+        argocd.argoproj.io/sync-wave: "0"
+    spec:
+      exporter:
+        endpoint: http://localhost:4318
+      propagators: [ tracecontext, baggage, b3 ]
+
+      nodejs: {}
+      java:   {}
+      python: {}
+
+      sampler:
+        type: parentbased_traceidratio
+        argument: "1.0" # TODO only for presentation "0.25"
+  - apiVersion: opentelemetry.io/v1alpha1
+    kind: OpenTelemetryCollector
+    metadata:
+      name: otel-sidecar
+      namespace: web-example
+      annotations:
+        argocd.argoproj.io/sync-wave: "0"
+    spec:
+      mode: sidecar
+      config: |
+        receivers:
+          otlp:
+            protocols:
+              grpc:
+                endpoint: 0.0.0.0:4317
+              http:
+                endpoint: 0.0.0.0:4318
+        exporters:
+          debug: null
+          otlp:
+            endpoint: tempo-gateway.monitoring.svc.cluster.local:4317
+            tls:
+              insecure: true
+        processors:
+          batch: {}
+        service:
+          telemetry:
+            metrics:
+              readers:
+                - pull:
+                    exporter:
+                      prometheus:
+                        host: 0.0.0.0
+                        port: 8888
+          pipelines:
+            traces:
+              exporters:
+                - otlp
+                - debug
+              processors:
+                - batch
+              receivers:
+                - otlp

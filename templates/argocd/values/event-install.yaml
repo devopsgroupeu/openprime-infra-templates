@@ -1,0 +1,50 @@
+name: install
+action: webhook
+description: "Event used to install new version of application into ArgoCD."
+parameters:
+  - name: chart
+    base64: false
+  - name: repo
+    base64: false
+  - name: version
+    base64: false
+  - name: release
+    base64: false 
+  - name: owner
+    base64: false       
+  - name: namespace
+    base64: false
+  - name: name
+    base64: false
+  - name: userValuesYaml
+    base64: true
+  - name: applicationCode
+    base64: false
+  - name: team
+    base64: false
+  - name: env
+    base64: false
+secretName: event
+workflowTemplates:
+- name: install
+  env:
+  - name: GIT_SSH_KEY
+    valueFrom:
+      secretKeyRef:
+        name: event
+        key: GIT_SSH_KEY
+  - name: GITOPS_REPO
+    valueFrom:
+      secretKeyRef:
+        name: event
+        key: GITOPS_REPO
+  - name: GIT_USER
+    valueFrom:
+      secretKeyRef:
+        name: event
+        key: GIT_USER
+  - name: GIT_EMAIL
+    valueFrom:
+      secretKeyRef:
+        name: event
+        key: GIT_EMAIL

@@ -1,0 +1,5 @@
+admissionWebhooks:
+  create: true
+manager:
+  featureGatesMap:
+    operator.sidecarcontainers.native: true
