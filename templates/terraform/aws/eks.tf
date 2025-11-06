@@ -76,39 +76,36 @@ module "eks" {
   version = "~> 21.0"
 
   name = local.cluster_name
-  # @param services.eks.kubernetesVersion
-  kubernetes_version = "1.33"
+  kubernetes_version = var.kubernetes_version
 
-  # @param services.eks.enableClusterCreatorAdminPermissions
-  enable_cluster_creator_admin_permissions = true
-  # @param services.eks.endpointPublicAccess
-  endpoint_public_access = true
-  authentication_mode    = "API"
-  enable_irsa            = true
+  enable_cluster_creator_admin_permissions = var.enable_cluster_creator_admin_permissions
+  endpoint_public_access = var.endpoint_public_access
+  authentication_mode    = var.authentication_mode
+  enable_irsa            = var.enable_irsa
 
   addons = {
     coredns = {
-      most_recent = true
+      most_recent = var.eks_addon_coredns_most_recent
     }
     eks-pod-identity-agent = {
-      most_recent    = true
-      before_compute = true
+      most_recent    = var.eks_addon_pod_identity_most_recent
+      before_compute = var.eks_addon_pod_identity_before_compute
     }
     kube-proxy = {
-      most_recent = true
+      most_recent = var.eks_addon_kube_proxy_most_recent
     }
     vpc-cni = {
       service_account_role_arn = module.vpc_cni_irsa_role.iam_role_arn
-      most_recent              = true
-      before_compute           = true
+      most_recent              = var.eks_addon_vpc_cni_most_recent
+      before_compute           = var.eks_addon_vpc_cni_before_compute
     }
     aws-ebs-csi-driver = {
       service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
-      most_recent              = true
+      most_recent              = var.eks_addon_ebs_csi_most_recent
     }
     aws-efs-csi-driver = {
       service_account_role_arn = module.efs_csi_irsa_role.iam_role_arn
-      most_recent              = true
+      most_recent              = var.eks_addon_efs_csi_most_recent
     }
   }
 
@@ -121,15 +118,13 @@ module "eks" {
       ami_type                       = var.default_node_group_ami_type
       instance_types                 = var.default_node_group_instance_types
       capacity_type                  = var.default_node_group_capacity_type
-      use_latest_ami_release_version = true
+      use_latest_ami_release_version = var.default_node_group_use_latest_ami
 
-      iam_role_additional_policies = {
-        AmazonEBSCSIDriverPolicy = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
-      }
+      iam_role_additional_policies = var.default_node_group_iam_additional_policies
 
-      min_size     = 1
-      max_size     = var.default_node_group_nodes_count
-      desired_size = var.default_node_group_nodes_count
+      min_size     = var.default_node_group_min_size
+      max_size     = var.default_node_group_max_size
+      desired_size = var.default_node_group_desired_size
 
       labels = {
         Name = "default"

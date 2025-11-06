@@ -29,8 +29,8 @@ module "ecr" {
   for_each                          = toset(var.ecr_repositories)
   repository_type                   = var.ecr_repository_type
   repository_name                   = each.value
-  repository_read_write_access_arns = [data.aws_caller_identity.current.arn]
-  repository_encryption_type        = "AES256"
+  repository_read_write_access_arns = var.ecr_repository_read_write_access_arns
+  repository_encryption_type        = var.ecr_repository_encryption_type
   repository_image_tag_mutability   = var.ecr_image_tag_mutability
 
   ## Image scanning configuration
@@ -40,16 +40,16 @@ module "ecr" {
   repository_lifecycle_policy = jsonencode({
     rules = [
       {
-        rulePriority = 1,
-        description  = "Keep last 25 images",
+        rulePriority = var.ecr_lifecycle_policy_rule_priority,
+        description  = var.ecr_lifecycle_policy_description,
         selection = {
-          tagStatus     = "tagged",
-          tagPrefixList = ["v"],
-          countType     = "imageCountMoreThan",
-          countNumber   = 25
+          tagStatus     = var.ecr_lifecycle_policy_tag_status,
+          tagPrefixList = var.ecr_lifecycle_policy_tag_prefix_list,
+          countType     = var.ecr_lifecycle_policy_count_type,
+          countNumber   = var.ecr_lifecycle_policy_count_number
         },
         action = {
-          type = "expire"
+          type = var.ecr_lifecycle_policy_action_type
         }
       }
     ]

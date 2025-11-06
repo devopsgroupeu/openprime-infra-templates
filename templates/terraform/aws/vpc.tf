@@ -25,16 +25,13 @@ module "vpc" {
   intra_subnets    = var.create_intra_subnets ? [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k + 52)] : []
   database_subnets = var.create_database_subnets ? [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k + 56)] : []
 
-  # @param vpc.enableDnsHostnames
-  enable_dns_hostnames = true
-  # @param vpc.enableDnsSupport
-  enable_dns_support     = true
+  enable_dns_hostnames = var.enable_dns_hostnames
+  enable_dns_support   = var.enable_dns_support
   enable_nat_gateway     = local.nat_gateway.enable_nat_gateway
   single_nat_gateway     = local.nat_gateway.single_nat_gateway
   one_nat_gateway_per_az = local.nat_gateway.one_nat_gateway_per_az
 
-  # @param vpc.create_database_subnet_group
-  create_database_subnet_group = true
+  create_database_subnet_group = var.create_database_subnet_group
 
   public_subnet_tags = merge({
     "kubernetes.io/cluster/${local.cluster_name}" = "shared"

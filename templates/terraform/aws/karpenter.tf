@@ -5,14 +5,12 @@ module "karpenter" {
 
   cluster_name = module.eks.cluster_name
 
-  node_iam_role_use_name_prefix   = false
+  node_iam_role_use_name_prefix   = var.karpenter_node_iam_role_use_name_prefix
   node_iam_role_name              = "${data.aws_caller_identity.current.account_id}-${lower(local.cluster_name)}-karpenter"
-  create_pod_identity_association = true
+  create_pod_identity_association = var.karpenter_create_pod_identity_association
 
   ## Used to attach additional IAM policies to the Karpenter node IAM role
-  node_iam_role_additional_policies = {
-    AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-  }
+  node_iam_role_additional_policies = var.karpenter_node_iam_role_additional_policies
 }
 
 resource "local_file" "karpenter" {
