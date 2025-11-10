@@ -876,3 +876,227 @@ variable "waf_sampled_requests_enabled" {
   description = "Whether to enable sampled requests for WAF"
   default     = true
 }
+
+# -------------------------------------------------------------------
+# S3
+# -------------------------------------------------------------------
+
+variable "s3_buckets" {
+  description = "List of S3 buckets to create with their configurations"
+  type = list(object({
+    name                     = string
+    versioning_enabled       = optional(bool, false)
+    encryption_type          = optional(string, "AES256")
+    kms_key_id               = optional(string, null)
+    bucket_key_enabled       = optional(bool, true)
+    block_public_acls        = optional(bool, true)
+    block_public_policy      = optional(bool, true)
+    ignore_public_acls       = optional(bool, true)
+    restrict_public_buckets  = optional(bool, true)
+    logging_enabled          = optional(bool, false)
+    logging_target_bucket    = optional(string, null)
+    logging_prefix           = optional(string, "logs/")
+    control_object_ownership = optional(bool, true)
+    object_ownership         = optional(string, "BucketOwnerEnforced")
+    attach_policy            = optional(bool, false)
+    policy                   = optional(string, null)
+    lifecycle_rules          = optional(list(any), [])
+    cors_rules               = optional(list(any), [])
+  }))
+  default = []
+}
+
+# -------------------------------------------------------------------
+# LAMBDA
+# -------------------------------------------------------------------
+
+variable "lambda_functions" {
+  description = "List of Lambda functions to create"
+  type = list(object({
+    name                           = string
+    description                    = optional(string, null)
+    handler                        = optional(string, "index.handler")
+    runtime                        = optional(string, null)
+    memory_size                    = optional(number, null)
+    timeout                        = optional(number, null)
+    ephemeral_storage_size         = optional(number, 512)
+    package_path                   = optional(string, null)
+    s3_bucket                      = optional(string, null)
+    s3_key                         = optional(string, null)
+    create_package                 = optional(bool, false)
+    environment_variables          = optional(map(string), {})
+    vpc_subnet_ids                 = optional(list(string), null)
+    vpc_security_group_ids         = optional(list(string), null)
+    create_role                    = optional(bool, true)
+    role_name                      = optional(string, null)
+    attach_cloudwatch_logs_policy  = optional(bool, true)
+    layers                         = optional(list(string), [])
+    reserved_concurrent_executions = optional(number, -1)
+    dlq_arn                        = optional(string, null)
+    tracing_mode                   = optional(string, "PassThrough")
+    log_retention_days             = optional(number, 7)
+  }))
+  default = []
+}
+
+variable "lambda_default_runtime" {
+  type        = string
+  description = "Default runtime for Lambda functions"
+  default     = "nodejs18.x"
+}
+
+variable "lambda_default_memory" {
+  type        = number
+  description = "Default memory allocation for Lambda functions (MB)"
+  default     = 256
+}
+
+variable "lambda_default_timeout" {
+  type        = number
+  description = "Default timeout for Lambda functions (seconds)"
+  default     = 30
+}
+
+# -------------------------------------------------------------------
+# SQS
+# -------------------------------------------------------------------
+
+variable "sqs_queues" {
+  description = "List of SQS queues to create"
+  type = list(object({
+    name                              = string
+    fifo_queue                        = optional(bool, false)
+    content_based_deduplication       = optional(bool, false)
+    deduplication_scope               = optional(string, "queue")
+    fifo_throughput_limit             = optional(string, "perQueue")
+    visibility_timeout_seconds        = optional(number, null)
+    message_retention_seconds         = optional(number, null)
+    max_message_size                  = optional(number, 262144)
+    delay_seconds                     = optional(number, 0)
+    receive_wait_time_seconds         = optional(number, 0)
+    create_dlq                        = optional(bool, false)
+    dlq_message_retention_seconds     = optional(number, 1209600)
+    max_receive_count                 = optional(number, 3)
+    sse_enabled                       = optional(bool, true)
+    kms_key_id                        = optional(string, null)
+    kms_data_key_reuse_period_seconds = optional(number, 300)
+  }))
+  default = []
+}
+
+variable "sqs_default_visibility_timeout" {
+  type        = number
+  description = "Default visibility timeout for SQS queues (seconds)"
+  default     = 30
+}
+
+variable "sqs_default_message_retention" {
+  type        = number
+  description = "Default message retention period for SQS queues (seconds)"
+  default     = 345600
+}
+
+# -------------------------------------------------------------------
+# SNS
+# -------------------------------------------------------------------
+
+variable "sns_topics" {
+  description = "List of SNS topics to create"
+  type = list(object({
+    name                        = string
+    display_name                = optional(string, null)
+    kms_master_key_id           = optional(string, null)
+    delivery_policy             = optional(string, null)
+    subscriptions               = optional(map(any), {})
+    fifo_topic                  = optional(bool, false)
+    content_based_deduplication = optional(bool, false)
+    data_protection_policy      = optional(string, null)
+  }))
+  default = []
+}
+
+variable "sns_default_kms_key_id" {
+  type        = string
+  description = "Default KMS key ID for SNS topic encryption"
+  default     = null
+}
+
+# -------------------------------------------------------------------
+# CLOUDFRONT
+# -------------------------------------------------------------------
+
+variable "cloudfront_distributions" {
+  description = "List of CloudFront distributions to create"
+  type = list(object({
+    name                    = string
+    comment                 = optional(string, null)
+    enabled                 = optional(bool, true)
+    is_ipv6_enabled         = optional(bool, true)
+    price_class             = optional(string, null)
+    retain_on_delete        = optional(bool, false)
+    wait_for_deployment     = optional(bool, true)
+    default_origin_id       = optional(string, "default")
+    origins                 = optional(list(any), [])
+    default_cache_behavior  = optional(map(any), {})
+    ordered_cache_behaviors = optional(list(any), [])
+    viewer_certificate      = optional(map(any), {})
+    geo_restriction         = optional(map(any), {})
+    web_acl_id              = optional(string, null)
+    custom_error_responses  = optional(list(any), [])
+    logging_enabled         = optional(bool, false)
+    logging_bucket          = optional(string, null)
+    logging_prefix          = optional(string, "cloudfront/")
+    logging_include_cookies = optional(bool, false)
+  }))
+  default = []
+}
+
+variable "cloudfront_default_price_class" {
+  type        = string
+  description = "Default price class for CloudFront distributions"
+  default     = "PriceClass_100"
+}
+
+variable "cloudfront_default_waf_enabled" {
+  type        = bool
+  description = "Whether to enable WAF by default for CloudFront distributions"
+  default     = false
+}
+
+# -------------------------------------------------------------------
+# ROUTE53
+# -------------------------------------------------------------------
+
+variable "route53_hosted_zones" {
+  description = "List of Route53 hosted zones to create"
+  type = list(object({
+    name       = string
+    comment    = optional(string, null)
+    vpc_id     = optional(string, null)
+    vpc_region = optional(string, null)
+  }))
+  default = []
+}
+
+variable "route53_record_sets" {
+  description = "List of Route53 record sets to create"
+  type = list(object({
+    zone_name                    = string
+    zone_id                      = optional(string, null)
+    name                         = optional(string, "")
+    type                         = optional(string, "A")
+    ttl                          = optional(number, 300)
+    records                      = optional(list(string), [])
+    alias_name                   = optional(string, null)
+    alias_zone_id                = optional(string, null)
+    alias_evaluate_target_health = optional(bool, false)
+    set_identifier               = optional(string, null)
+    weight                       = optional(number, null)
+    continent                    = optional(string, null)
+    country                      = optional(string, null)
+    subdivision                  = optional(string, null)
+    failover                     = optional(string, null)
+    health_check_id              = optional(string, null)
+  }))
+  default = []
+}

@@ -39,6 +39,10 @@ enable_dns_hostnames = true
 enable_dns_support = true
 # @param services.vpc.createDatabaseSubnetGroup
 create_database_subnet_group = true
+# @param services.vpc.enableVpnGateway
+enable_vpn_gateway = false
+# @param services.vpc.enableFlowLogs
+enable_flow_logs = false
 
 # -------------------------------------------------------------------
 # EKS
@@ -92,23 +96,10 @@ eks_addon_vpc_cni_before_compute = true
 eks_addon_ebs_csi_most_recent = true
 # @param services.eks.addonEfsCsiMostRecent
 eks_addon_efs_csi_most_recent = true
-
-# -------------------------------------------------------------------
-# KARPENTER
-# -------------------------------------------------------------------
-
-# @param karpenter.defaultNodepoolArch
+# @param services.eks.karpenterNodepoolArch
 karpenter_nodepool_arch = "arm64"
-# @param karpenter.defaultNodepoolCapacityType
+# @param services.eks.karpenterNodepoolCapacityType
 karpenter_nodepool_capacity_type = "spot"
-# @param karpenter.nodeIamRoleUseNamePrefix
-karpenter_node_iam_role_use_name_prefix = false
-# @param karpenter.createPodIdentityAssociation
-karpenter_create_pod_identity_association = true
-# @param karpenter.nodeIamRoleAdditionalPolicies
-karpenter_node_iam_role_additional_policies = {
-  AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-}
 
 # -------------------------------------------------------------------
 # MSK
@@ -135,11 +126,69 @@ rds_major_engine_version = "15"
 rds_family = "postgres15"
 # @param services.rds.instanceClass
 rds_instance_class = "db.t3.micro"
+# @param services.rds.allocatedStorage
+rds_allocated_storage = 20
+# @param services.rds.maxAllocatedStorage
+rds_max_allocated_storage = 50
+# @param services.rds.multiAz
+rds_multi_az = true
+# @param services.rds.backupRetention
+rds_backup_retention_period = 7
+# @param services.rds.backupWindow
+rds_backup_window = "03:00-06:00"
+# @param services.rds.maintenanceWindow
+rds_maintenance_window = "Mon:00:00-Mon:03:00"
+# @param services.rds.deletionProtection
+rds_deletion_protection = false
+# @param services.rds.skipFinalSnapshot
+rds_skip_final_snapshot = true
+# @param services.rds.applyImmediately
+rds_apply_immediately = false
+# @param services.rds.autoMinorVersionUpgrade
+rds_auto_minor_version_upgrade = true
+# @param services.rds.publiclyAccessible
+rds_publicly_accessible = false
+# @param services.rds.iamDatabaseAuthenticationEnabled
+rds_iam_database_authentication_enabled = true
+# @param services.rds.manageMasterUserPassword
+rds_manage_master_user_password = false
+# @param services.rds.performanceInsights
+rds_performance_insights_enabled = false
+# @param services.rds.performanceInsightsRetentionPeriod
+rds_performance_insights_retention_period = 7
+# @param services.rds.monitoringInterval
+rds_monitoring_interval = 60
+# @param services.rds.deleteAutomatedBackups
+rds_delete_automated_backups = true
 
 # @param services.aurora.engine
 aurora_engine = "aurora-postgresql"
 # @param services.aurora.engineVersion
 aurora_engine_version = "15.8"
+# @param services.aurora.instances
+aurora_instances = { one = {} }
+# @param services.aurora.serverlessv2MinCapacity
+aurora_serverlessv2_min_capacity = 0
+# @param services.aurora.serverlessv2MaxCapacity
+aurora_serverlessv2_max_capacity = 10
+# @param services.aurora.serverlessv2SecondsUntilAutoPause
+aurora_serverlessv2_seconds_until_auto_pause = 3600
+# @param services.aurora.backupRetention
+aurora_backup_retention_period = 7
+# @param services.aurora.deletionProtection
+aurora_deletion_protection = false
+# @param services.aurora.enableHttpEndpoint
+aurora_enable_http_endpoint = true
+# @param services.aurora.iamDatabaseAuthenticationEnabled
+aurora_iam_database_authentication_enabled = true
+# @param services.aurora.monitoringInterval
+aurora_monitoring_interval = 60
+# @param services.aurora.applyImmediately
+aurora_apply_immediately = true
+# @param services.aurora.skipFinalSnapshot
+aurora_skip_final_snapshot = true
+# @param services.aurora.deleteAutomatedBackups
+aurora_delete_automated_backups = true
 
 # -------------------------------------------------------------------
 # OpenSearch
@@ -163,19 +212,59 @@ opensearch_ebs_volume_size = 64
 opensearch_custom_endpoint_enabled = false
 # @param services.opensearch.masterUserName
 opensearch_master_user_name = "admin"
+# @param services.opensearch.dedicatedMasterEnabled
+opensearch_dedicated_master_enabled = false
+# @param services.opensearch.dedicatedMasterType
+opensearch_dedicated_master_type = "t3.small.search"
+# @param services.opensearch.dedicatedMasterCount
+opensearch_dedicated_master_count = 0
+# @param services.opensearch.nodeToNodeEncryption
+opensearch_node_to_node_encryption = true
+# @param services.opensearch.enforceHttps
+opensearch_enforce_https = true
+# @param services.opensearch.tlsSecurityPolicy
+opensearch_tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+# @param services.opensearch.advancedSecurityEnabled
+opensearch_advanced_security_enabled = true
+# @param services.opensearch.internalUserDatabaseEnabled
+opensearch_internal_user_database_enabled = true
+# @param services.opensearch.createAccessPolicy
+opensearch_create_access_policy = true
+# @param services.opensearch.ipAddressType
+opensearch_ip_address_type = "dualstack"
+# @param services.opensearch.allowExplicitIndex
+opensearch_allow_explicit_index = "true"
 
 # -------------------------------------------------------------------
 # ECR
 # -------------------------------------------------------------------
 
 # @param services.ecr.repositories
-ecr_repositories = ["example-app"]
+ecr_repositories = []
 # @param services.ecr.repositoryType
 ecr_repository_type = "private"
 # @param services.ecr.imageTagMutability
 ecr_image_tag_mutability = "IMMUTABLE"
+# @param services.ecr.repositoryEncryptionType
+ecr_repository_encryption_type = "AES256"
+# @param services.ecr.repositoryReadWriteAccessArns
+ecr_repository_read_write_access_arns = []
 # @param services.ecr.createLifecyclePolicy
 ecr_create_lifecycle_policy = true
+# @param services.ecr.lifecyclePolicyRulePriority
+ecr_lifecycle_policy_rule_priority = 1
+# @param services.ecr.lifecyclePolicyDescription
+ecr_lifecycle_policy_description = "Keep last 25 images"
+# @param services.ecr.lifecyclePolicyTagStatus
+ecr_lifecycle_policy_tag_status = "tagged"
+# @param services.ecr.lifecyclePolicyTagPrefixList
+ecr_lifecycle_policy_tag_prefix_list = ["v"]
+# @param services.ecr.lifecyclePolicyCountType
+ecr_lifecycle_policy_count_type = "imageCountMoreThan"
+# @param services.ecr.lifecyclePolicyCountNumber
+ecr_lifecycle_policy_count_number = 25
+# @param services.ecr.lifecyclePolicyActionType
+ecr_lifecycle_policy_action_type = "expire"
 # @param services.ecr.enableScanning
 ecr_enable_scanning = true
 # @param services.ecr.scanType
@@ -184,8 +273,6 @@ ecr_scan_type = "BASIC"
 ecr_enable_replication = false
 # @param services.ecr.replicationDestinations
 ecr_replication_destinations = []
-# @param services.ecr.repositoryEncryptionType
-ecr_repository_encryption_type = "AES256"
 
 # -------------------------------------------------------------------
 # WAF
@@ -203,3 +290,63 @@ waf_cloudwatch_metrics_enabled = true
 waf_metric_name = "WAF-metrics"
 # @param services.waf.sampledRequestsEnabled
 waf_sampled_requests_enabled = true
+
+# -------------------------------------------------------------------
+# S3
+# -------------------------------------------------------------------
+
+# @param services.s3.buckets
+s3_buckets = []
+
+# -------------------------------------------------------------------
+# LAMBDA
+# -------------------------------------------------------------------
+
+# @param services.lambda.functions
+lambda_functions = []
+# @param services.lambda.defaultRuntime
+lambda_default_runtime = "nodejs18.x"
+# @param services.lambda.defaultMemory
+lambda_default_memory = 256
+# @param services.lambda.defaultTimeout
+lambda_default_timeout = 30
+
+# -------------------------------------------------------------------
+# SQS
+# -------------------------------------------------------------------
+
+# @param services.sqs.queues
+sqs_queues = []
+# @param services.sqs.defaultVisibilityTimeout
+sqs_default_visibility_timeout = 30
+# @param services.sqs.defaultMessageRetention
+sqs_default_message_retention = 345600
+
+# -------------------------------------------------------------------
+# SNS
+# -------------------------------------------------------------------
+
+# @param services.sns.topics
+sns_topics = []
+# @param services.sns.defaultKmsKeyId
+sns_default_kms_key_id = null
+
+# -------------------------------------------------------------------
+# CLOUDFRONT
+# -------------------------------------------------------------------
+
+# @param services.cloudfront.distributions
+cloudfront_distributions = []
+# @param services.cloudfront.priceClass
+cloudfront_default_price_class = "PriceClass_100"
+# @param services.cloudfront.wafEnabled
+cloudfront_default_waf_enabled = false
+
+# -------------------------------------------------------------------
+# ROUTE53
+# -------------------------------------------------------------------
+
+# @param services.route53.hostedZones
+route53_hosted_zones = []
+# @param services.route53.recordSets
+route53_record_sets = []

@@ -1,4 +1,4 @@
-# @section karpenter.enabled begin
+# @section services.eks.karpenterEnabled begin
 module "karpenter" {
   source  = "terraform-aws-modules/eks/aws//modules/karpenter"
   version = "~> 21.0"
@@ -25,4 +25,4 @@ resource "local_file" "karpenter" {
   )
   filename = trimsuffix("${path.module}/../../argocd/support-resources/karpenter.yaml.tftpl", ".tftpl")
 }
-# @section karpenter.enabled end
+# @section services.eks.karpenterEnabled end
