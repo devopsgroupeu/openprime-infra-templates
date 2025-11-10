@@ -9,14 +9,25 @@ module "opensearch" {
   ip_address_type      = var.opensearch_ip_address_type
 
   cluster_config = {
-    instance_count = var.opensearch_instance_count
-    instance_type  = var.opensearch_instance_type
+    instance_count           = var.opensearch_instance_count
+    instance_type            = var.opensearch_instance_type
+    dedicated_master_enabled = var.opensearch_dedicated_master_enabled
+    dedicated_master_type    = var.opensearch_dedicated_master_enabled ? var.opensearch_dedicated_master_type : null
+    dedicated_master_count   = var.opensearch_dedicated_master_enabled ? var.opensearch_dedicated_master_count : null
   }
 
   ebs_options = {
     ebs_enabled = var.opensearch_ebs_enabled
     volume_type = var.opensearch_ebs_volume_type
     volume_size = var.opensearch_ebs_volume_size
+  }
+
+  encrypt_at_rest = {
+    enabled = true
+  }
+
+  node_to_node_encryption = {
+    enabled = var.opensearch_node_to_node_encryption
   }
 
   advanced_options = {

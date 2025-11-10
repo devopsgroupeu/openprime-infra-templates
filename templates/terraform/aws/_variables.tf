@@ -125,6 +125,18 @@ variable "create_database_subnet_group" {
   default     = true
 }
 
+variable "enable_vpn_gateway" {
+  description = "Enable VPN gateway for the VPC"
+  type        = bool
+  default     = false
+}
+
+variable "enable_flow_logs" {
+  description = "Enable VPC Flow Logs"
+  type        = bool
+  default     = false
+}
+
 # -------------------------------------------------------------------
 # EKS
 # -------------------------------------------------------------------
@@ -192,12 +204,6 @@ variable "default_node_group_max_size" {
 variable "default_node_group_desired_size" {
   type        = number
   description = "Desired count of nodes in default node group"
-  default     = 2
-}
-
-variable "default_node_group_nodes_count" {
-  type        = number
-  description = "Count of nodes in default node group (deprecated, use min/max/desired instead)"
   default     = 2
 }
 
@@ -445,12 +451,6 @@ variable "rds_instance_class" {
   description = "The instance class for the RDS instance (e.g., db.t3.micro)"
 }
 
-variable "rds_create_db_subnet_group" {
-  type        = bool
-  description = "Whether to create DB subnet group"
-  default     = true
-}
-
 variable "rds_apply_immediately" {
   type        = bool
   description = "Apply changes immediately"
@@ -466,18 +466,6 @@ variable "rds_deletion_protection" {
 variable "rds_skip_final_snapshot" {
   type        = bool
   description = "Skip final snapshot on deletion"
-  default     = true
-}
-
-variable "rds_create_db_option_group" {
-  type        = bool
-  description = "Whether to create DB option group"
-  default     = true
-}
-
-variable "rds_create_db_parameter_group" {
-  type        = bool
-  description = "Whether to create DB parameter group"
   default     = true
 }
 
@@ -509,12 +497,6 @@ variable "rds_manage_master_user_password" {
   type        = bool
   description = "Whether RDS manages the master user password"
   default     = false
-}
-
-variable "rds_storage_encrypted" {
-  type        = bool
-  description = "Enable storage encryption"
-  default     = true
 }
 
 variable "rds_allocated_storage" {
@@ -553,22 +535,10 @@ variable "rds_performance_insights_retention_period" {
   default     = 7
 }
 
-variable "rds_create_monitoring_role" {
-  type        = bool
-  description = "Whether to create monitoring IAM role"
-  default     = true
-}
-
 variable "rds_monitoring_interval" {
   type        = number
   description = "Monitoring interval in seconds"
   default     = 60
-}
-
-variable "rds_create_cloudwatch_log_group" {
-  type        = bool
-  description = "Whether to create CloudWatch log group"
-  default     = true
 }
 
 variable "rds_maintenance_window" {
@@ -597,22 +567,10 @@ variable "aurora_engine_version" {
   description = "The version of the Aurora MySQL engine to use. (e.g. for MySQL - 8.0.mysql_aurora.3.08.0; for PostgreSQL - 15.8)"
 }
 
-variable "aurora_instance_class" {
-  type        = string
-  default     = "db.serverless"
-  description = "The instance class for the Aurora serverless database (e.g., db.serverless)"
-}
-
-variable "aurora_engine_mode" {
-  type        = string
-  description = "Engine mode for Aurora cluster"
-  default     = "provisioned"
-}
-
 variable "aurora_instances" {
   type        = map(any)
   description = "Map of Aurora instances"
-  default     = {
+  default = {
     one = {}
   }
 }
@@ -635,27 +593,9 @@ variable "aurora_serverlessv2_seconds_until_auto_pause" {
   default     = 3600
 }
 
-variable "aurora_create_db_subnet_group" {
-  type        = bool
-  description = "Whether to create DB subnet group for Aurora"
-  default     = true
-}
-
 variable "aurora_enable_http_endpoint" {
   type        = bool
   description = "Enable HTTP endpoint for Aurora"
-  default     = true
-}
-
-variable "aurora_manage_master_user_password" {
-  type        = bool
-  description = "Whether Aurora manages the master user password"
-  default     = false
-}
-
-variable "aurora_storage_encrypted" {
-  type        = bool
-  description = "Enable storage encryption for Aurora"
   default     = true
 }
 
@@ -665,22 +605,10 @@ variable "aurora_iam_database_authentication_enabled" {
   default     = true
 }
 
-variable "aurora_create_monitoring_role" {
-  type        = bool
-  description = "Whether to create monitoring IAM role for Aurora"
-  default     = true
-}
-
 variable "aurora_monitoring_interval" {
   type        = number
   description = "Monitoring interval in seconds for Aurora"
   default     = 60
-}
-
-variable "aurora_create_cloudwatch_log_group" {
-  type        = bool
-  description = "Whether to create CloudWatch log group for Aurora"
-  default     = true
 }
 
 variable "aurora_apply_immediately" {
@@ -831,6 +759,34 @@ variable "opensearch_internal_user_database_enabled" {
   default     = true
 }
 
+variable "opensearch_dedicated_master_enabled" {
+  type        = bool
+  description = "Whether dedicated master nodes are enabled"
+  default     = false
+}
+
+variable "opensearch_dedicated_master_type" {
+  type        = string
+  description = "Instance type for dedicated master nodes"
+  default     = "t3.small.search"
+}
+
+variable "opensearch_dedicated_master_count" {
+  type        = number
+  description = "Number of dedicated master nodes"
+  default     = 0
+  validation {
+    condition     = var.opensearch_dedicated_master_count == 0 || var.opensearch_dedicated_master_count == 3 || var.opensearch_dedicated_master_count == 5
+    error_message = "Dedicated master count must be 0, 3, or 5"
+  }
+}
+
+variable "opensearch_node_to_node_encryption" {
+  type        = bool
+  description = "Whether to enable node-to-node encryption"
+  default     = true
+}
+
 # -------------------------------------------------------------------
 # MSK
 # -------------------------------------------------------------------
@@ -872,7 +828,7 @@ variable "karpenter_create_pod_identity_association" {
 variable "karpenter_node_iam_role_additional_policies" {
   type        = map(string)
   description = "Additional IAM policies for Karpenter node role"
-  default     = {
+  default = {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   }
 }

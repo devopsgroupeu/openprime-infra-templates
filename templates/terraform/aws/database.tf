@@ -45,14 +45,14 @@ module "rds" {
   identifier = local.rds_identifier
 
   subnet_ids             = module.vpc.database_subnets
-  create_db_subnet_group = var.rds_create_db_subnet_group
+  create_db_subnet_group = true
   vpc_security_group_ids = [module.rds_sg.security_group_id]
 
   apply_immediately         = var.rds_apply_immediately
   deletion_protection       = var.rds_deletion_protection
   skip_final_snapshot       = var.rds_skip_final_snapshot
-  create_db_option_group    = var.rds_create_db_option_group
-  create_db_parameter_group = var.rds_create_db_parameter_group
+  create_db_option_group    = true
+  create_db_parameter_group = true
   delete_automated_backups  = var.rds_delete_automated_backups
   backup_retention_period   = var.rds_backup_retention_period
 
@@ -79,10 +79,10 @@ module "rds" {
 
   performance_insights_enabled          = var.rds_performance_insights_enabled
   performance_insights_retention_period = var.rds_performance_insights_retention_period
-  create_monitoring_role                = var.rds_create_monitoring_role
+  create_monitoring_role                = true
   monitoring_interval                   = var.rds_monitoring_interval
   enabled_cloudwatch_logs_exports       = local.cloudwatch_logs_exports
-  create_cloudwatch_log_group           = var.rds_create_cloudwatch_log_group
+  create_cloudwatch_log_group           = true
 
   maintenance_window = var.rds_maintenance_window
   backup_window      = var.rds_backup_window
@@ -131,7 +131,7 @@ module "aurora" {
   vpc_id                 = module.vpc.vpc_id
   vpc_security_group_ids = [module.aurora_sg.security_group_id]
   subnets                = module.vpc.database_subnets
-  create_db_subnet_group = var.aurora_create_db_subnet_group
+  create_db_subnet_group = true
   enable_http_endpoint   = var.aurora_enable_http_endpoint
 
   master_username             = local.aurora_username
@@ -144,7 +144,7 @@ module "aurora" {
   iam_database_authentication_enabled = var.aurora_iam_database_authentication_enabled
 
   create_monitoring_role          = true
-  monitoring_interval             = 60
+  monitoring_interval             = var.aurora_monitoring_interval
   enabled_cloudwatch_logs_exports = local.cloudwatch_logs_exports
   create_cloudwatch_log_group     = true
 

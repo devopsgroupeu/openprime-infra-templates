@@ -33,9 +33,6 @@ module "ecr" {
   repository_encryption_type        = var.ecr_repository_encryption_type
   repository_image_tag_mutability   = var.ecr_image_tag_mutability
 
-  ## Image scanning configuration
-  repository_image_scan_on_push = var.ecr_enable_scanning
-
   create_lifecycle_policy = var.ecr_create_lifecycle_policy
   repository_lifecycle_policy = jsonencode({
     rules = [

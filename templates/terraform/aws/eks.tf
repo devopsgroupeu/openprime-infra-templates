@@ -75,13 +75,13 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 21.0"
 
-  name = local.cluster_name
+  name               = local.cluster_name
   kubernetes_version = var.kubernetes_version
 
   enable_cluster_creator_admin_permissions = var.enable_cluster_creator_admin_permissions
-  endpoint_public_access = var.endpoint_public_access
-  authentication_mode    = var.authentication_mode
-  enable_irsa            = var.enable_irsa
+  endpoint_public_access                   = var.endpoint_public_access
+  authentication_mode                      = var.authentication_mode
+  enable_irsa                              = var.enable_irsa
 
   addons = {
     coredns = {

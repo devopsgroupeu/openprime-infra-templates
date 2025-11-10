@@ -7,11 +7,11 @@ module "msk" {
   source  = "terraform-aws-modules/msk-kafka-cluster/aws"
   version = "~> 2.13"
 
-  name = local.msk_cluster_name
-  kafka_version = var.msk_kafka_version
+  name                   = local.msk_cluster_name
+  kafka_version          = var.msk_kafka_version
   number_of_broker_nodes = var.msk_number_of_broker_nodes
 
-  broker_node_client_subnets = module.vpc.private_subnets
+  broker_node_client_subnets  = module.vpc.private_subnets
   broker_node_instance_type   = var.msk_broker_node_instance_type
   broker_node_security_groups = [module.security_group.security_group_id]
 
