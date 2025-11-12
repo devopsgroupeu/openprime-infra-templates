@@ -1,7 +1,7 @@
 # @section services.s3.enabled begin
 module "s3_buckets" {
   source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "~> 4.0"
+  version = "~> 5.8"
 
   for_each = { for idx, bucket in var.s3_buckets : bucket.name => bucket }
 

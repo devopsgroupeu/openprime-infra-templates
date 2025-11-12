@@ -27,12 +27,12 @@ module "loki_s3_buckets" {
 }
 
 module "loki_role" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.59"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version = "~> 6.2"
 
-  role_name = local.general_name
+  name = local.general_name
 
-  role_policy_arns = {
+  policies = {
     LokiPolicy = module.loki_policy.arn
   }
 

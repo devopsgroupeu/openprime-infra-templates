@@ -348,5 +348,3 @@ cloudfront_default_waf_enabled = false
 
 # @param services.route53.hostedZones
 route53_hosted_zones = []
-# @param services.route53.recordSets
-route53_record_sets = []

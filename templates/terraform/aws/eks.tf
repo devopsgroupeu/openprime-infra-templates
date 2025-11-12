@@ -9,10 +9,10 @@ locals {
 }
 
 module "ebs_csi_irsa_role" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.59"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version = "~> 6.2"
 
-  role_name             = "${local.cluster_name}-ebs-csi"
+  name                  = "${local.cluster_name}-ebs-csi"
   attach_ebs_csi_policy = true
 
   oidc_providers = {
@@ -24,10 +24,10 @@ module "ebs_csi_irsa_role" {
 }
 
 module "efs_csi_irsa_role" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.59"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version = "~> 6.2"
 
-  role_name             = "${local.cluster_name}-efs-csi"
+  name                  = "${local.cluster_name}-efs-csi"
   attach_efs_csi_policy = true
 
   oidc_providers = {
@@ -39,10 +39,10 @@ module "efs_csi_irsa_role" {
 }
 
 module "vpc_cni_irsa_role" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.59"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version = "~> 6.2"
 
-  role_name             = "${local.cluster_name}-vpc-cni"
+  name                  = "${local.cluster_name}-vpc-cni"
   attach_vpc_cni_policy = true
   vpc_cni_enable_ipv4   = true
 
@@ -56,10 +56,10 @@ module "vpc_cni_irsa_role" {
 
 # @section aws_load_balancer_controller.enable begin
 module "alb_controller_irsa_role" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.59"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  version = "~> 6.2"
 
-  role_name                              = "${local.cluster_name}-aws-lb-controller"
+  name                                   = "${local.cluster_name}-aws-lb-controller"
   attach_load_balancer_controller_policy = true
 
   oidc_providers = {

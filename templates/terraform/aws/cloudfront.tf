@@ -1,7 +1,7 @@
 # @section services.cloudfront.enabled begin
 module "cloudfront_distributions" {
   source  = "terraform-aws-modules/cloudfront/aws"
-  version = "~> 3.0"
+  version = "~> 5.0"
 
   for_each = { for idx, dist in var.cloudfront_distributions : dist.name => dist }
 
@@ -44,7 +44,7 @@ module "cloudfront_distributions" {
     restriction_type = "none"
   })
 
-  web_acl_id = lookup(each.value, "web_acl_id", var.cloudfront_default_waf_enabled ? var.waf_arn : null)
+  web_acl_id = lookup(each.value, "web_acl_id", var.cloudfront_default_waf_enabled ? aws_wafv2_web_acl.waf : null)
 
   custom_error_response = lookup(each.value, "custom_error_responses", [])
 

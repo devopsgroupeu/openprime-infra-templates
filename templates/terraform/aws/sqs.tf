@@ -1,7 +1,7 @@
 # @section services.sqs.enabled begin
 module "sqs_queues" {
   source  = "terraform-aws-modules/sqs/aws"
-  version = "~> 4.0"
+  version = "~> 5.1"
 
   for_each = { for idx, queue in var.sqs_queues : queue.name => queue }
 

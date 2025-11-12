@@ -1,7 +1,7 @@
 # @section services.sns.enabled begin
 module "sns_topics" {
   source  = "terraform-aws-modules/sns/aws"
-  version = "~> 6.0"
+  version = "~> 7.0"
 
   for_each = { for idx, topic in var.sns_topics : topic.name => topic }
 

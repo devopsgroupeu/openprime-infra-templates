@@ -907,6 +907,101 @@ variable "s3_buckets" {
 }
 
 # -------------------------------------------------------------------
+# ELASTICACHE
+# -------------------------------------------------------------------
+
+# @param services.elasticache.engine
+variable "elasticache_engine" {
+  description = "ElastiCache engine (redis, valkey, memcached)"
+  type        = string
+  default     = "valkey"
+}
+
+# @param services.elasticache.engineVersion
+variable "elasticache_engine_version" {
+  description = "ElastiCache engine version"
+  type        = string
+  default     = "7.2"
+}
+
+# @param services.elasticache.nodeType
+variable "elasticache_node_type" {
+  description = "ElastiCache node instance type"
+  type        = string
+  default     = "cache.t4g.small"
+}
+
+# @param services.elasticache.numCacheNodes
+variable "elasticache_num_cache_nodes" {
+  description = "Number of cache nodes (for non-cluster mode)"
+  type        = number
+  default     = 1
+}
+
+# @param services.elasticache.parameterGroupFamily
+variable "elasticache_parameter_group_family" {
+  description = "ElastiCache parameter group family"
+  type        = string
+  default     = "valkey7"
+}
+
+# @param services.elasticache.transitEncryption
+variable "elasticache_transit_encryption_enabled" {
+  description = "Enable encryption in transit"
+  type        = bool
+  default     = true
+}
+
+# @param services.elasticache.atRestEncryption
+variable "elasticache_at_rest_encryption_enabled" {
+  description = "Enable encryption at rest"
+  type        = bool
+  default     = true
+}
+
+# @param services.elasticache.authTokenEnabled
+variable "elasticache_auth_token_enabled" {
+  description = "Enable auth token (password) protection"
+  type        = bool
+  default     = true
+}
+
+# @param services.elasticache.maintenanceWindow
+variable "elasticache_maintenance_window" {
+  description = "Maintenance window for ElastiCache"
+  type        = string
+  default     = "sun:05:00-sun:09:00"
+}
+
+# @param services.elasticache.snapshotRetentionLimit
+variable "elasticache_snapshot_retention_limit" {
+  description = "Number of days to retain snapshots"
+  type        = number
+  default     = 5
+}
+
+# @param services.elasticache.snapshotWindow
+variable "elasticache_snapshot_window" {
+  description = "Daily time range for snapshots"
+  type        = string
+  default     = "03:00-05:00"
+}
+
+# @param services.elasticache.automaticFailover
+variable "elasticache_automatic_failover_enabled" {
+  description = "Enable automatic failover (requires multiple nodes)"
+  type        = bool
+  default     = false
+}
+
+# @param services.elasticache.multiAz
+variable "elasticache_multi_az_enabled" {
+  description = "Enable Multi-AZ with automatic failover"
+  type        = bool
+  default     = false
+}
+
+# -------------------------------------------------------------------
 # LAMBDA
 # -------------------------------------------------------------------
 
@@ -1067,36 +1162,80 @@ variable "cloudfront_default_waf_enabled" {
 # ROUTE53
 # -------------------------------------------------------------------
 
+# @param services.route53.hostedZones
 variable "route53_hosted_zones" {
-  description = "List of Route53 hosted zones to create"
+  description = "List of Route53 hosted zones to create with their records"
   type = list(object({
-    name       = string
-    comment    = optional(string, null)
-    vpc_id     = optional(string, null)
-    vpc_region = optional(string, null)
+    name              = string
+    comment           = optional(string, null)
+    vpc_id            = optional(string, null)
+    vpc_region        = optional(string, null)
+    force_destroy     = optional(bool, false)
+    delegation_set_id = optional(string, null)
+    enable_dnssec     = optional(bool, false)
+
+    # Records within this zone
+    records = optional(map(object({
+      name            = optional(string)
+      full_name       = optional(string)
+      type            = string
+      ttl             = optional(number, 300)
+      records         = optional(list(string), [])
+      set_identifier  = optional(string, null)
+      allow_overwrite = optional(bool, false)
+      health_check_id = optional(string, null)
+
+      # Alias configuration
+      alias = optional(object({
+        name                   = string
+        zone_id                = string
+        evaluate_target_health = optional(bool, false)
+      }), null)
+
+      # Weighted routing
+      weighted_routing_policy = optional(object({
+        weight = number
+      }), null)
+
+      # Geolocation routing
+      geolocation_routing_policy = optional(object({
+        continent   = optional(string)
+        country     = optional(string)
+        subdivision = optional(string)
+      }), null)
+
+      # Geoproximity routing
+      geoproximity_routing_policy = optional(object({
+        aws_region       = optional(string)
+        bias             = optional(number)
+        local_zone_group = optional(string)
+        coordinates = optional(list(object({
+          latitude  = number
+          longitude = number
+        })))
+      }), null)
+
+      # Failover routing
+      failover_routing_policy = optional(object({
+        type = string
+      }), null)
+
+      # Latency routing
+      latency_routing_policy = optional(object({
+        region = string
+      }), null)
+
+      # CIDR routing
+      cidr_routing_policy = optional(object({
+        collection_id = string
+        location_name = string
+      }), null)
+
+      # Multivalue answer
+      multivalue_answer_routing_policy = optional(bool, null)
+    })), {})
   }))
   default = []
 }
 
-variable "route53_record_sets" {
-  description = "List of Route53 record sets to create"
-  type = list(object({
-    zone_name                    = string
-    zone_id                      = optional(string, null)
-    name                         = optional(string, "")
-    type                         = optional(string, "A")
-    ttl                          = optional(number, 300)
-    records                      = optional(list(string), [])
-    alias_name                   = optional(string, null)
-    alias_zone_id                = optional(string, null)
-    alias_evaluate_target_health = optional(bool, false)
-    set_identifier               = optional(string, null)
-    weight                       = optional(number, null)
-    continent                    = optional(string, null)
-    country                      = optional(string, null)
-    subdivision                  = optional(string, null)
-    failover                     = optional(string, null)
-    health_check_id              = optional(string, null)
-  }))
-  default = []
-}
+

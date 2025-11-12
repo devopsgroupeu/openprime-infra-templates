@@ -1,7 +1,7 @@
 # @section services.lambda.enabled begin
 module "lambda_functions" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "~> 7.0"
+  version = "~> 8.1"
 
   for_each = { for idx, func in var.lambda_functions : func.name => func }
 

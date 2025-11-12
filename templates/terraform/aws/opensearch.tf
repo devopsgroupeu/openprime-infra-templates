@@ -1,7 +1,7 @@
 # @section services.opensearch.enabled begin
 module "opensearch" {
   source  = "terraform-aws-modules/opensearch/aws"
-  version = "~> 2.0"
+  version = "~> 2.3"
 
   domain_name          = var.opensearch_domain_name
   engine_version       = var.opensearch_version
