@@ -26,31 +26,31 @@ module "ecr" {
   source  = "terraform-aws-modules/ecr/aws"
   version = "~> 3.1"
 
-  for_each                          = toset(var.ecr_repositories)
-  repository_type                   = var.ecr_repository_type
-  repository_name                   = each.value
-  repository_read_write_access_arns = var.ecr_repository_read_write_access_arns
-  repository_encryption_type        = var.ecr_repository_encryption_type
-  repository_image_tag_mutability   = var.ecr_image_tag_mutability
+  for_each = toset(var.ecr_repository_names)
 
+  repository_type                 = var.ecr_repository_type
+  repository_name                 = each.value
+  repository_encryption_type      = var.ecr_encryption_type
+  repository_image_tag_mutability = var.ecr_image_tag_mutability
+
+  ## Lifecycle policy configuration
   create_lifecycle_policy = var.ecr_create_lifecycle_policy
-  repository_lifecycle_policy = jsonencode({
+  repository_lifecycle_policy = var.ecr_create_lifecycle_policy ? jsonencode({
     rules = [
       {
-        rulePriority = var.ecr_lifecycle_policy_rule_priority,
-        description  = var.ecr_lifecycle_policy_description,
+        rulePriority = 1,
+        description  = "Keep last ${var.ecr_lifecycle_policy_max_images} images",
         selection = {
-          tagStatus     = var.ecr_lifecycle_policy_tag_status,
-          tagPrefixList = var.ecr_lifecycle_policy_tag_prefix_list,
-          countType     = var.ecr_lifecycle_policy_count_type,
-          countNumber   = var.ecr_lifecycle_policy_count_number
+          tagStatus   = "any",
+          countType   = "imageCountMoreThan",
+          countNumber = var.ecr_lifecycle_policy_max_images
         },
         action = {
-          type = var.ecr_lifecycle_policy_action_type
+          type = "expire"
         }
       }
     ]
-  })
+  }) : null
 
   tags = merge({
     "Name" = each.value
@@ -71,7 +71,8 @@ module "ecr_registry" {
 
   ## Registry Scanning Configuration
   manage_registry_scanning_configuration = var.ecr_enable_scanning
-  registry_scan_type                     = var.ecr_enable_scanning ? var.ecr_scan_type : "BASIC"
+  registry_scan_type                     = var.ecr_scan_type
+
   registry_scan_rules = var.ecr_enable_scanning ? [
     {
       scan_frequency = "SCAN_ON_PUSH"
@@ -99,8 +100,6 @@ module "ecr_registry" {
     }
   ] : []
 
-  tags = merge({
-    "Name" = "${var.global_prefix}-ecr-registry"
-  }, var.global_tags)
+  tags = var.global_tags
 }
 # @section services.ecr.enabled end

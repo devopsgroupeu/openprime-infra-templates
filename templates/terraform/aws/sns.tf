@@ -3,24 +3,23 @@ module "sns_topics" {
   source  = "terraform-aws-modules/sns/aws"
   version = "~> 7.0"
 
-  for_each = { for idx, topic in var.sns_topics : topic.name => topic }
+  for_each = toset(var.sns_topic_names)
 
-  name         = "${var.global_prefix}${each.value.name}-${var.environment_short}"
-  display_name = lookup(each.value, "display_name", each.value.name)
+  name         = "${var.global_prefix}-${each.value}-${var.environment_short}"
+  display_name = each.value
 
-  kms_master_key_id = lookup(each.value, "kms_master_key_id", var.sns_default_kms_key_id)
+  kms_master_key_id = var.sns_enable_encryption ? var.sns_kms_key_id : null
 
-  delivery_policy = lookup(each.value, "delivery_policy", null)
+  delivery_policy = null
+  subscriptions   = {}
 
-  subscriptions = lookup(each.value, "subscriptions", {})
+  fifo_topic                  = var.sns_fifo_topics
+  content_based_deduplication = var.sns_content_based_deduplication
 
-  fifo_topic                  = lookup(each.value, "fifo_topic", false)
-  content_based_deduplication = lookup(each.value, "content_based_deduplication", false)
-
-  data_protection_policy = lookup(each.value, "data_protection_policy", null)
+  data_protection_policy = null
 
   tags = merge({
-    Name = each.value.name
+    Name = each.value
   }, var.global_tags)
 }
 # @section services.sns.enabled end

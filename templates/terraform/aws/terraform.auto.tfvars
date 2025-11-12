@@ -236,39 +236,56 @@ opensearch_ip_address_type = "dualstack"
 opensearch_allow_explicit_index = "true"
 
 # -------------------------------------------------------------------
+# ELASTICACHE
+# -------------------------------------------------------------------
+
+# @param services.elasticache.engine
+elasticache_engine = "valkey"
+# @param services.elasticache.engineVersion
+elasticache_engine_version = "7.2"
+# @param services.elasticache.nodeType
+elasticache_node_type = "cache.t4g.small"
+# @param services.elasticache.numCacheNodes
+elasticache_num_cache_nodes = 1
+# @param services.elasticache.parameterGroupFamily
+elasticache_parameter_group_family = "valkey7"
+# @param services.elasticache.transitEncryption
+elasticache_transit_encryption_enabled = true
+# @param services.elasticache.atRestEncryption
+elasticache_at_rest_encryption_enabled = true
+# @param services.elasticache.authTokenEnabled
+elasticache_auth_token_enabled = true
+# @param services.elasticache.maintenanceWindow
+elasticache_maintenance_window = "sun:05:00-sun:06:00"
+# @param services.elasticache.snapshotRetentionLimit
+elasticache_snapshot_retention_limit = 7
+# @param services.elasticache.snapshotWindow
+elasticache_snapshot_window = "03:00-05:00"
+# @param services.elasticache.automaticFailover
+elasticache_automatic_failover_enabled = false
+# @param services.elasticache.multiAz
+elasticache_multi_az_enabled = false
+
+# -------------------------------------------------------------------
 # ECR
 # -------------------------------------------------------------------
 
-# @param services.ecr.repositories
-ecr_repositories = []
+# @param services.ecr.repositoryNames
+ecr_repository_names = []
 # @param services.ecr.repositoryType
 ecr_repository_type = "private"
 # @param services.ecr.imageTagMutability
 ecr_image_tag_mutability = "IMMUTABLE"
-# @param services.ecr.repositoryEncryptionType
-ecr_repository_encryption_type = "AES256"
-# @param services.ecr.repositoryReadWriteAccessArns
-ecr_repository_read_write_access_arns = []
-# @param services.ecr.createLifecyclePolicy
-ecr_create_lifecycle_policy = true
-# @param services.ecr.lifecyclePolicyRulePriority
-ecr_lifecycle_policy_rule_priority = 1
-# @param services.ecr.lifecyclePolicyDescription
-ecr_lifecycle_policy_description = "Keep last 25 images"
-# @param services.ecr.lifecyclePolicyTagStatus
-ecr_lifecycle_policy_tag_status = "tagged"
-# @param services.ecr.lifecyclePolicyTagPrefixList
-ecr_lifecycle_policy_tag_prefix_list = ["v"]
-# @param services.ecr.lifecyclePolicyCountType
-ecr_lifecycle_policy_count_type = "imageCountMoreThan"
-# @param services.ecr.lifecyclePolicyCountNumber
-ecr_lifecycle_policy_count_number = 25
-# @param services.ecr.lifecyclePolicyActionType
-ecr_lifecycle_policy_action_type = "expire"
+# @param services.ecr.encryptionType
+ecr_encryption_type = "AES256"
 # @param services.ecr.enableScanning
 ecr_enable_scanning = true
 # @param services.ecr.scanType
 ecr_scan_type = "BASIC"
+# @param services.ecr.createLifecyclePolicy
+ecr_create_lifecycle_policy = true
+# @param services.ecr.lifecyclePolicyMaxImages
+ecr_lifecycle_policy_max_images = 25
 # @param services.ecr.enableReplication
 ecr_enable_replication = false
 # @param services.ecr.replicationDestinations
@@ -297,18 +314,6 @@ waf_sampled_requests_enabled = true
 
 # @param services.s3.bucketNames
 s3_bucket_names = []
-# @param services.s3.versioningEnabled
-s3_versioning_enabled = false
-# @param services.s3.encryptionType
-s3_encryption_type = "AES256"
-# @param services.s3.blockPublicAccess
-s3_block_public_access = true
-# @param services.s3.loggingEnabled
-s3_logging_enabled = false
-# @param services.s3.loggingTargetBucket
-s3_logging_target_bucket = null
-# @param services.s3.objectOwnership
-s3_object_ownership = "BucketOwnerEnforced"
 
 # -------------------------------------------------------------------
 # LAMBDA
@@ -316,22 +321,6 @@ s3_object_ownership = "BucketOwnerEnforced"
 
 # @param services.lambda.functionNames
 lambda_function_names = []
-# @param services.lambda.defaultRuntime
-lambda_default_runtime = "nodejs18.x"
-# @param services.lambda.defaultMemory
-lambda_default_memory = 256
-# @param services.lambda.defaultTimeout
-lambda_default_timeout = 30
-# @param services.lambda.defaultHandler
-lambda_default_handler = "index.handler"
-# @param services.lambda.ephemeralStorageSize
-lambda_ephemeral_storage_size = 512
-# @param services.lambda.logRetentionDays
-lambda_log_retention_days = 7
-# @param services.lambda.enableVpc
-lambda_enable_vpc = false
-# @param services.lambda.enableXrayTracing
-lambda_enable_xray_tracing = false
 
 # -------------------------------------------------------------------
 # SQS

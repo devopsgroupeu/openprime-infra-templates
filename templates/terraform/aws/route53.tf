@@ -3,30 +3,30 @@ module "route53_zones" {
   source  = "terraform-aws-modules/route53/aws"
   version = "~> 6.1"
 
-  for_each = { for idx, zone in var.route53_hosted_zones : zone.name => zone }
+  for_each = toset(var.route53_zone_names)
 
   create_zone = true
-  name        = each.value.name
-  comment     = lookup(each.value, "comment", "Managed by Terraform - Hosted zone for ${each.value.name}")
+  name        = each.value
+  comment     = "Managed by Terraform - Hosted zone for ${each.value}"
 
   ## Private zone configuration
-  vpc = lookup(each.value, "vpc_id", null) != null ? {
+  vpc = var.route53_private_zones ? {
     default = {
-      vpc_id     = lookup(each.value, "vpc_id")
-      vpc_region = lookup(each.value, "vpc_region", var.region)
+      vpc_id     = module.vpc.vpc_id
+      vpc_region = var.region
     }
   } : null
 
-  force_destroy = lookup(each.value, "force_destroy", false)
+  force_destroy = var.route53_force_destroy
 
   ## Delegation set (for public zones only)
-  delegation_set_id = lookup(each.value, "delegation_set_id", null)
+  delegation_set_id = null
 
-  enable_dnssec = lookup(each.value, "enable_dnssec", false)
-  records       = lookup(each.value, "records", {})
+  enable_dnssec = var.route53_enable_dnssec
+  records       = {}
 
   tags = merge({
-    Name = each.value.name
+    Name = each.value
   }, var.global_tags)
 }
 # @section services.route53.enabled end

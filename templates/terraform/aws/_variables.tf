@@ -303,52 +303,78 @@ variable "default_node_group_iam_additional_policies" {
 # ECR
 # -------------------------------------------------------------------
 
-variable "ecr_repositories" {
-  description = "List of ECR repositories to create"
+variable "ecr_repository_names" {
+  description = "List of ECR repository names to create"
   type        = list(string)
   default     = []
 }
 
-variable "ecr_image_tag_mutability" {
-  description = "Set the mutability of image tags. Valid values are 'MUTABLE' and 'IMMUTABLE'"
+variable "ecr_repository_type" {
+  description = "Repository type: private or public (applies to all repositories)"
   type        = string
+  default     = "private"
+  validation {
+    condition     = contains(["private", "public"], var.ecr_repository_type)
+    error_message = "Must be either 'private' or 'public'"
+  }
+}
+
+variable "ecr_image_tag_mutability" {
+  description = "Image tag mutability setting (applies to all repositories)"
+  type        = string
+  default     = "IMMUTABLE"
   validation {
     condition     = contains(["MUTABLE", "IMMUTABLE"], var.ecr_image_tag_mutability)
     error_message = "Must be either 'MUTABLE' or 'IMMUTABLE'"
   }
-  default = "IMMUTABLE"
+}
+
+variable "ecr_encryption_type" {
+  description = "Encryption type: AES256 or KMS (applies to all repositories)"
+  type        = string
+  default     = "AES256"
+  validation {
+    condition     = contains(["AES256", "KMS"], var.ecr_encryption_type)
+    error_message = "Must be either 'AES256' or 'KMS'"
+  }
 }
 
 variable "ecr_enable_scanning" {
-  description = "Enable image scanning on push for ECR repositories"
+  description = "Enable vulnerability scanning on push"
   type        = bool
   default     = true
 }
 
 variable "ecr_scan_type" {
-  description = "The type of scanning to perform on images. Valid values are 'BASIC' and 'ENHANCED'"
+  description = "Scanning type: BASIC or ENHANCED"
   type        = string
+  default     = "BASIC"
   validation {
     condition     = contains(["BASIC", "ENHANCED"], var.ecr_scan_type)
     error_message = "Must be either 'BASIC' or 'ENHANCED'"
   }
-  default = "BASIC"
+}
+
+variable "ecr_create_lifecycle_policy" {
+  description = "Enable lifecycle policy for automatic image cleanup"
+  type        = bool
+  default     = true
+}
+
+variable "ecr_lifecycle_policy_max_images" {
+  description = "Maximum number of images to keep per repository"
+  type        = number
+  default     = 25
+  validation {
+    condition     = var.ecr_lifecycle_policy_max_images >= 1 && var.ecr_lifecycle_policy_max_images <= 1000
+    error_message = "Must be between 1 and 1000"
+  }
 }
 
 variable "ecr_enable_replication" {
-  description = "Enable ECR replication configuration"
+  description = "Enable ECR cross-region replication"
   type        = bool
   default     = false
-}
-
-variable "ecr_repository_type" {
-  description = "Set repository type. Valid values are 'private' or 'public'"
-  type        = string
-  validation {
-    condition     = contains(["private", "public"], var.ecr_repository_type)
-    error_message = "Must be either 'private' or 'public'"
-  }
-  default = "private"
 }
 
 variable "ecr_replication_destinations" {
@@ -357,20 +383,8 @@ variable "ecr_replication_destinations" {
   default     = []
 }
 
-variable "ecr_create_lifecycle_policy" {
-  description = "Enable lifecycle policy for ECR repositories"
-  type        = bool
-  default     = true
-}
-
-variable "ecr_repository_read_write_access_arns" {
-  description = "List of ARNs for read/write access to ECR repositories"
-  type        = list(string)
-  default     = []
-}
-
 variable "ecr_repository_encryption_type" {
-  description = "Encryption type for ECR repositories. Must be 'KMS' or 'AES256'."
+  description = "Use ecr_repositories object. Encryption type for ECR repositories. Must be 'KMS' or 'AES256'."
   type        = string
   default     = "AES256"
   validation {
@@ -380,43 +394,43 @@ variable "ecr_repository_encryption_type" {
 }
 
 variable "ecr_lifecycle_policy_rule_priority" {
-  description = "Priority for lifecycle policy rule"
+  description = "Use ecr_repositories object. Priority for lifecycle policy rule"
   type        = number
   default     = 1
 }
 
 variable "ecr_lifecycle_policy_description" {
-  description = "Description for lifecycle policy"
+  description = "Use ecr_repositories object. Description for lifecycle policy"
   type        = string
   default     = "Keep last 25 images"
 }
 
 variable "ecr_lifecycle_policy_tag_status" {
-  description = "Tag status for lifecycle policy"
+  description = "Use ecr_repositories object. Tag status for lifecycle policy"
   type        = string
   default     = "tagged"
 }
 
 variable "ecr_lifecycle_policy_tag_prefix_list" {
-  description = "Tag prefix list for lifecycle policy"
+  description = "Use ecr_repositories object. Tag prefix list for lifecycle policy"
   type        = list(string)
   default     = ["v"]
 }
 
 variable "ecr_lifecycle_policy_count_type" {
-  description = "Count type for lifecycle policy"
+  description = "Use ecr_repositories object. Count type for lifecycle policy"
   type        = string
   default     = "imageCountMoreThan"
 }
 
 variable "ecr_lifecycle_policy_count_number" {
-  description = "Count number for lifecycle policy"
+  description = "Use ecr_repositories object. Count number for lifecycle policy"
   type        = number
   default     = 25
 }
 
 variable "ecr_lifecycle_policy_action_type" {
-  description = "Action type for lifecycle policy"
+  description = "Use ecr_repositories object. Action type for lifecycle policy"
   type        = string
   default     = "expire"
 }
@@ -888,48 +902,6 @@ variable "s3_bucket_names" {
   default     = []
 }
 
-# @param services.s3.versioningEnabled
-variable "s3_versioning_enabled" {
-  description = "Enable versioning for S3 buckets"
-  type        = bool
-  default     = false
-}
-
-# @param services.s3.encryptionType
-variable "s3_encryption_type" {
-  description = "Encryption type for S3 buckets (AES256 or aws:kms)"
-  type        = string
-  default     = "AES256"
-}
-
-# @param services.s3.blockPublicAccess
-variable "s3_block_public_access" {
-  description = "Block all public access to S3 buckets"
-  type        = bool
-  default     = true
-}
-
-# @param services.s3.loggingEnabled
-variable "s3_logging_enabled" {
-  description = "Enable access logging for S3 buckets"
-  type        = bool
-  default     = false
-}
-
-# @param services.s3.loggingTargetBucket
-variable "s3_logging_target_bucket" {
-  description = "Target bucket for S3 access logs"
-  type        = string
-  default     = null
-}
-
-# @param services.s3.objectOwnership
-variable "s3_object_ownership" {
-  description = "Object ownership setting for S3 buckets"
-  type        = string
-  default     = "BucketOwnerEnforced"
-}
-
 # -------------------------------------------------------------------
 # ELASTICACHE
 # -------------------------------------------------------------------
@@ -1034,62 +1006,6 @@ variable "lambda_function_names" {
   description = "List of Lambda function names to create"
   type        = list(string)
   default     = []
-}
-
-# @param services.lambda.defaultRuntime
-variable "lambda_default_runtime" {
-  type        = string
-  description = "Default runtime for Lambda functions"
-  default     = "nodejs18.x"
-}
-
-# @param services.lambda.defaultMemory
-variable "lambda_default_memory" {
-  type        = number
-  description = "Default memory allocation for Lambda functions (MB)"
-  default     = 256
-}
-
-# @param services.lambda.defaultTimeout
-variable "lambda_default_timeout" {
-  type        = number
-  description = "Default timeout for Lambda functions (seconds)"
-  default     = 30
-}
-
-# @param services.lambda.defaultHandler
-variable "lambda_default_handler" {
-  type        = string
-  description = "Default handler for Lambda functions"
-  default     = "index.handler"
-}
-
-# @param services.lambda.ephemeralStorageSize
-variable "lambda_ephemeral_storage_size" {
-  type        = number
-  description = "Ephemeral storage size for Lambda functions (MB)"
-  default     = 512
-}
-
-# @param services.lambda.logRetentionDays
-variable "lambda_log_retention_days" {
-  type        = number
-  description = "CloudWatch log retention period in days"
-  default     = 7
-}
-
-# @param services.lambda.enableVpc
-variable "lambda_enable_vpc" {
-  type        = bool
-  description = "Deploy Lambda functions in VPC"
-  default     = false
-}
-
-# @param services.lambda.enableXrayTracing
-variable "lambda_enable_xray_tracing" {
-  type        = bool
-  description = "Enable X-Ray tracing for Lambda functions"
-  default     = false
 }
 
 # -------------------------------------------------------------------
