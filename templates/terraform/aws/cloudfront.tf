@@ -12,10 +12,8 @@ module "cloudfront_distributions" {
   retain_on_delete    = lookup(each.value, "retain_on_delete", false)
   wait_for_deployment = lookup(each.value, "wait_for_deployment", true)
 
-  # Origin configuration
   origin = lookup(each.value, "origins", [])
 
-  # Default cache behavior
   default_cache_behavior = lookup(each.value, "default_cache_behavior", {
     target_origin_id       = lookup(each.value, "default_origin_id", "default")
     viewer_protocol_policy = "redirect-to-https"
@@ -36,26 +34,20 @@ module "cloudfront_distributions" {
     }
   })
 
-  # Ordered cache behaviors
   ordered_cache_behavior = lookup(each.value, "ordered_cache_behaviors", [])
 
-  # Viewer certificate
   viewer_certificate = lookup(each.value, "viewer_certificate", {
     cloudfront_default_certificate = true
   })
 
-  # Restrictions
   geo_restriction = lookup(each.value, "geo_restriction", {
     restriction_type = "none"
   })
 
-  # WAF
   web_acl_id = lookup(each.value, "web_acl_id", var.cloudfront_default_waf_enabled ? var.waf_arn : null)
 
-  # Custom error responses
   custom_error_response = lookup(each.value, "custom_error_responses", [])
 
-  # Logging
   logging_config = lookup(each.value, "logging_enabled", false) ? {
     bucket          = lookup(each.value, "logging_bucket", null)
     prefix          = lookup(each.value, "logging_prefix", "cloudfront/")

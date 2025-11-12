@@ -7,18 +7,15 @@ module "s3_buckets" {
 
   bucket = "${var.global_prefix}${each.value.name}-${var.environment_short}"
 
-  # Block public access
   block_public_acls       = lookup(each.value, "block_public_acls", true)
   block_public_policy     = lookup(each.value, "block_public_policy", true)
   ignore_public_acls      = lookup(each.value, "ignore_public_acls", true)
   restrict_public_buckets = lookup(each.value, "restrict_public_buckets", true)
 
-  # Versioning
   versioning = {
     enabled = lookup(each.value, "versioning_enabled", false)
   }
 
-  # Server-side encryption
   server_side_encryption_configuration = {
     rule = {
       apply_server_side_encryption_by_default = {
@@ -29,23 +26,18 @@ module "s3_buckets" {
     }
   }
 
-  # Lifecycle rules
   lifecycle_rule = lookup(each.value, "lifecycle_rules", [])
 
-  # Logging
   logging = lookup(each.value, "logging_enabled", false) ? {
     target_bucket = lookup(each.value, "logging_target_bucket", null)
     target_prefix = lookup(each.value, "logging_prefix", "logs/")
   } : {}
 
-  # CORS
   cors_rule = lookup(each.value, "cors_rules", [])
 
-  # Object ownership
   control_object_ownership = lookup(each.value, "control_object_ownership", true)
   object_ownership         = lookup(each.value, "object_ownership", "BucketOwnerEnforced")
 
-  # Attach policy
   attach_policy = lookup(each.value, "attach_policy", false)
   policy        = lookup(each.value, "policy", null)
 

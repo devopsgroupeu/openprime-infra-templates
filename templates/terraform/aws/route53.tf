@@ -42,32 +42,27 @@ module "route53_records" {
       ttl     = lookup(each.value, "ttl", 300)
       records = lookup(each.value, "records", [])
 
-      # Alias records
       alias = lookup(each.value, "alias_name", null) != null ? {
         name                   = lookup(each.value, "alias_name", null)
         zone_id                = lookup(each.value, "alias_zone_id", null)
         evaluate_target_health = lookup(each.value, "alias_evaluate_target_health", false)
       } : null
 
-      # Weighted routing policy
       set_identifier = lookup(each.value, "set_identifier", null)
       weighted_routing_policy = lookup(each.value, "weight", null) != null ? {
         weight = lookup(each.value, "weight", null)
       } : null
 
-      # Geolocation routing policy
       geolocation_routing_policy = lookup(each.value, "continent", null) != null || lookup(each.value, "country", null) != null ? {
         continent   = lookup(each.value, "continent", null)
         country     = lookup(each.value, "country", null)
         subdivision = lookup(each.value, "subdivision", null)
       } : null
 
-      # Failover routing policy
       failover_routing_policy = lookup(each.value, "failover", null) != null ? {
         type = lookup(each.value, "failover", null)
       } : null
 
-      # Health check
       health_check_id = lookup(each.value, "health_check_id", null)
     }
   ]
