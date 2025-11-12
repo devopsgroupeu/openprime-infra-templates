@@ -18,7 +18,6 @@ module "elasticache" {
   automatic_failover_enabled = var.elasticache_automatic_failover_enabled
   multi_az_enabled           = var.elasticache_multi_az_enabled
 
-  # Security Group
   vpc_id = module.vpc.vpc_id
   security_group_rules = {
     ingress_vpc = {
@@ -27,12 +26,10 @@ module "elasticache" {
     }
   }
 
-  # Subnet Group
   subnet_group_name        = "${var.global_prefix}-elasticache"
   subnet_group_description = "ElastiCache subnet group"
   subnet_ids               = module.vpc.private_subnets
 
-  # Parameter Group
   create_parameter_group      = true
   parameter_group_name        = "${var.global_prefix}-elasticache"
   parameter_group_family      = var.elasticache_parameter_group_family
