@@ -881,29 +881,53 @@ variable "waf_sampled_requests_enabled" {
 # S3
 # -------------------------------------------------------------------
 
-variable "s3_buckets" {
-  description = "List of S3 buckets to create with their configurations"
-  type = list(object({
-    name                     = string
-    versioning_enabled       = optional(bool, false)
-    encryption_type          = optional(string, "AES256")
-    kms_key_id               = optional(string, null)
-    bucket_key_enabled       = optional(bool, true)
-    block_public_acls        = optional(bool, true)
-    block_public_policy      = optional(bool, true)
-    ignore_public_acls       = optional(bool, true)
-    restrict_public_buckets  = optional(bool, true)
-    logging_enabled          = optional(bool, false)
-    logging_target_bucket    = optional(string, null)
-    logging_prefix           = optional(string, "logs/")
-    control_object_ownership = optional(bool, true)
-    object_ownership         = optional(string, "BucketOwnerEnforced")
-    attach_policy            = optional(bool, false)
-    policy                   = optional(string, null)
-    lifecycle_rules          = optional(list(any), [])
-    cors_rules               = optional(list(any), [])
-  }))
-  default = []
+# @param services.s3.bucketNames
+variable "s3_bucket_names" {
+  description = "List of S3 bucket names to create"
+  type        = list(string)
+  default     = []
+}
+
+# @param services.s3.versioningEnabled
+variable "s3_versioning_enabled" {
+  description = "Enable versioning for S3 buckets"
+  type        = bool
+  default     = false
+}
+
+# @param services.s3.encryptionType
+variable "s3_encryption_type" {
+  description = "Encryption type for S3 buckets (AES256 or aws:kms)"
+  type        = string
+  default     = "AES256"
+}
+
+# @param services.s3.blockPublicAccess
+variable "s3_block_public_access" {
+  description = "Block all public access to S3 buckets"
+  type        = bool
+  default     = true
+}
+
+# @param services.s3.loggingEnabled
+variable "s3_logging_enabled" {
+  description = "Enable access logging for S3 buckets"
+  type        = bool
+  default     = false
+}
+
+# @param services.s3.loggingTargetBucket
+variable "s3_logging_target_bucket" {
+  description = "Target bucket for S3 access logs"
+  type        = string
+  default     = null
+}
+
+# @param services.s3.objectOwnership
+variable "s3_object_ownership" {
+  description = "Object ownership setting for S3 buckets"
+  type        = string
+  default     = "BucketOwnerEnforced"
 }
 
 # -------------------------------------------------------------------
@@ -1005,114 +1029,186 @@ variable "elasticache_multi_az_enabled" {
 # LAMBDA
 # -------------------------------------------------------------------
 
-variable "lambda_functions" {
-  description = "List of Lambda functions to create"
-  type = list(object({
-    name                           = string
-    description                    = optional(string, null)
-    handler                        = optional(string, "index.handler")
-    runtime                        = optional(string, null)
-    memory_size                    = optional(number, null)
-    timeout                        = optional(number, null)
-    ephemeral_storage_size         = optional(number, 512)
-    package_path                   = optional(string, null)
-    s3_bucket                      = optional(string, null)
-    s3_key                         = optional(string, null)
-    create_package                 = optional(bool, false)
-    environment_variables          = optional(map(string), {})
-    vpc_subnet_ids                 = optional(list(string), null)
-    vpc_security_group_ids         = optional(list(string), null)
-    create_role                    = optional(bool, true)
-    role_name                      = optional(string, null)
-    attach_cloudwatch_logs_policy  = optional(bool, true)
-    layers                         = optional(list(string), [])
-    reserved_concurrent_executions = optional(number, -1)
-    dlq_arn                        = optional(string, null)
-    tracing_mode                   = optional(string, "PassThrough")
-    log_retention_days             = optional(number, 7)
-  }))
-  default = []
+# @param services.lambda.functionNames
+variable "lambda_function_names" {
+  description = "List of Lambda function names to create"
+  type        = list(string)
+  default     = []
 }
 
+# @param services.lambda.defaultRuntime
 variable "lambda_default_runtime" {
   type        = string
   description = "Default runtime for Lambda functions"
   default     = "nodejs18.x"
 }
 
+# @param services.lambda.defaultMemory
 variable "lambda_default_memory" {
   type        = number
   description = "Default memory allocation for Lambda functions (MB)"
   default     = 256
 }
 
+# @param services.lambda.defaultTimeout
 variable "lambda_default_timeout" {
   type        = number
   description = "Default timeout for Lambda functions (seconds)"
   default     = 30
 }
 
+# @param services.lambda.defaultHandler
+variable "lambda_default_handler" {
+  type        = string
+  description = "Default handler for Lambda functions"
+  default     = "index.handler"
+}
+
+# @param services.lambda.ephemeralStorageSize
+variable "lambda_ephemeral_storage_size" {
+  type        = number
+  description = "Ephemeral storage size for Lambda functions (MB)"
+  default     = 512
+}
+
+# @param services.lambda.logRetentionDays
+variable "lambda_log_retention_days" {
+  type        = number
+  description = "CloudWatch log retention period in days"
+  default     = 7
+}
+
+# @param services.lambda.enableVpc
+variable "lambda_enable_vpc" {
+  type        = bool
+  description = "Deploy Lambda functions in VPC"
+  default     = false
+}
+
+# @param services.lambda.enableXrayTracing
+variable "lambda_enable_xray_tracing" {
+  type        = bool
+  description = "Enable X-Ray tracing for Lambda functions"
+  default     = false
+}
+
 # -------------------------------------------------------------------
 # SQS
 # -------------------------------------------------------------------
 
-variable "sqs_queues" {
-  description = "List of SQS queues to create"
-  type = list(object({
-    name                              = string
-    fifo_queue                        = optional(bool, false)
-    content_based_deduplication       = optional(bool, false)
-    deduplication_scope               = optional(string, "queue")
-    fifo_throughput_limit             = optional(string, "perQueue")
-    visibility_timeout_seconds        = optional(number, null)
-    message_retention_seconds         = optional(number, null)
-    max_message_size                  = optional(number, 262144)
-    delay_seconds                     = optional(number, 0)
-    receive_wait_time_seconds         = optional(number, 0)
-    create_dlq                        = optional(bool, false)
-    dlq_message_retention_seconds     = optional(number, 1209600)
-    max_receive_count                 = optional(number, 3)
-    sse_enabled                       = optional(bool, true)
-    kms_key_id                        = optional(string, null)
-    kms_data_key_reuse_period_seconds = optional(number, 300)
-  }))
-  default = []
+# @param services.sqs.queueNames
+variable "sqs_queue_names" {
+  description = "List of SQS queue names to create"
+  type        = list(string)
+  default     = []
 }
 
-variable "sqs_default_visibility_timeout" {
+# @param services.sqs.fifoQueues
+variable "sqs_fifo_queues" {
+  description = "Enable FIFO queues"
+  type        = bool
+  default     = false
+}
+
+# @param services.sqs.contentBasedDeduplication
+variable "sqs_content_based_deduplication" {
+  description = "Enable content-based deduplication for FIFO queues"
+  type        = bool
+  default     = false
+}
+
+# @param services.sqs.visibilityTimeout
+variable "sqs_visibility_timeout" {
   type        = number
-  description = "Default visibility timeout for SQS queues (seconds)"
+  description = "Visibility timeout for SQS queues (seconds)"
   default     = 30
 }
 
-variable "sqs_default_message_retention" {
+# @param services.sqs.messageRetention
+variable "sqs_message_retention" {
   type        = number
-  description = "Default message retention period for SQS queues (seconds)"
+  description = "Message retention period for SQS queues (seconds, 60-1209600)"
   default     = 345600
+}
+
+# @param services.sqs.maxMessageSize
+variable "sqs_max_message_size" {
+  type        = number
+  description = "Maximum message size in bytes (1024-262144)"
+  default     = 262144
+}
+
+# @param services.sqs.delaySeconds
+variable "sqs_delay_seconds" {
+  type        = number
+  description = "Delay delivery of messages (0-900 seconds)"
+  default     = 0
+}
+
+# @param services.sqs.receiveWaitTime
+variable "sqs_receive_wait_time" {
+  type        = number
+  description = "Long polling wait time (0-20 seconds)"
+  default     = 0
+}
+
+# @param services.sqs.createDeadLetterQueue
+variable "sqs_create_dlq" {
+  description = "Create dead letter queue for each queue"
+  type        = bool
+  default     = false
+}
+
+# @param services.sqs.maxReceiveCount
+variable "sqs_max_receive_count" {
+  type        = number
+  description = "Max receive count before sending to DLQ"
+  default     = 3
+}
+
+# @param services.sqs.enableEncryption
+variable "sqs_enable_encryption" {
+  description = "Enable server-side encryption"
+  type        = bool
+  default     = true
 }
 
 # -------------------------------------------------------------------
 # SNS
 # -------------------------------------------------------------------
 
-variable "sns_topics" {
-  description = "List of SNS topics to create"
-  type = list(object({
-    name                        = string
-    display_name                = optional(string, null)
-    kms_master_key_id           = optional(string, null)
-    delivery_policy             = optional(string, null)
-    subscriptions               = optional(map(any), {})
-    fifo_topic                  = optional(bool, false)
-    content_based_deduplication = optional(bool, false)
-    data_protection_policy      = optional(string, null)
-  }))
-  default = []
+# @param services.sns.topicNames
+variable "sns_topic_names" {
+  description = "List of SNS topic names to create"
+  type        = list(string)
+  default     = []
 }
 
-variable "sns_default_kms_key_id" {
+# @param services.sns.fifoTopics
+variable "sns_fifo_topics" {
+  description = "Enable FIFO topics"
+  type        = bool
+  default     = false
+}
+
+# @param services.sns.contentBasedDeduplication
+variable "sns_content_based_deduplication" {
+  description = "Enable content-based deduplication for FIFO topics"
+  type        = bool
+  default     = false
+}
+
+# @param services.sns.enableEncryption
+variable "sns_enable_encryption" {
+  description = "Enable encryption for SNS topics"
+  type        = bool
+  default     = false
+}
+
+# @param services.sns.kmsKeyId
+variable "sns_kms_key_id" {
   type        = string
-  description = "Default KMS key ID for SNS topic encryption"
+  description = "KMS key ID for SNS topic encryption"
   default     = null
 }
 
@@ -1120,122 +1216,78 @@ variable "sns_default_kms_key_id" {
 # CLOUDFRONT
 # -------------------------------------------------------------------
 
-variable "cloudfront_distributions" {
-  description = "List of CloudFront distributions to create"
-  type = list(object({
-    name                    = string
-    comment                 = optional(string, null)
-    enabled                 = optional(bool, true)
-    is_ipv6_enabled         = optional(bool, true)
-    price_class             = optional(string, null)
-    retain_on_delete        = optional(bool, false)
-    wait_for_deployment     = optional(bool, true)
-    default_origin_id       = optional(string, "default")
-    origins                 = optional(list(any), [])
-    default_cache_behavior  = optional(map(any), {})
-    ordered_cache_behaviors = optional(list(any), [])
-    viewer_certificate      = optional(map(any), {})
-    geo_restriction         = optional(map(any), {})
-    web_acl_id              = optional(string, null)
-    custom_error_responses  = optional(list(any), [])
-    logging_enabled         = optional(bool, false)
-    logging_bucket          = optional(string, null)
-    logging_prefix          = optional(string, "cloudfront/")
-    logging_include_cookies = optional(bool, false)
-  }))
-  default = []
+# @param services.cloudfront.distributionNames
+variable "cloudfront_distribution_names" {
+  description = "List of CloudFront distribution names/aliases to create"
+  type        = list(string)
+  default     = []
 }
 
-variable "cloudfront_default_price_class" {
+# @param services.cloudfront.priceClass
+variable "cloudfront_price_class" {
   type        = string
-  description = "Default price class for CloudFront distributions"
+  description = "Price class for CloudFront distributions"
   default     = "PriceClass_100"
 }
 
-variable "cloudfront_default_waf_enabled" {
+# @param services.cloudfront.enableIpv6
+variable "cloudfront_enable_ipv6" {
   type        = bool
-  description = "Whether to enable WAF by default for CloudFront distributions"
+  description = "Enable IPv6 for CloudFront distributions"
+  default     = true
+}
+
+# @param services.cloudfront.enableWaf
+variable "cloudfront_enable_waf" {
+  type        = bool
+  description = "Enable WAF for CloudFront distributions"
   default     = false
+}
+
+# @param services.cloudfront.enableLogging
+variable "cloudfront_enable_logging" {
+  type        = bool
+  description = "Enable access logging for CloudFront distributions"
+  default     = false
+}
+
+# @param services.cloudfront.loggingBucket
+variable "cloudfront_logging_bucket" {
+  type        = string
+  description = "S3 bucket for CloudFront access logs"
+  default     = null
 }
 
 # -------------------------------------------------------------------
 # ROUTE53
 # -------------------------------------------------------------------
 
-# @param services.route53.hostedZones
-variable "route53_hosted_zones" {
-  description = "List of Route53 hosted zones to create with their records"
-  type = list(object({
-    name              = string
-    comment           = optional(string, null)
-    vpc_id            = optional(string, null)
-    vpc_region        = optional(string, null)
-    force_destroy     = optional(bool, false)
-    delegation_set_id = optional(string, null)
-    enable_dnssec     = optional(bool, false)
+# @param services.route53.zoneNames
+variable "route53_zone_names" {
+  description = "List of Route53 hosted zone domain names to create"
+  type        = list(string)
+  default     = []
+}
 
-    # Records within this zone
-    records = optional(map(object({
-      name            = optional(string)
-      full_name       = optional(string)
-      type            = string
-      ttl             = optional(number, 300)
-      records         = optional(list(string), [])
-      set_identifier  = optional(string, null)
-      allow_overwrite = optional(bool, false)
-      health_check_id = optional(string, null)
+# @param services.route53.privateZones
+variable "route53_private_zones" {
+  description = "Create private hosted zones (VPC-associated)"
+  type        = bool
+  default     = false
+}
 
-      # Alias configuration
-      alias = optional(object({
-        name                   = string
-        zone_id                = string
-        evaluate_target_health = optional(bool, false)
-      }), null)
+# @param services.route53.forceDestroy
+variable "route53_force_destroy" {
+  description = "Allow deletion of zones with records"
+  type        = bool
+  default     = false
+}
 
-      # Weighted routing
-      weighted_routing_policy = optional(object({
-        weight = number
-      }), null)
-
-      # Geolocation routing
-      geolocation_routing_policy = optional(object({
-        continent   = optional(string)
-        country     = optional(string)
-        subdivision = optional(string)
-      }), null)
-
-      # Geoproximity routing
-      geoproximity_routing_policy = optional(object({
-        aws_region       = optional(string)
-        bias             = optional(number)
-        local_zone_group = optional(string)
-        coordinates = optional(list(object({
-          latitude  = number
-          longitude = number
-        })))
-      }), null)
-
-      # Failover routing
-      failover_routing_policy = optional(object({
-        type = string
-      }), null)
-
-      # Latency routing
-      latency_routing_policy = optional(object({
-        region = string
-      }), null)
-
-      # CIDR routing
-      cidr_routing_policy = optional(object({
-        collection_id = string
-        location_name = string
-      }), null)
-
-      # Multivalue answer
-      multivalue_answer_routing_policy = optional(bool, null)
-    })), {})
-  }))
-  default = []
+# @param services.route53.enableDnssec
+variable "route53_enable_dnssec" {
+  description = "Enable DNSSEC for hosted zones"
+  type        = bool
+  default     = false
 }
 
 

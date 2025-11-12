@@ -295,56 +295,112 @@ waf_sampled_requests_enabled = true
 # S3
 # -------------------------------------------------------------------
 
-# @param services.s3.buckets
-s3_buckets = []
+# @param services.s3.bucketNames
+s3_bucket_names = []
+# @param services.s3.versioningEnabled
+s3_versioning_enabled = false
+# @param services.s3.encryptionType
+s3_encryption_type = "AES256"
+# @param services.s3.blockPublicAccess
+s3_block_public_access = true
+# @param services.s3.loggingEnabled
+s3_logging_enabled = false
+# @param services.s3.loggingTargetBucket
+s3_logging_target_bucket = null
+# @param services.s3.objectOwnership
+s3_object_ownership = "BucketOwnerEnforced"
 
 # -------------------------------------------------------------------
 # LAMBDA
 # -------------------------------------------------------------------
 
-# @param services.lambda.functions
-lambda_functions = []
+# @param services.lambda.functionNames
+lambda_function_names = []
 # @param services.lambda.defaultRuntime
 lambda_default_runtime = "nodejs18.x"
 # @param services.lambda.defaultMemory
 lambda_default_memory = 256
 # @param services.lambda.defaultTimeout
 lambda_default_timeout = 30
+# @param services.lambda.defaultHandler
+lambda_default_handler = "index.handler"
+# @param services.lambda.ephemeralStorageSize
+lambda_ephemeral_storage_size = 512
+# @param services.lambda.logRetentionDays
+lambda_log_retention_days = 7
+# @param services.lambda.enableVpc
+lambda_enable_vpc = false
+# @param services.lambda.enableXrayTracing
+lambda_enable_xray_tracing = false
 
 # -------------------------------------------------------------------
 # SQS
 # -------------------------------------------------------------------
 
-# @param services.sqs.queues
-sqs_queues = []
-# @param services.sqs.defaultVisibilityTimeout
-sqs_default_visibility_timeout = 30
-# @param services.sqs.defaultMessageRetention
-sqs_default_message_retention = 345600
+# @param services.sqs.queueNames
+sqs_queue_names = []
+# @param services.sqs.fifoQueues
+sqs_fifo_queues = false
+# @param services.sqs.contentBasedDeduplication
+sqs_content_based_deduplication = false
+# @param services.sqs.visibilityTimeout
+sqs_visibility_timeout = 30
+# @param services.sqs.messageRetention
+sqs_message_retention = 345600
+# @param services.sqs.maxMessageSize
+sqs_max_message_size = 262144
+# @param services.sqs.delaySeconds
+sqs_delay_seconds = 0
+# @param services.sqs.receiveWaitTime
+sqs_receive_wait_time = 0
+# @param services.sqs.createDeadLetterQueue
+sqs_create_dlq = false
+# @param services.sqs.maxReceiveCount
+sqs_max_receive_count = 3
+# @param services.sqs.enableEncryption
+sqs_enable_encryption = true
 
 # -------------------------------------------------------------------
 # SNS
 # -------------------------------------------------------------------
 
-# @param services.sns.topics
-sns_topics = []
-# @param services.sns.defaultKmsKeyId
-sns_default_kms_key_id = null
+# @param services.sns.topicNames
+sns_topic_names = []
+# @param services.sns.fifoTopics
+sns_fifo_topics = false
+# @param services.sns.contentBasedDeduplication
+sns_content_based_deduplication = false
+# @param services.sns.enableEncryption
+sns_enable_encryption = false
+# @param services.sns.kmsKeyId
+sns_kms_key_id = null
 
 # -------------------------------------------------------------------
 # CLOUDFRONT
 # -------------------------------------------------------------------
 
-# @param services.cloudfront.distributions
-cloudfront_distributions = []
+# @param services.cloudfront.distributionNames
+cloudfront_distribution_names = []
 # @param services.cloudfront.priceClass
-cloudfront_default_price_class = "PriceClass_100"
-# @param services.cloudfront.wafEnabled
-cloudfront_default_waf_enabled = false
+cloudfront_price_class = "PriceClass_100"
+# @param services.cloudfront.enableIpv6
+cloudfront_enable_ipv6 = true
+# @param services.cloudfront.enableWaf
+cloudfront_enable_waf = false
+# @param services.cloudfront.enableLogging
+cloudfront_enable_logging = false
+# @param services.cloudfront.loggingBucket
+cloudfront_logging_bucket = null
 
 # -------------------------------------------------------------------
 # ROUTE53
 # -------------------------------------------------------------------
 
-# @param services.route53.hostedZones
-route53_hosted_zones = []
+# @param services.route53.zoneNames
+route53_zone_names = []
+# @param services.route53.privateZones
+route53_private_zones = false
+# @param services.route53.forceDestroy
+route53_force_destroy = false
+# @param services.route53.enableDnssec
+route53_enable_dnssec = false
