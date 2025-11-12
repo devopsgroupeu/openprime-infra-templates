@@ -95,16 +95,16 @@ module "eks" {
       most_recent = var.eks_addon_kube_proxy_most_recent
     }
     vpc-cni = {
-      service_account_role_arn = module.vpc_cni_irsa_role.iam_role_arn
+      service_account_role_arn = module.vpc_cni_irsa_role.arn
       most_recent              = var.eks_addon_vpc_cni_most_recent
       before_compute           = var.eks_addon_vpc_cni_before_compute
     }
     aws-ebs-csi-driver = {
-      service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
+      service_account_role_arn = module.ebs_csi_irsa_role.arn
       most_recent              = var.eks_addon_ebs_csi_most_recent
     }
     aws-efs-csi-driver = {
-      service_account_role_arn = module.efs_csi_irsa_role.iam_role_arn
+      service_account_role_arn = module.efs_csi_irsa_role.arn
       most_recent              = var.eks_addon_efs_csi_most_recent
     }
   }

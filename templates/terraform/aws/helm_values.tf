@@ -26,7 +26,7 @@ locals {
       template_values_file = "${path.module}/../../helm/aws-load-balancer-controller/values.yaml.tftpl"
       values = {
         service_account_name = local.aws_lb_service_account_name
-        alb_role_arn         = module.alb_controller_irsa_role.iam_role_arn
+        alb_role_arn         = module.alb_controller_irsa_role.arn
         cluster_name         = module.eks.cluster_name
         region               = var.region
         vpc_id               = module.vpc.vpc_id
@@ -41,7 +41,7 @@ locals {
       template_values_file = "${path.module}/../../helm/loki/values.yaml.tftpl"
       values = {
         region               = var.region
-        loki_role_arn        = module.loki_role.iam_role_arn
+        loki_role_arn        = module.loki_role.arn
         service_account_name = "loki-sa"
         s3_bucket_chunk      = module.loki_s3_buckets["chunk"].s3_bucket_id
         s3_bucket_ruler      = module.loki_s3_buckets["ruler"].s3_bucket_id
