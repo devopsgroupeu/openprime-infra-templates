@@ -1,4 +1,4 @@
-# @section msk begin
+# @section services.msk.enabled begin
 locals {
   msk_cluster_name = "${var.global_prefix}msk-${var.environment_short}"
 }
@@ -7,15 +7,12 @@ module "msk" {
   source  = "terraform-aws-modules/msk-kafka-cluster/aws"
   version = "~> 2.13"
 
-  name = local.msk_cluster_name
-  # @param msk.kafka_version
-  kafka_version = "3.5.1"
-  # @param msk.number_of_broker_nodes
-  number_of_broker_nodes = 2
+  name                   = local.msk_cluster_name
+  kafka_version          = var.msk_kafka_version
+  number_of_broker_nodes = var.msk_number_of_broker_nodes
 
-  broker_node_client_subnets = module.vpc.private_subnets
-  # @param msk.broker_node_instance_type
-  broker_node_instance_type   = "kafka.t3.small"
+  broker_node_client_subnets  = module.vpc.private_subnets
+  broker_node_instance_type   = var.msk_broker_node_instance_type
   broker_node_security_groups = [module.security_group.security_group_id]
 
   tags = {
@@ -38,4 +35,4 @@ module "security_group" {
     "kafka-broker-tls-tcp"
   ]
 }
-# @section msk end
+# @section services.msk.enabled end

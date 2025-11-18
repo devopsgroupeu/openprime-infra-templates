@@ -25,6 +25,7 @@ vpc:
 eks:
   enable: true
   default_node_group_ami_type: "BOTTLEROCKET_ARM_64"
+  karpenterEnabled: true
 
 argocd:
   enable: true
@@ -40,9 +41,6 @@ rds:
 ---
 ecr:
   enable: false
-
-karpenter:
-  enable: true
 
 aurora:
   enable: false
@@ -91,4 +89,22 @@ cicd_pipeline:
 
 ---
 waf:
+  enable: false
+
+s3:
+  enable: false
+
+lambda:
+  enable: false
+
+sqs:
+  enable: false
+
+sns:
+  enable: false
+
+cloudfront:
+  enable: false
+
+route53:
   enable: false

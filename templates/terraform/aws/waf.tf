@@ -1,8 +1,8 @@
-# @section waf begin
+# @section services.waf.enabled begin
 resource "aws_wafv2_web_acl" "waf" {
-  name        = "waf"
-  description = "Default AWS WAF Managed rule set"
-  scope       = "REGIONAL"
+  name        = var.waf_name
+  description = var.waf_description
+  scope       = var.waf_scope
 
   default_action {
     allow {}
@@ -97,9 +97,9 @@ resource "aws_wafv2_web_acl" "waf" {
   }
 
   visibility_config {
-    cloudwatch_metrics_enabled = true
-    metric_name                = "WAF-metrics"
-    sampled_requests_enabled   = true
+    cloudwatch_metrics_enabled = var.waf_cloudwatch_metrics_enabled
+    metric_name                = var.waf_metric_name
+    sampled_requests_enabled   = var.waf_sampled_requests_enabled
   }
 }
-# @section waf end
+# @section services.waf.enabled end

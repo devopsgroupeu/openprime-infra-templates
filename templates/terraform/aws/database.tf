@@ -1,23 +1,23 @@
 locals {
-  # @section rds begin
+  # @section services.rds.enabled begin
   rds_identifier          = "${var.global_prefix}rds-${var.environment_short}"
   rds_db_name             = "${var.global_prefix}db${var.environment_short}"
   rds_username            = "${var.global_prefix}rdsuser${var.environment_short}"
   rds_sg_vpc_rule_name    = var.rds_engine == "postgres" ? "postgresql-tcp" : "mysql-tcp"
   rds_port                = var.rds_engine == "postgres" ? 5432 : 3306
   cloudwatch_logs_exports = var.rds_engine == "postgres" ? ["postgresql"] : ["error", "general", "slowquery"]
-  # @section rds end
+  # @section services.rds.enabled end
 
-  # @section aurora begin
+  # @section services.aurora.enabled begin
   aurora_name             = "${var.global_prefix}auroradb${var.environment_short}"
   aurora_database_name    = "${var.global_prefix}auroradb${var.environment_short}"
   aurora_username         = "${var.global_prefix}aurorauser${var.environment_short}"
   aurora_sg_vpc_rule_name = var.aurora_engine == "aurora-postgresql" ? "postgresql-tcp" : "mysql-tcp"
   aurora_port             = var.aurora_engine == "aurora-postgresql" ? 5432 : 3306
-  # @section aurora end
+  # @section services.aurora.enabled end
 }
 
-# @section rds begin
+# @section services.rds.enabled begin
 resource "random_password" "rds_password" {
   length  = 16
   upper   = true
@@ -25,9 +25,9 @@ resource "random_password" "rds_password" {
   numeric = true
   special = false
 }
-# @section rds end
+# @section services.rds.enabled end
 
-# @section aurora begin
+# @section services.aurora.enabled begin
 resource "random_password" "aurora_password" {
   length  = 16
   upper   = true
@@ -35,9 +35,9 @@ resource "random_password" "aurora_password" {
   numeric = true
   special = false
 }
-# @section aurora end
+# @section services.aurora.enabled end
 
-# @section rds begin
+# @section services.rds.enabled begin
 module "rds" {
   source  = "terraform-aws-modules/rds/aws"
   version = "~> 6.12"
@@ -48,44 +48,44 @@ module "rds" {
   create_db_subnet_group = true
   vpc_security_group_ids = [module.rds_sg.security_group_id]
 
-  apply_immediately         = false
-  deletion_protection       = false
-  skip_final_snapshot       = true
+  apply_immediately         = var.rds_apply_immediately
+  deletion_protection       = var.rds_deletion_protection
+  skip_final_snapshot       = var.rds_skip_final_snapshot
   create_db_option_group    = true
   create_db_parameter_group = true
-  delete_automated_backups  = true
-  backup_retention_period   = 7
+  delete_automated_backups  = var.rds_delete_automated_backups
+  backup_retention_period   = var.rds_backup_retention_period
 
   engine                     = var.rds_engine
   engine_version             = var.rds_engine_version
   major_engine_version       = var.rds_major_engine_version
   family                     = var.rds_family
   instance_class             = var.rds_instance_class
-  multi_az                   = true
-  auto_minor_version_upgrade = true
+  multi_az                   = var.rds_multi_az
+  auto_minor_version_upgrade = var.rds_auto_minor_version_upgrade
 
   db_name                     = local.rds_db_name
-  manage_master_user_password = false
+  manage_master_user_password = var.rds_manage_master_user_password
   username                    = local.rds_username
   password                    = random_password.rds_password.result
   port                        = local.rds_port
 
   storage_encrypted     = true
-  allocated_storage     = 20
-  max_allocated_storage = 50
+  allocated_storage     = var.rds_allocated_storage
+  max_allocated_storage = var.rds_max_allocated_storage
 
-  iam_database_authentication_enabled = true
-  # publicly_accessible                 = true
+  iam_database_authentication_enabled = var.rds_iam_database_authentication_enabled
+  publicly_accessible                 = var.rds_publicly_accessible
 
-  # performance_insights_enabled          = true
-  # performance_insights_retention_period = 7
-  create_monitoring_role          = true
-  monitoring_interval             = 60
-  enabled_cloudwatch_logs_exports = local.cloudwatch_logs_exports
-  create_cloudwatch_log_group     = true
+  performance_insights_enabled          = var.rds_performance_insights_enabled
+  performance_insights_retention_period = var.rds_performance_insights_retention_period
+  create_monitoring_role                = true
+  monitoring_interval                   = var.rds_monitoring_interval
+  enabled_cloudwatch_logs_exports       = local.cloudwatch_logs_exports
+  create_cloudwatch_log_group           = true
 
-  maintenance_window = "Mon:00:00-Mon:03:00"
-  backup_window      = "03:00-06:00"
+  maintenance_window = var.rds_maintenance_window
+  backup_window      = var.rds_backup_window
 }
 
 module "rds_sg" {
@@ -106,9 +106,9 @@ module "rds_sg" {
     }
   ]
 }
-# @section rds end
+# @section services.rds.enabled end
 
-# @section aurora begin
+# @section services.aurora.enabled begin
 module "aurora" {
   source  = "terraform-aws-modules/rds-aurora/aws"
   version = "~> 9.13"
@@ -120,21 +120,19 @@ module "aurora" {
   engine_mode    = "provisioned"
   instance_class = "db.serverless"
 
-  instances = {
-    one = {}
-  }
+  instances = var.aurora_instances
 
   serverlessv2_scaling_configuration = {
-    min_capacity             = 0
-    max_capacity             = 10
-    seconds_until_auto_pause = 3600
+    min_capacity             = var.aurora_serverlessv2_min_capacity
+    max_capacity             = var.aurora_serverlessv2_max_capacity
+    seconds_until_auto_pause = var.aurora_serverlessv2_seconds_until_auto_pause
   }
 
   vpc_id                 = module.vpc.vpc_id
   vpc_security_group_ids = [module.aurora_sg.security_group_id]
   subnets                = module.vpc.database_subnets
   create_db_subnet_group = true
-  enable_http_endpoint   = true
+  enable_http_endpoint   = var.aurora_enable_http_endpoint
 
   master_username             = local.aurora_username
   master_password             = random_password.aurora_password.result
@@ -143,19 +141,18 @@ module "aurora" {
 
   storage_encrypted = true
 
-  iam_database_authentication_enabled = true
+  iam_database_authentication_enabled = var.aurora_iam_database_authentication_enabled
 
   create_monitoring_role          = true
-  monitoring_interval             = 60
+  monitoring_interval             = var.aurora_monitoring_interval
   enabled_cloudwatch_logs_exports = local.cloudwatch_logs_exports
   create_cloudwatch_log_group     = true
 
-  # DEV
-  apply_immediately        = true
-  deletion_protection      = false
-  skip_final_snapshot      = true
-  delete_automated_backups = true
-  # backup_retention_period  = 7
+  apply_immediately        = var.aurora_apply_immediately
+  deletion_protection      = var.aurora_deletion_protection
+  skip_final_snapshot      = var.aurora_skip_final_snapshot
+  delete_automated_backups = var.aurora_delete_automated_backups
+  backup_retention_period  = var.aurora_backup_retention_period
 }
 
 module "aurora_sg" {
@@ -176,4 +173,4 @@ module "aurora_sg" {
     }
   ]
 }
-# @section aurora end
+# @section services.aurora.enabled end

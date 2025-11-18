@@ -9,9 +9,9 @@ terraform {
     # @param backend.s3.region
     region = "eu-west-1"
     # @param backend.s3.encrypt
-    encrypt = false
-    # @param backend.s3.use_lockfile
-    use_lockfile = false
+    encrypt = true
+    # @param backend.s3.useLockfile
+    use_lockfile = true
   }
   # @section backend end
 
@@ -23,6 +23,10 @@ terraform {
     local = {
       source  = "hashicorp/local"
       version = ">= 2.5"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = ">= 3.7"
     }
   }
 }

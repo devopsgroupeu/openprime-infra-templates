@@ -4,14 +4,14 @@ terraform {
   # @section backend begin
   backend "s3" {
     # @param backend.s3.bucket
-    bucket         = "my-terraform-state-bucket"
-    key            = "kubernetes.tfstate"
+    bucket = "my-terraform-state-bucket"
+    key    = "kubernetes.tfstate"
     # @param backend.s3.region
-    region         = "eu-west-1"
+    region = "eu-west-1"
     # @param backend.s3.encrypt
-    encrypt        = true
-    # @param backend.s3.use_lockfile
-    use_lockfile   = false
+    encrypt = true
+    # @param backend.s3.useLockfile
+    use_lockfile = true
   }
   # @section backend end
 
