@@ -1,7 +1,7 @@
 deployments:
 
   argo-workflows-ui:
-    image: lukaspastva/argo-workflows-ui:8164756d8212065c384408583e9bd9df09c7a64b
+    image: ghcr.io/lukas-pastva/argo-workflows-ui:6314fb65d3d01b8d9f0ec259b670a280a5909f1b
     resources:
       limits:
         memory: 400Mi
