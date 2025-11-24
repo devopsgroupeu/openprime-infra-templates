@@ -93,7 +93,7 @@ echo -e "\n✔ Argo CD installed."
 echo "Bootstrapping app-of-apps…"
 sleep 10
 if ! kubectl get appproject default -n argocd >/dev/null 2>&1; then
-  cat <<EOF | kubectl apply -f -
+cat <<EOF | kubectl apply -f -
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:

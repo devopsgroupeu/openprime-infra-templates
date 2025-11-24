@@ -12,7 +12,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: {{ add $projectBase $aIdx | printf "%v" | quote }}
 spec:
-  project: {{ $appProject.namespace }}
+  project: default # FIXME: handle multiple projects correctly
   sources:
   - targetRevision: {{ $application.targetRevision | default "main" }}
     repoURL: {{ $application.repoURL | default $.Values.globals.repoURL | quote }}
