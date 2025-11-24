@@ -12,7 +12,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: {{ add $projectBase $aIdx | printf "%v" | quote }}
 spec:
-  project: default # FIXME: handle multiple projects correctly
+  project: default # TODO: handle multiple projects correctly
   sources:
   - targetRevision: {{ $application.targetRevision | default "main" }}
     repoURL: {{ $application.repoURL | default $.Values.globals.repoURL | quote }}
@@ -21,7 +21,7 @@ spec:
     directory:
       recurse: true
     {{- end }}
-    path: "argocd/charts/{{ $application.path }}"
+    path: "templates/argocd/charts/{{ $application.path }}"
     {{- end }}
     {{- if $application.chart }}
     chart: {{ $application.chart }}
@@ -31,9 +31,9 @@ spec:
       skipCrds: true
       {{- end }}
       valueFiles:
-      - $values/argocd/values/{{ $application.name }}.yaml
+      - $values/templates/argocd/values/{{ $application.name }}.yaml
   - repoURL: {{ $.Values.globals.repoURL | quote }}
-    targetRevision: main
+    targetRevision: {{ $application.targetRevision | default "main" }}
     ref: values
   destination:
     namespace: {{ $appProject.namespace }}

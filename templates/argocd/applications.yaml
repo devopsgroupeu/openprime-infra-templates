@@ -6,98 +6,132 @@ appProjects:
     applications:
       - name: rke2-cilium
         path: external/lukas-pastva/helm-chartie/1.0.8
+        targetRevision: openprime-init-integration
   - namespace: opentelemetry
     applications:
       - name: opentelemetry-operator
         path: external/opentelemetry-helm/opentelemetry-operator/0.91.1
+        targetRevision: openprime-init-integration
       - name: opentelemetry-collector
         path: external/lukas-pastva/helm-chartie/1.0.8
+        targetRevision: openprime-init-integration
   - namespace: rancher
     applications:
       - name: rancher
         path: external/rancher-stable/rancher/2.11.3
+        targetRevision: openprime-init-integration
   - namespace: openebs
     applications:
       - name: openebs
         path: external/openebs/openebs/4.3.2
+        targetRevision: openprime-init-integration
   - namespace: metallb-system
     applications:
       - name: metallb
         path: external/metallb/metallb/0.15.2
+        targetRevision: openprime-init-integration
       - name: metallb-iap
         path: external/lukas-pastva/helm-chartie/1.0.8
+        targetRevision: openprime-init-integration
   - namespace: monitoring
     applications:
       - name: kube-prometheus-stack-crds
         path: external/prometheus-community/kube-prometheus-stack/75.9.0/charts/crds
+        targetRevision: openprime-init-integration
         replace: true
         autoSync: true
       - name: kube-prometheus-stack
         path: external/prometheus-community/kube-prometheus-stack/75.9.0
+        targetRevision: openprime-init-integration
         skipCrds: true
       - name: promtail
         path: external/grafana/promtail/6.17.0
+        targetRevision: openprime-init-integration
       - name: loki
         path: external/grafana/loki/6.30.1
+        targetRevision: openprime-init-integration
       - name: thanos
         path: external/bitnami/thanos/17.2.1
+        targetRevision: openprime-init-integration
       - name: tempo
         path: external/grafana/tempo-distributed/1.45.0
+        targetRevision: openprime-init-integration
   - namespace: ingress-nginx
     applications:
       - name: ingress-nginx-extra
         path: external/lukas-pastva/helm-chartie/1.0.8
+        targetRevision: openprime-init-integration
       - name: ingress-nginx
         path: external/ingress-nginx/ingress-nginx/4.13.0
+        targetRevision: openprime-init-integration
   - namespace: oauth2-google
     applications:
       - name: oauth2-google
         path: external/oauth2-proxy/oauth2-proxy/7.9.0
+        targetRevision: openprime-init-integration
   - namespace: argocd
     applications:
       - name: argo-cd
         path: external/argo/argo-cd/8.2.5
+        targetRevision: openprime-init-integration
   - namespace: argo-workflows
     applications:
       - name: argo-events
         path: external/argo/argo-events/2.4.15
+        targetRevision: openprime-init-integration
       - name: argo-workflows
         path: external/argo/argo-workflows/0.45.19
+        targetRevision: openprime-init-integration
       - name: argo-workflows-ui
         path: external/lukas-pastva/helm-chartie/1.0.8
+        targetRevision: openprime-init-integration
       - name: event-backup-gl
         path: internal/events
+        targetRevision: openprime-init-integration
       - name: event-backup-gh
         path: internal/events
+        targetRevision: openprime-init-integration
       - name: event-backup-k8s
         path: internal/events
+        targetRevision: openprime-init-integration
       - name: event-stop
         path: internal/events
+        targetRevision: openprime-init-integration
       - name: event-deploy
         path: internal/events
+        targetRevision: openprime-init-integration
       - name: event-install
         path: internal/events
+        targetRevision: openprime-init-integration
       - name: event-upgrade
         path: internal/events
+        targetRevision: openprime-init-integration
       - name: event-download
         path: internal/events
+        targetRevision: openprime-init-integration
       - name: event-delete
         path: internal/events
+        targetRevision: openprime-init-integration
       - name: argo-app-manager
         path: external/lukas-pastva/helm-chartie/1.0.8
+        targetRevision: openprime-init-integration
   - namespace: cert-manager
     applications:
       - name: cert-manager
         path: external/cert-manager/cert-manager/1.18.2
+        targetRevision: openprime-init-integration
   - namespace: ingress-browser
     applications:
       - name: ingress-browser
         path: external/lukas-pastva/helm-chartie/1.0.8
+        targetRevision: openprime-init-integration
   - namespace: web-example
     applications:
       - name: web-example
         path: external/lukas-pastva/helm-chartie/1.0.8
+        targetRevision: openprime-init-integration
   - namespace: web-init-openprime
     applications:
       - name: web-init-openprime
         path: external/lukas-pastva/helm-chartie/1.0.8
+        targetRevision: openprime-init-integration
