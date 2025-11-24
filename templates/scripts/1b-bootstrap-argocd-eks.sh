@@ -21,7 +21,7 @@ if [[ -z "$SSH_PRIVATE_KEY" ]]; then
   echo "Paste SSH private key, end with EOF (Ctrl-D):"
   SSH_PRIVATE_KEY="$(cat)"
 fi
-[[ -z "$ARGOCD_PASS"  ]] && read -s -p "Enter desired Argo CD admin password : " ARGOCD_PASS && echo
+[[ -z "$ARGOCD_PASS" ]] && read -s -p "Enter desired Argo CD admin password : " ARGOCD_PASS && echo
 
 # ── ensure kubectl can talk to the API ───────────────────────────────────────
 if ! kubectl version >/dev/null 2>&1; then
@@ -34,12 +34,15 @@ fi
 # ── htpasswd for bcrypt hashing ──────────────────────────────────────────────
 if ! command -v htpasswd >/dev/null; then
   echo "Installing *htpasswd* utility…"
-  if   command -v apt-get >/dev/null; then
-       apt-get update -qq
-       DEBIAN_FRONTEND=noninteractive apt-get install -y -qq apache2-utils
-  elif command -v dnf     >/dev/null; then dnf install  -y -q httpd-tools
-  elif command -v yum     >/dev/null; then yum install  -y -q httpd-tools
-  elif command -v brew    >/dev/null; then brew install  httpd
+  if command -v apt-get >/dev/null; then
+    apt-get update -qq
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -qq apache2-utils
+  elif command -v dnf >/dev/null; then
+    dnf install -y -q httpd-tools
+  elif command -v yum >/dev/null; then
+    yum install -y -q httpd-tools
+  elif command -v brew >/dev/null; then
+    brew install httpd
   else
     echo "ERROR: cannot install 'htpasswd' automatically." >&2
     exit 1
@@ -48,9 +51,9 @@ fi
 
 # ── Argo CD admin password hash (bcrypt $2a$…) ──────────────────────────────
 ARGOCD_HASH="$(
-  htpasswd -nbBC 10 "" "$ARGOCD_PASS" \
-    | tr -d ':\n' \
-    | sed 's/\$2y/\$2a/'
+  htpasswd -nbBC 10 "" "$ARGOCD_PASS" |
+    tr -d ':\n' |
+    sed 's/\$2y/\$2a/'
 )"
 
 # ── Git repo SSH secret for Argo CD ─────────────────────────────────────────
@@ -68,6 +71,8 @@ metadata:
     argocd.argoproj.io/secret-type: repository
 type: Opaque
 stringData:
+  name: git-ssh-creds
+  project: default
   sshPrivateKey: |
 $(echo "$KEY_STR" | sed 's/^/    /')
   type: git
@@ -88,7 +93,7 @@ echo -e "\n✔ Argo CD installed."
 echo "Bootstrapping app-of-apps…"
 sleep 10
 if ! kubectl get appproject default -n argocd >/dev/null 2>&1; then
-cat <<EOF | kubectl apply -f -
+  cat <<EOF | kubectl apply -f -
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
@@ -109,6 +114,7 @@ spec:
 EOF
 fi
 
+# TODO: after testing set the targetRevision correctly
 cat <<EOF | kubectl apply -f -
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -119,8 +125,8 @@ spec:
   project: default
   source:
     repoURL: $GIT_REPO_URL
-    path: argocd/charts/internal/app-of-apps
-    targetRevision: main
+    path: templates/argocd/charts/internal/app-of-apps
+    targetRevision: openprime-init-integration
     helm:
       valueFiles:
       - ../../../applications.yaml
@@ -134,7 +140,9 @@ spec:
 EOF
 
 # ── Force Argo CD refresh & finish ──────────────────────────────────────────
-echo; echo "⏳ Waiting 10s before forcing Argo CD refresh…"; sleep 10
+echo
+echo "⏳ Waiting 10s before forcing Argo CD refresh…"
+sleep 10
 kubectl -n argocd annotate application app-of-apps \
   argocd.argoproj.io/refresh=hard --overwrite || true
 
