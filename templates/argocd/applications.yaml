@@ -1,5 +1,5 @@
 globals:
-  repoURL: git@github.com:devopsgroupeu/openprime-app-of-apps.git
+  repoURL: git@github.com:devopsgroupeu/openprime-infra-templates.git
   
 appProjects:
   - namespace: kube-system
