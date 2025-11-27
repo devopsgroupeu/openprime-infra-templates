@@ -2,6 +2,8 @@
 # GLOBAL
 # -------------------------------------------------------------------
 
+# @param region
+region = "eu-west-1"
 # @param name
 global_prefix = "my-project"
 # @param name
