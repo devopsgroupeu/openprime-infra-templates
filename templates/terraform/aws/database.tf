@@ -1,17 +1,20 @@
 locals {
+  # Sanitized prefix for resources that don't allow dashes (RDS db names, usernames)
+  global_prefix_sanitized = replace(var.global_prefix, "-", "")
+
   # @section services.rds.enabled begin
   rds_identifier          = "${var.global_prefix}rds-${var.environment_short}"
-  rds_db_name             = "${var.global_prefix}db${var.environment_short}"
-  rds_username            = "${var.global_prefix}rdsuser${var.environment_short}"
+  rds_db_name             = "${local.global_prefix_sanitized}db${var.environment_short}"
+  rds_username            = "${local.global_prefix_sanitized}rdsuser${var.environment_short}"
   rds_sg_vpc_rule_name    = var.rds_engine == "postgres" ? "postgresql-tcp" : "mysql-tcp"
   rds_port                = var.rds_engine == "postgres" ? 5432 : 3306
   cloudwatch_logs_exports = var.rds_engine == "postgres" ? ["postgresql"] : ["error", "general", "slowquery"]
   # @section services.rds.enabled end
 
   # @section services.aurora.enabled begin
-  aurora_name             = "${var.global_prefix}auroradb${var.environment_short}"
-  aurora_database_name    = "${var.global_prefix}auroradb${var.environment_short}"
-  aurora_username         = "${var.global_prefix}aurorauser${var.environment_short}"
+  aurora_name             = "${var.global_prefix}aurora-${var.environment_short}"
+  aurora_database_name    = "${local.global_prefix_sanitized}auroradb${var.environment_short}"
+  aurora_username         = "${local.global_prefix_sanitized}aurorauser${var.environment_short}"
   aurora_sg_vpc_rule_name = var.aurora_engine == "aurora-postgresql" ? "postgresql-tcp" : "mysql-tcp"
   aurora_port             = var.aurora_engine == "aurora-postgresql" ? 5432 : 3306
   # @section services.aurora.enabled end
