@@ -1,0 +1,65 @@
+# AWS Gateway API Controller Values for EKS
+# Custom values overlay for AWS Gateway Controller
+
+# Service account is managed by IRSA
+serviceAccount:
+  create: false
+  name: aws-gateway-controller
+  # Annotations are set by eksctl/Terraform IRSA
+  # annotations:
+  #   eks.amazonaws.com/role-arn: arn:aws:iam::<ACCOUNT_ID>:role/<ROLE_NAME>
+
+# Controller configuration
+controller:
+  # AWS region where the EKS cluster is running
+  region: <AWS_REGION>  # e.g., us-east-1
+  
+  # VPC ID where the cluster is deployed
+  vpcId: <VPC_ID>
+  
+  # Cluster name
+  clusterName: <CLUSTER_NAME>
+  
+  # Log level: debug, info, warn, error
+  logLevel: info
+  
+  # Enable/disable features
+  enableVpcLattice: true
+
+# Resource requests and limits
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Number of replicas for high availability
+replicaCount: 2
+
+# Pod disruption budget
+podDisruptionBudget:
+  enabled: true
+  maxUnavailable: 1
+
+# Node selector (optional - for dedicated node pools)
+nodeSelector: {}
+  # kubernetes.io/os: linux
+
+# Tolerations (optional)
+tolerations: []
+
+# Affinity rules (optional)
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - aws-gateway-controller
+          topologyKey: kubernetes.io/hostname

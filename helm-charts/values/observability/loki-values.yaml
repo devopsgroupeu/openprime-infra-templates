@@ -1,0 +1,88 @@
+# Loki Values for AWS EKS
+# Custom values overlay for Loki chart
+
+loki:
+  auth_enabled: false
+  commonConfig:
+    path_prefix: /var/loki
+    replication_factor: 1
+  schemaConfig:
+    configs:
+      - from: "2024-04-01"
+        store: tsdb
+        object_store: s3
+        schema: v13
+        index:
+          prefix: loki_index_
+          period: 24h
+  storage_config:
+    aws:
+      region: <REGION>  # e.g., us-east-1
+      bucketnames: <S3_BUCKET_CHUNKS>
+      s3forcepathstyle: false
+  pattern_ingester:
+    enabled: true
+  limits_config:
+    allow_structured_metadata: true
+    volume_enabled: true
+    retention_period: 672h # 28 days retention
+  ruler:
+    enable_api: true
+
+  storage:
+    type: s3
+    bucketNames:
+      chunks: <S3_BUCKET_CHUNKS>
+      ruler: <S3_BUCKET_RULER>
+    s3:
+      region: <REGION>
+
+  podAnnotations:
+    iam.amazonaws.com/role-arn: <LOKI_ROLE_ARN>
+
+serviceAccount:
+  create: true
+  name: loki
+  annotations:
+    eks.amazonaws.com/role-arn: <LOKI_ROLE_ARN>
+
+# Disable minio storage (using S3 instead)
+minio:
+  enabled: false
+
+# Deploy as SingleBinary for simplicity
+deploymentMode: SingleBinary
+
+singleBinary:
+  replicas: 1
+  persistence:
+    storageClass: gp2
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+
+# Zero out replica counts of other deployment modes
+backend:
+  replicas: 0
+read:
+  replicas: 0
+write:
+  replicas: 0
+ingester:
+  replicas: 0
+querier:
+  replicas: 0
+queryFrontend:
+  replicas: 0
+queryScheduler:
+  replicas: 0
+distributor:
+  replicas: 0
+compactor:
+  replicas: 0
+indexGateway:
+  replicas: 0
+bloomCompactor:
+  replicas: 0
+bloomGateway:
+  replicas: 0
