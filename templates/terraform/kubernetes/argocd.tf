@@ -38,7 +38,7 @@ resource "helm_release" "argocd" {
     EOT
   ]
 
-  set_sensitive {
+  set_sensitive = {
     name  = "configs.repositories.dog-gitlab-repo.sshPrivateKey"
     value = var.git_repo_private_key
   }
