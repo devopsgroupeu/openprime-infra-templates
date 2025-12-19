@@ -1,9 +1,3 @@
-variable "helm_charts" {
-  description = "Helm chart selections from the frontend"
-  type        = map(any)
-  default     = {}
-}
-
 locals {
   # Get helm chart selections from services.eks.helmCharts
   # Expected structure: { prometheusStack: { enabled: true, customValues: false }, ... }
