@@ -50,13 +50,13 @@ spec:
         factor: 2
         maxDuration: 3m
     syncOptions:
-    - CreateNamespace=false
+    - CreateNamespace=true
     - PruneLast=true
     - ApplyOutOfSyncOnly=true
     - RespectIgnoreDifferences=true
-    {{- end }}
     {{- if $application.replace }}
     - Replace=true
+    {{- end }}
     {{- end }}
   {{- end }}
 {{- end }}
