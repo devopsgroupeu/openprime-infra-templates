@@ -12,9 +12,9 @@ set -euo pipefail
 ###############################################################################
 
 # ── inputs (env or prompt) ──────────────────────────────────────────────────
-GIT_REPO_URL="${GIT_REPO_URL:-}"
+GIT_REPO_URL="${GIT_REPO_URL:-git@github.com:devopsgroupeu/openprime-infra-templates.git}"
 SSH_PRIVATE_KEY="${SSH_PRIVATE_KEY:-}"
-ARGOCD_PASS="${ARGOCD_PASS:-}"
+ARGOCD_PASS="${ARGOCD_PASS:-admin123}"
 
 [[ -z "$GIT_REPO_URL" ]] && read -p "Enter Git repo SSH URL              : " GIT_REPO_URL
 if [[ -z "$SSH_PRIVATE_KEY" ]]; then
@@ -126,7 +126,7 @@ spec:
   source:
     repoURL: $GIT_REPO_URL
     path: templates/argocd/charts/internal/app-of-apps
-    targetRevision: openprime-init-integration
+    targetRevision: f/virostek
     helm:
       valueFiles:
       - ../../../applications.yaml

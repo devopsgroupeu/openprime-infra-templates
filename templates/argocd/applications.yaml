@@ -9,37 +9,37 @@ appProjects:
       # @section helmCharts.prometheusStack.enabled begin
       - name: kube-prometheus-stack-crds
         path: external/prometheus-community/kube-prometheus-stack/75.9.0/charts/crds
-        targetRevision: openprime-init-integration
+        targetRevision: f/virostek
         replace: true
         autoSync: true
       - name: kube-prometheus-stack
         path: external/prometheus-community/kube-prometheus-stack/75.9.0
-        targetRevision: openprime-init-integration
+        targetRevision: f/virostek
         skipCrds: true
       # @section helmCharts.prometheusStack.enabled end
 
       # @section helmCharts.promtail.enabled begin
       - name: promtail
         path: external/grafana/promtail/6.17.0
-        targetRevision: openprime-init-integration
+        targetRevision: f/virostek
       # @section helmCharts.promtail.enabled end
 
       # @section helmCharts.loki.enabled begin
       - name: loki
         path: external/grafana/loki/6.30.1
-        targetRevision: openprime-init-integration
+        targetRevision: f/virostek
       # @section helmCharts.loki.enabled end
 
       # @section helmCharts.thanos.enabled begin
       - name: thanos
         path: external/bitnami/thanos/17.2.1
-        targetRevision: openprime-init-integration
+        targetRevision: f/virostek
       # @section helmCharts.thanos.enabled end
 
       # @section helmCharts.tempo.enabled begin
       - name: tempo
         path: external/grafana/tempo-distributed/1.45.0
-        targetRevision: openprime-init-integration
+        targetRevision: f/virostek
       # @section helmCharts.tempo.enabled end
 
   # @section helmCharts.ingressNginx.enabled begin
@@ -48,7 +48,7 @@ appProjects:
     applications:
       - name: ingress-nginx
         path: external/ingress-nginx/ingress-nginx/4.13.0
-        targetRevision: openprime-init-integration
+        targetRevision: f/virostek
   # @section helmCharts.ingressNginx.enabled end
 
   # @section helmCharts.certManager.enabled begin
@@ -57,7 +57,7 @@ appProjects:
     applications:
       - name: cert-manager
         path: external/cert-manager/cert-manager/1.18.2
-        targetRevision: openprime-init-integration
+        targetRevision: f/virostek
   # @section helmCharts.certManager.enabled end
   
   # Gateway API (Uncomment when IRSA is configured)
@@ -67,9 +67,9 @@ appProjects:
   #   applications:
   #     - name: gateway-api-crds
   #       path: external/gateway-api/gateway-api-crds/1.0.0
-  #       targetRevision: openprime-init-integration
+  #       targetRevision: f/virostek
   #     - name: aws-gateway-controller
   #       path: external/aws/aws-gateway-controller/1.0.0
-  #       targetRevision: openprime-init-integration
+  #       targetRevision: f/virostek
 
 
