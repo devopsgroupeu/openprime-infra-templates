@@ -1,0 +1,9 @@
+nodeSelector:
+  karpenter.sh/controller: 'true'
+dnsPolicy: Default
+settings:
+  clusterName: brc7aeks-dev
+  clusterEndpoint: https://B06E6C698E9D72676D31DE4E30DB306B.gr7.eu-west-1.eks.amazonaws.com
+  interruptionQueue: Karpenter-brc7aeks-dev
+webhook:
+  enabled: false

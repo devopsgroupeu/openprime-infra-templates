@@ -1,0 +1,14 @@
+installCRDs: true
+replicaCount: 1
+nodeSelector:
+  kubernetes.io/os: linux
+prometheus:
+  enabled: true
+webhook:
+  replicaCount: 1
+  nodeSelector:
+    kubernetes.io/os: linux
+cainjector:
+  replicaCount: 1
+  nodeSelector:
+    kubernetes.io/os: linux
