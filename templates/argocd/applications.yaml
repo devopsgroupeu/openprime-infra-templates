@@ -3,7 +3,53 @@ globals:
   repoURL: git@github.com:devopsgroupeu/openprime-infra-templates.git
 
 appProjects:
-  # Observability Stack
+  # @section helmCharts.awsLBController.enabled begin
+  ## Infrastructure - must deploy first for webhooks
+  - namespace: kube-system
+    applications:
+      - name: aws-lb-controller
+        path: external/eks/aws-load-balancer-controller/1.16.0
+        targetRevision: f/virostek
+        autoSync: true
+  # @section helmCharts.awsLBController.enabled end
+
+  # @section helmCharts.karpenter.enabled begin
+  - namespace: kube-system
+    applications:
+      - name: karpenter-crds
+        path: external/karpenter/karpenter/1.8.3/crds
+        targetRevision: f/virostek
+        replace: true
+        autoSync: true
+        skipValuesFile: true
+      - name: karpenter
+        path: external/karpenter/karpenter/1.8.3
+        targetRevision: f/virostek
+        autoSync: true
+        skipCrds: true
+  # @section helmCharts.karpenter.enabled end
+
+  # @section helmCharts.certManager.enabled begin
+  ## Certificate Management
+  - namespace: cert-manager
+    applications:
+      - name: cert-manager
+        path: external/cert-manager/cert-manager/1.18.2
+        targetRevision: f/virostek
+        autoSync: true
+  # @section helmCharts.certManager.enabled end
+
+  # @section helmCharts.ingressNginx.enabled begin
+  ## Ingress
+  - namespace: ingress-nginx
+    applications:
+      - name: ingress-nginx
+        path: external/ingress-nginx/ingress-nginx/4.13.0
+        targetRevision: f/virostek
+        autoSync: true
+  # @section helmCharts.ingressNginx.enabled end
+
+  ## Observability Stack
   - namespace: monitoring
     applications:
       # @section helmCharts.prometheusStack.enabled begin
@@ -41,39 +87,6 @@ appProjects:
         autoSync: true
       # @section helmCharts.tempo.enabled end
 
-  # @section helmCharts.ingressNginx.enabled begin
-  ## Ingress
-  - namespace: ingress-nginx
-    applications:
-      - name: ingress-nginx
-        path: external/ingress-nginx/ingress-nginx/4.13.0
-        targetRevision: f/virostek
-        autoSync: true
-  # @section helmCharts.ingressNginx.enabled end
-
-  # @section helmCharts.certManager.enabled begin
-  ## Certificate Management
-  - namespace: cert-manager
-    applications:
-      - name: cert-manager
-        path: external/cert-manager/cert-manager/1.18.2
-        targetRevision: f/virostek
-        autoSync: true
-  # @section helmCharts.certManager.enabled end
-
-  # @section helmCharts.awsLBController.enabled begin
-  - namespace: kube-system
-    applications:
-      - name: aws-lb-controller
-        path: external/eks/aws-load-balancer-controller/1.16.0
-        targetRevision: f/virostek
-        autoSync: true
-  # @section helmCharts.awsLBController.enabled end
-      - name: karpenter
-        path: external/karpenter/karpenter/1.8.3
-        targetRevision: f/virostek
-        autoSync: true
-  
   # Gateway API (Uncomment when IRSA is configured)
   # Gateway API provides next-generation ingress with VPC Lattice integration
   # Run in parallel with ingress-nginx for gradual migration
