@@ -1,11 +1,7 @@
 # Retrieve SSH private key from AWS Secrets Manager
 # YOU NEED TO CREATE THE SECRET BEFOREHAND: `aws secretsmanager create-secret --name argocd/git-ssh-private-key --secret-string "$(cat ~/.ssh/id_ed25519)"`
-data "aws_secretsmanager_secret" "argocd_ssh_key" {
-  name = "argocd/git-ssh-private-key"
-}
-
 data "aws_secretsmanager_secret_version" "argocd_ssh_key" {
-  secret_id = data.aws_secretsmanager_secret.argocd_ssh_key.id
+  secret_id = "argocd/git-ssh-private-key"
 }
 
 resource "helm_release" "argocd" {
@@ -75,58 +71,70 @@ resource "helm_release" "argocd" {
     #   value = module.wildcard_cert.acm_certificate_arn
     # },
     # HA setup
-    {
-      name  = "redis-ha.enabled"
-      value = true
-    },
-    {
-      name  = "controller.replicas"
-      value = 1
-    },
-    {
-      name  = "server.replicas"
-      value = 2
-    },
-    {
-      name  = "repoServer.replicas"
-      value = 2
-    },
-    {
-      name  = "applicationSet.replicas"
-      value = 2
-    },
+    # {
+    #   name  = "redis-ha.enabled"
+    #   value = true
+    # },
+    # {
+    #   name  = "controller.replicas"
+    #   value = 1
+    # },
+    # {
+    #   name  = "server.replicas"
+    #   value = 2
+    # },
+    # {
+    #   name  = "repoServer.replicas"
+    #   value = 2
+    # },
+    # {
+    #   name  = "applicationSet.replicas"
+    #   value = 2
+    # },
   ]
 }
 
 
 # Using 'gavinbunney/kubectl' instead of official Kubernetes provider to allow applying manifest without checking for CRDs during plan
 resource "kubectl_manifest" "infra_apps" {
-  yaml_body = <<-YAML
-    apiVersion: argoproj.io/v1alpha1
-    kind: Application
-    metadata:
-      name: infra-apps
-      namespace: argocd
-      finalizers:
-        - resources-finalizer.argocd.argoproj.io
-      annotations:
-        argocd.argoproj.io/sync-wave: "2" # Default wave is 0 (0 is the earliest)
-    spec:
-      project: default
-      source:
-        repoURL: ${var.git_repo_url}
-        targetRevision: ${var.git_target_revision}
-        path: argocd/infra-apps
-        directory:
-          recurse: true
-      destination:
-        server: in-cluster
-        namespace: argocd
-      syncPolicy:
-        automated:
-          prune: true
-          selfHeal: true
-  YAML
+  yaml_body = yamlencode({
+    apiVersion = "argoproj.io/v1alpha1"
+    kind       = "Application"
+    metadata = {
+      name      = "infra-apps"
+      namespace = "argocd"
+      finalizers = [
+        "resources-finalizer.argocd.argoproj.io"
+      ]
+      annotations = {
+        "argocd.argoproj.io/sync-wave" = "2" # Default wave is 0 (0 is the earliest)
+      }
+    }
+    spec = {
+      project = "default"
+      source = {
+        repoURL        = var.git_repo_url
+        targetRevision = var.git_target_revision
+        path           = "argocd/infra-apps"
+        directory = {
+          recurse = true
+        }
+      }
+      destination = {
+        server    = "in-cluster"
+        namespace = "argocd"
+      }
+      syncPolicy = {
+        automated = {
+          prune    = true
+          selfHeal = true
+        }
+        syncOptions = [
+          "CreateNamespace=true"
+        ]
+      }
+    }
+  })
 
   wait = true
 
@@ -134,32 +142,44 @@ resource "kubectl_manifest" "infra_apps" {
 }
 
 resource "kubectl_manifest" "support_resources" {
-  yaml_body = <<-YAML
-    apiVersion: argoproj.io/v1alpha1
-    kind: Application
-    metadata:
-      name: support-resources
-      namespace: argocd
-      finalizers:
-        - resources-finalizer.argocd.argoproj.io
-      annotations:
-        argocd.argoproj.io/sync-wave: "3" # Default wave is 0 (0 means early)
-    spec:
-      project: default
-      source:
-        repoURL: ${var.git_repo_url}
-        targetRevision: ${var.git_target_revision}
-        path: argocd/support-resources
-        directory:
-          recurse: true
-      destination:
-        server: in-cluster
-        namespace: argocd
-      syncPolicy:
-        automated:
-          prune: true
-          selfHeal: true
-  YAML
+  yaml_body = yamlencode({
+    apiVersion = "argoproj.io/v1alpha1"
+    kind       = "Application"
+    metadata = {
+      name      = "support-resources"
+      namespace = "argocd"
+      finalizers = [
+        "resources-finalizer.argocd.argoproj.io"
+      ]
+      annotations = {
+        "argocd.argoproj.io/sync-wave" = "3"
+      }
+    }
+    spec = {
+      project = "default"
+      source = {
+        repoURL        = var.git_repo_url
+        targetRevision = var.git_target_revision
+        path           = "argocd/support-resources"
+        directory = {
+          recurse = true
+        }
+      }
+      destination = {
+        server    = "in-cluster"
+        namespace = "argocd"
+      }
+      syncPolicy = {
+        automated = {
+          prune    = true
+          selfHeal = true
+        }
+        syncOptions = [
+          "CreateNamespace=true"
+        ]
+      }
+    }
+  })
 
   wait = true
 
@@ -167,31 +187,43 @@ resource "kubectl_manifest" "support_resources" {
 }
 
 resource "kubectl_manifest" "app_of_apps" {
-  yaml_body = <<-YAML
-    apiVersion: argoproj.io/v1alpha1
-    kind: Application
-    metadata:
-      name: app-of-apps
-      namespace: argocd
-      finalizers:
-        - resources-finalizer.argocd.argoproj.io
-    spec:
-      project: default
-      source:
-        repoURL: ${var.git_repo_url}
-        path: templates/argocd/charts/internal/app-of-apps
-        targetRevision: ${var.git_target_revision}
-        helm:
-          valueFiles:
-          - $values/templates/argocd/applications.yaml
-      destination:
-        name: in-cluster
-        namespace: argocd
-      syncPolicy:
-        automated:
-          prune: true
-          selfHeal: true
-  YAML
+  yaml_body = yamlencode({
+    apiVersion = "argoproj.io/v1alpha1"
+    kind       = "Application"
+    metadata = {
+      name      = "app-of-apps"
+      namespace = "argocd"
+      finalizers = [
+        "resources-finalizer.argocd.argoproj.io"
+      ]
+    }
+    spec = {
+      project = "default"
+      source = {
+        repoURL        = var.git_repo_url
+        path           = "templates/argocd/charts/internal/app-of-apps"
+        targetRevision = var.git_target_revision
+        helm = {
+          valueFiles = [
+            "$values/templates/argocd/applications.yaml"
+          ]
+        }
+      }
+      destination = {
+        name      = "in-cluster"
+        namespace = "argocd"
+      }
+      syncPolicy = {
+        automated = {
+          prune    = true
+          selfHeal = true
+        }
+        syncOptions = [
+          "CreateNamespace=true"
+        ]
+      }
+    }
+  })
 
   wait = true
 
@@ -199,20 +231,24 @@ resource "kubectl_manifest" "app_of_apps" {
 }
 
 resource "kubectl_manifest" "repo_secret" {
-  yaml_body = <<-YAML
-    apiVersion: v1
-    kind: Secret
-    metadata:
-      name: private-repo
-      namespace: argocd
-      labels:
-        argocd.argoproj.io/secret-type: repository
-    stringData:
-      type: git
-      url: ${var.git_repo_url}
-      sshPrivateKey: |
-${indent(8, data.aws_secretsmanager_secret_version.argocd_ssh_key.secret_string)}
-  YAML
+  yaml_body = yamlencode({
+    apiVersion = "v1"
+    kind       = "Secret"
+    metadata = {
+      name      = "argocd-repo"
+      namespace = "argocd"
+      labels = {
+        "argocd.argoproj.io/secret-type" = "repository"
+      }
+    }
+    stringData = {
+      type          = "git"
+      name          = "github"
+      project       = "default"
+      url           = var.git_repo_url
+      sshPrivateKey = data.aws_secretsmanager_secret_version.argocd_ssh_key.secret_string
+    }
+  })
 
   wait = true
 

@@ -38,11 +38,6 @@ variable "global_tags" {
 # ARGOCD
 # -------------------------------------------------------------------
 
-variable "selfhosted_git_server_fingerprint" {
-  type        = string
-  description = "Fingerprint of the self-hosted Git server. Can be retrieved by running `ssh-keyscan -t rsa your.gitlab.com`"
-}
-
 variable "git_repo_url" {
   type        = string
   description = "SSH URL of the Git repository to be used by ArgoCD"
@@ -51,10 +46,4 @@ variable "git_repo_url" {
 variable "git_target_revision" {
   type        = string
   description = "Target branch to sync from"
-}
-
-variable "git_repo_private_key" {
-  type        = string
-  description = "Private key to access the Git repository. Public one is configured in the repository settings as deploy key"
-  sensitive   = true
 }
