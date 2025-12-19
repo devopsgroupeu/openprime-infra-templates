@@ -1,27 +1,27 @@
-global:
-  extraEnv:
-    - name: S3_TEMPO_ENDPOINT
-      valueFrom:
-        secretKeyRef:
-          name: monitoring-s3
-          key: S3_ENDPOINT
-    - name: S3_TEMPO_ACCESS_KEY_ID
-      valueFrom:
-        secretKeyRef:
-          name: monitoring-s3
-          key: S3_ACCESS_KEY_ID
-    - name: S3_TEMPO_SECRET_ACCESS_KEY
-      valueFrom:
-        secretKeyRef:
-          name: monitoring-s3
-          key: S3_SECRET_ACCESS_KEY
-    - name: S3_TEMPO_BUCKET
-      valueFrom:
-        secretKeyRef:
-          name: monitoring-s3
-          key: S3_BUCKET
-    - name: AWS_S3_FORCE_PATH_STYLE
-      value: "true"
+# global:
+#   extraEnv:
+#     - name: S3_TEMPO_ENDPOINT
+#       valueFrom:
+#         secretKeyRef:
+#           name: monitoring-s3
+#           key: S3_ENDPOINT
+#     - name: S3_TEMPO_ACCESS_KEY_ID
+#       valueFrom:
+#         secretKeyRef:
+#           name: monitoring-s3
+#           key: S3_ACCESS_KEY_ID
+#     - name: S3_TEMPO_SECRET_ACCESS_KEY
+#       valueFrom:
+#         secretKeyRef:
+#           name: monitoring-s3
+#           key: S3_SECRET_ACCESS_KEY
+#     - name: S3_TEMPO_BUCKET
+#       valueFrom:
+#         secretKeyRef:
+#           name: monitoring-s3
+#           key: S3_BUCKET
+#     - name: AWS_S3_FORCE_PATH_STYLE
+#       value: "true"
 tempo:
   searchEnabled: true
 
@@ -77,12 +77,12 @@ prometheusRule:
 server:
   logLevel: debug
 
-storage:
-  trace:
-    backend: s3
-    s3:
-      bucket:     ${S3_TEMPO_BUCKET}
-      region:     auto
-      endpoint:   ${S3_TEMPO_ENDPOINT}
-      access_key: ${S3_TEMPO_ACCESS_KEY_ID}
-      secret_key: ${S3_TEMPO_SECRET_ACCESS_KEY}
+# storage:
+#   trace:
+#     backend: s3
+#     s3:
+#       bucket:     ${S3_TEMPO_BUCKET}
+#       region:     auto
+#       endpoint:   ${S3_TEMPO_ENDPOINT}
+#       access_key: ${S3_TEMPO_ACCESS_KEY_ID}
+#       secret_key: ${S3_TEMPO_SECRET_ACCESS_KEY}

@@ -40,9 +40,6 @@ grafana:
     ingressClassName: nginx
     hosts: [grafana.openprime.io]
 
-  admin:
-    existingSecret: grafana-admin-secret
-
 # ────────────────────────────────────────────────────────────
 # 3. Datasources – Prometheus, Loki & Tempo
 # ────────────────────────────────────────────────────────────
