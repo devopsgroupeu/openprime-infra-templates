@@ -83,6 +83,7 @@ module "rds" {
   performance_insights_enabled          = var.rds_performance_insights_enabled
   performance_insights_retention_period = var.rds_performance_insights_retention_period
   create_monitoring_role                = true
+  monitoring_role_name                  = "${var.global_prefix}rds-monitoring-role"
   monitoring_interval                   = var.rds_monitoring_interval
   enabled_cloudwatch_logs_exports       = local.cloudwatch_logs_exports
   create_cloudwatch_log_group           = true
