@@ -15,7 +15,7 @@ locals {
   all_helm_charts = {
     # @section promtail begin
     promtail = {
-      enabled              = lookup(lookup(local.helm_chart_selections, "promtail", {}), "enabled", false)
+      enabled              = try(local.helm_chart_selections["promtail"]["enabled"], false)
       template_values_file = "${path.module}/../../argocd/values/promtail.yaml.tftpl"
       values = {
         logLevel = "info"
@@ -25,7 +25,7 @@ locals {
 
     # @section aws_load_balancer_controller begin
     aws_load_balancer_controller = {
-      enabled              = lookup(lookup(local.helm_chart_selections, "awsLoadBalancerController", {}), "enabled", false)
+      enabled              = try(local.helm_chart_selections["awsLoadBalancerController"]["enabled"], false)
       template_values_file = "${path.module}/../../argocd/values/aws-lb-controller.yaml.tftpl"
       values = {
         service_account_name = local.aws_lb_service_account_name
@@ -41,7 +41,7 @@ locals {
 
     # @section loki begin
     loki = {
-      enabled              = lookup(lookup(local.helm_chart_selections, "loki", {}), "enabled", false)
+      enabled              = try(local.helm_chart_selections["loki"]["enabled"], false)
       template_values_file = "${path.module}/../../argocd/values/loki.yaml.tftpl"
       values = {
         region               = var.region
@@ -55,7 +55,7 @@ locals {
 
     # @section cert_manager begin
     cert_manager = {
-      enabled              = lookup(lookup(local.helm_chart_selections, "certManager", {}), "enabled", false)
+      enabled              = try(local.helm_chart_selections["certManager"]["enabled"], false)
       template_values_file = "${path.module}/../../argocd/values/cert-manager.yaml.tftpl"
       values = {
         install_custom_resource_definitions = true
@@ -72,7 +72,7 @@ locals {
 
     # @section ingress_nginx begin
     ingress_nginx = {
-      enabled              = lookup(lookup(local.helm_chart_selections, "ingressNginx", {}), "enabled", false)
+      enabled              = try(local.helm_chart_selections["ingressNginx"]["enabled"], false)
       template_values_file = "$${path.module}/../../argocd/values/ingress-nginx.yaml.tftpl"
       values = {
         cpu_request                       = "100m"
