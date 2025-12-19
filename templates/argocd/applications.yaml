@@ -66,6 +66,15 @@ appProjects:
         targetRevision: f/virostek
         autoSync: true
   # @section helmCharts.certManager.enabled end
+
+  # @section helmCharts.awsLBController.enabled begin
+  - namespace: kube-system
+    applications:
+      - name: aws-lb-controller
+        path: external/eks/aws-load-balancer-controller/1.16.0
+        targetRevision: f/virostek
+        autoSync: true
+  # @section helmCharts.awsLBController.enabled end
   
   # Gateway API (Uncomment when IRSA is configured)
   # Gateway API provides next-generation ingress with VPC Lattice integration

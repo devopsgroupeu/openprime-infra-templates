@@ -115,7 +115,7 @@ resource "kubectl_manifest" "infra_apps" {
       source = {
         repoURL        = var.git_repo_url
         targetRevision = var.git_target_revision
-        path           = "argocd/infra-apps"
+        path           = "templates/argocd/infra-apps"
         directory = {
           recurse = true
         }
@@ -160,7 +160,7 @@ resource "kubectl_manifest" "support_resources" {
       source = {
         repoURL        = var.git_repo_url
         targetRevision = var.git_target_revision
-        path           = "argocd/support-resources"
+        path           = "templates/argocd/support-resources"
         directory = {
           recurse = true
         }
