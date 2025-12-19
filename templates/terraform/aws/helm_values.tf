@@ -69,6 +69,27 @@ locals {
       }
     }
     # @section cert_manager end
+
+    # @section ingress_nginx begin
+    ingress_nginx = {
+      enabled              = lookup(lookup(local.helm_chart_selections, "ingressNginx", {}), "enabled", false)
+      template_values_file = "$${path.module}/../../argocd/values/ingress-nginx.yaml.tftpl"
+      values = {
+        cpu_request                       = "100m"
+        memory_request                    = "128Mi"
+        metrics_enabled                   = true
+        autoscaling_enabled               = true
+        autoscaling_min_replicas          = 1
+        autoscaling_max_replicas          = 5
+        autoscaling_target_cpu_percentage = 80
+        lb_backend_protocol               = "http"
+        lb_connection_idle_timeout        = "3600"
+        lb_type                           = "external"
+        lb_nlb_target_type                = "ip"
+        lb_scheme                         = "internet-facing"
+      }
+    }
+    # @section ingress_nginx end
   }
 
   # Filter to only enabled helm charts
