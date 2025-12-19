@@ -395,3 +395,10 @@ route53_private_zones = false
 route53_force_destroy = false
 # @param services.route53.enableDnssec
 route53_enable_dnssec = false
+
+# -------------------------------------------------------------------
+# HELM CHARTS
+# -------------------------------------------------------------------
+
+# @param services.eks.helmCharts
+helm_charts = {}

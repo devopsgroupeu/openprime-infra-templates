@@ -59,7 +59,6 @@ appProjects:
         path: external/cert-manager/cert-manager/1.18.2
         targetRevision: f/virostek
         autoSync: true
-        skipValuesFile: true
   # @section helmCharts.certManager.enabled end
 
   # @section helmCharts.awsLBController.enabled begin

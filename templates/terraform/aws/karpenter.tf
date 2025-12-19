@@ -13,7 +13,7 @@ module "karpenter" {
   node_iam_role_additional_policies = var.karpenter_node_iam_role_additional_policies
 }
 
-# Generate Karpenter Helm chart values
+## Generate Karpenter Helm chart values
 resource "local_file" "karpenter_values" {
   content = templatefile(
     "${path.module}/../../argocd/values/karpenter.yaml.tftpl",
@@ -26,7 +26,7 @@ resource "local_file" "karpenter_values" {
   filename = trimsuffix("${path.module}/../../argocd/values/karpenter.yaml.tftpl", ".tftpl")
 }
 
-# Generate Karpenter support resources (EC2NodeClass and NodePool)
+## Generate Karpenter support resources (EC2NodeClass and NodePool)
 resource "local_file" "karpenter_support_resources" {
   content = templatefile(
     "${path.module}/../../argocd/support-resources/karpenter.yaml.tftpl",

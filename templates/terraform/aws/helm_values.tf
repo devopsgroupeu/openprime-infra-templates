@@ -1,4 +1,3 @@
-# @param services.eks.helmCharts
 variable "helm_charts" {
   description = "Helm chart selections from the frontend"
   type        = map(any)
@@ -53,6 +52,23 @@ locals {
       }
     }
     # @section loki end
+
+    # @section cert_manager begin
+    cert_manager = {
+      enabled              = lookup(lookup(local.helm_chart_selections, "certManager", {}), "enabled", false)
+      template_values_file = "${path.module}/../../argocd/values/cert-manager.yaml.tftpl"
+      values = {
+        install_custom_resource_definitions = true
+        replica_count                       = 1
+        node_selector                       = "kubernetes.io/os: linux"
+        metrics                             = true
+        webhook_replica_count               = 1
+        webhook_node_selector               = "kubernetes.io/os: linux"
+        cainjector_replica_count            = 1
+        cainjector_node_selector            = "kubernetes.io/os: linux"
+      }
+    }
+    # @section cert_manager end
   }
 
   # Filter to only enabled helm charts

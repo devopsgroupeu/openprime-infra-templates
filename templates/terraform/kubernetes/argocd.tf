@@ -138,7 +138,7 @@ resource "kubectl_manifest" "example_apps" {
 
   wait = true
 
-  depends_on = [helm_release.argocd, kubectl_manifest.infra_apps]
+  depends_on = [helm_release.argocd]
 }
 
 resource "kubectl_manifest" "support_resources" {
@@ -184,7 +184,7 @@ resource "kubectl_manifest" "support_resources" {
 
   wait = true
 
-  depends_on = [helm_release.argocd, kubectl_manifest.infra_apps]
+  depends_on = [helm_release.argocd]
 }
 
 resource "kubectl_manifest" "app_of_apps" {

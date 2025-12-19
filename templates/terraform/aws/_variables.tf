@@ -299,6 +299,12 @@ variable "default_node_group_iam_additional_policies" {
   }
 }
 
+variable "helm_charts" {
+  description = "Helm chart selections from the frontend"
+  type        = map(any)
+  default     = {}
+}
+
 # -------------------------------------------------------------------
 # ECR
 # -------------------------------------------------------------------
