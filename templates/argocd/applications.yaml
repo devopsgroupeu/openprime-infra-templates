@@ -43,7 +43,7 @@ appProjects:
       # @section helmCharts.tempo.enabled end
 
   # @section helmCharts.ingressNginx.enabled begin
-  # Ingress
+  ## Ingress
   - namespace: ingress-nginx
     applications:
       - name: ingress-nginx
@@ -52,7 +52,7 @@ appProjects:
   # @section helmCharts.ingressNginx.enabled end
 
   # @section helmCharts.certManager.enabled begin
-  # Certificate Management
+  ## Certificate Management
   - namespace: cert-manager
     applications:
       - name: cert-manager
