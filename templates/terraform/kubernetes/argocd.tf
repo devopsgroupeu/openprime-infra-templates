@@ -121,7 +121,7 @@ resource "kubectl_manifest" "infra_apps" {
         }
       }
       destination = {
-        server    = "in-cluster"
+        name      = "in-cluster"
         namespace = "argocd"
       }
       syncPolicy = {
@@ -166,7 +166,7 @@ resource "kubectl_manifest" "support_resources" {
         }
       }
       destination = {
-        server    = "in-cluster"
+        name      = "in-cluster"
         namespace = "argocd"
       }
       syncPolicy = {
