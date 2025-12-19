@@ -67,7 +67,7 @@ locals {
     # @section ingress_nginx begin
     ingress_nginx = {
       enabled              = try(local.helm_chart_selections["ingressNginx"]["enabled"], false)
-      template_values_file = "$${path.module}/../../argocd/values/ingress-nginx.yaml.tftpl"
+      template_values_file = "${path.module}/../../argocd/values/ingress-nginx.yaml.tftpl"
       values = {
         cpu_request                       = "100m"
         memory_request                    = "128Mi"
