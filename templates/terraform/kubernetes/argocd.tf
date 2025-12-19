@@ -13,10 +13,10 @@ resource "helm_release" "argocd" {
   create_namespace = true
 
   set = [
-    # {
-    #   name  = "global.domain"
-    #   value = "argocd.${var.domain_name}"
-    # },
+    {
+      name  = "global.domain"
+      value = "argocd.openprime.io"
+    },
     {
       name  = "configs.params.server\\.insecure"
       value = true
