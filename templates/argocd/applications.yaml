@@ -70,7 +70,7 @@ appProjects:
         autoSync: true
   # @section helmCharts.awsLBController.enabled end
       - name: karpenter
-        path: external/karpenter/karpenter/1.8.0
+        path: external/karpenter/karpenter/1.8.3
         targetRevision: f/virostek
         autoSync: true
   
