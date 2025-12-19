@@ -12,19 +12,8 @@ locals {
 
   # Define all possible helm chart configurations
   # Values files are located in argocd/values/ directory
+  # Note: Karpenter is managed in karpenter.tf directly
   all_helm_charts = {
-    # @section karpenter begin
-    karpenter = {
-      enabled              = lookup(lookup(local.helm_chart_selections, "karpenter", {}), "enabled", false)
-      template_values_file = "${path.module}/../../argocd/values/karpenter.yaml.tftpl"
-      values = {
-        cluster_name     = module.eks.cluster_name
-        cluster_endpoint = module.eks.cluster_endpoint
-        queue_name       = module.karpenter.queue_name
-      }
-    }
-    # @section karpenter end
-
     # @section promtail begin
     promtail = {
       enabled              = lookup(lookup(local.helm_chart_selections, "promtail", {}), "enabled", false)

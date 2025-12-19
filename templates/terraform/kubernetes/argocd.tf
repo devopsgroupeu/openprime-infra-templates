@@ -141,6 +141,52 @@ resource "kubectl_manifest" "example_apps" {
   depends_on = [helm_release.argocd, kubectl_manifest.infra_apps]
 }
 
+resource "kubectl_manifest" "support_resources" {
+  yaml_body = yamlencode({
+    apiVersion = "argoproj.io/v1alpha1"
+    kind       = "Application"
+    metadata = {
+      name      = "support-resources"
+      namespace = "argocd"
+      finalizers = [
+        "resources-finalizer.argocd.argoproj.io"
+      ]
+      annotations = {
+        "argocd.argoproj.io/sync-wave" = "3"
+      }
+    }
+    spec = {
+      project = "default"
+      source = {
+        repoURL        = var.git_repo_url
+        targetRevision = var.git_target_revision
+        path           = "templates/argocd/support-resources"
+        directory = {
+          recurse = true
+        }
+      }
+      destination = {
+        name      = "in-cluster"
+        namespace = "argocd"
+      }
+      syncPolicy = {
+        automated = {
+          prune    = true
+          selfHeal = true
+        }
+        syncOptions = [
+          "CreateNamespace=true"
+        ]
+      }
+    }
+  })
+
+
+  wait = true
+
+  depends_on = [helm_release.argocd, kubectl_manifest.infra_apps]
+}
+
 resource "kubectl_manifest" "app_of_apps" {
   yaml_body = yamlencode({
     apiVersion = "argoproj.io/v1alpha1"
