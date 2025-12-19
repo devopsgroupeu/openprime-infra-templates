@@ -1,48 +1,103 @@
-resource "helm_release" "argocd" {
-  namespace  = "argocd"
-  name       = "argocd"
-  repository = "https://argoproj.github.io/argo-helm"
-  chart      = "argo-cd"
-  version    = "8.0.7"
+# Retrieve SSH private key from AWS Secrets Manager
+# YOU NEED TO CREATE THE SECRET BEFOREHAND: `aws secretsmanager create-secret --name argocd/git-ssh-private-key --secret-string "$(cat ~/.ssh/id_ed25519)"`
+data "aws_secretsmanager_secret" "argocd_ssh_key" {
+  name = "argocd/git-ssh-private-key"
+}
 
+data "aws_secretsmanager_secret_version" "argocd_ssh_key" {
+  secret_id = data.aws_secretsmanager_secret.argocd_ssh_key.id
+}
+
+resource "helm_release" "argocd" {
+  namespace        = "argocd"
+  name             = "argocd"
+  repository       = "https://argoproj.github.io/argo-helm"
+  chart            = "argo-cd"
+  version          = "9.1.4"
   create_namespace = true
 
-  values = [
-    <<-EOT
-    server:
-      ingress:
-        enabled: false
-        controller: aws
-        ingressClassName: alb
-        annotations:
-          alb.ingress.kubernetes.io/scheme: internal
-          alb.ingress.kubernetes.io/target-type: ip
-          alb.ingress.kubernetes.io/backend-protocol: HTTP
-          alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}, {"HTTPS":443}]'
-          alb.ingress.kubernetes.io/ssl-redirect: '443'
-        aws:
-          serviceType: ClusterIP # <- Used with target-type: ip
-          backendProtocolVersion: GRPC
-
-    configs:
-      params:
-        server.insecure: true
-      repositories:
-        dog-gitlab-repo:
-          url: ${var.git_repo_url}
-          type: git
-          name: GitLab
-      ssh:
-        extraHosts: |
-          ${var.selfhosted_git_server_fingerprint}
-    EOT
+  set = [
+    # {
+    #   name  = "global.domain"
+    #   value = "argocd.${var.domain_name}"
+    # },
+    {
+      name  = "configs.params.server\\.insecure"
+      value = true
+    },
+    {
+      name  = "server.ingress.enabled"
+      value = true
+    },
+    {
+      name  = "server.ingress.controller"
+      value = "aws"
+    },
+    {
+      name  = "server.ingress.ingressClassName"
+      value = "alb"
+    },
+    {
+      name  = "server.ingress.annotations.alb\\.ingress\\.kubernetes\\.io/scheme"
+      value = "internet-facing"
+    },
+    {
+      name  = "server.ingress.annotations.alb\\.ingress\\.kubernetes\\.io/target-type"
+      value = "ip"
+    },
+    {
+      name  = "server.ingress.annotations.alb\\.ingress\\.kubernetes\\.io/backend-protocol"
+      value = "HTTP"
+    },
+    {
+      name  = "server.ingress.annotations.alb\\.ingress\\.kubernetes\\.io/listen-ports"
+      value = "[{\"HTTPS\":443}]"
+    },
+    {
+      name  = "server.ingress.annotations.alb\\.ingress\\.kubernetes\\.io/ssl-redirect"
+      value = "443"
+    },
+    {
+      name  = "server.ingress.annotations.alb\\.ingress\\.kubernetes\\.io/group\\.name"
+      value = "essential"
+    },
+    {
+      name  = "server.ingress.aws.serviceType"
+      value = "ClusterIP"
+    },
+    {
+      name  = "server.ingress.aws.backendProtocolVersion"
+      value = "GRPC"
+    },
+    # ACM Certificate
+    # {
+    #   name  = "server.ingress.annotations.alb\\.ingress\\.kubernetes\\.io/certificate-arn"
+    #   value = module.wildcard_cert.acm_certificate_arn
+    # },
+    # HA setup
+    {
+      name  = "redis-ha.enabled"
+      value = true
+    },
+    {
+      name  = "controller.replicas"
+      value = 1
+    },
+    {
+      name  = "server.replicas"
+      value = 2
+    },
+    {
+      name  = "repoServer.replicas"
+      value = 2
+    },
+    {
+      name  = "applicationSet.replicas"
+      value = 2
+    },
   ]
-
-  set_sensitive = {
-    name  = "configs.repositories.dog-gitlab-repo.sshPrivateKey"
-    value = var.git_repo_private_key
-  }
 }
+
 
 # Using 'gavinbunney/kubectl' instead of official Kubernetes provider to allow applying manifest without checking for CRDs during plan
 resource "kubectl_manifest" "infra_apps" {
@@ -65,7 +120,7 @@ resource "kubectl_manifest" "infra_apps" {
         directory:
           recurse: true
       destination:
-        server: https://kubernetes.default.svc
+        server: in-cluster
         namespace: argocd
       syncPolicy:
         automated:
@@ -98,7 +153,7 @@ resource "kubectl_manifest" "support_resources" {
         directory:
           recurse: true
       destination:
-        server: https://kubernetes.default.svc
+        server: in-cluster
         namespace: argocd
       syncPolicy:
         automated:
@@ -109,4 +164,57 @@ resource "kubectl_manifest" "support_resources" {
   wait = true
 
   depends_on = [helm_release.argocd, kubectl_manifest.infra_apps]
+}
+
+resource "kubectl_manifest" "app_of_apps" {
+  yaml_body = <<-YAML
+    apiVersion: argoproj.io/v1alpha1
+    kind: Application
+    metadata:
+      name: app-of-apps
+      namespace: argocd
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: default
+      source:
+        repoURL: ${var.git_repo_url}
+        path: templates/argocd/charts/internal/app-of-apps
+        targetRevision: ${var.git_target_revision}
+        helm:
+          valueFiles:
+          - $values/templates/argocd/applications.yaml
+      destination:
+        name: in-cluster
+        namespace: argocd
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+  YAML
+
+  wait = true
+
+  depends_on = [helm_release.argocd]
+}
+
+resource "kubectl_manifest" "repo_secret" {
+  yaml_body = <<-YAML
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: private-repo
+      namespace: argocd
+      labels:
+        argocd.argoproj.io/secret-type: repository
+    stringData:
+      type: git
+      url: ${var.git_repo_url}
+      sshPrivateKey: |
+${indent(8, data.aws_secretsmanager_secret_version.argocd_ssh_key.secret_string)}
+  YAML
+
+  wait = true
+
+  depends_on = [helm_release.argocd]
 }
