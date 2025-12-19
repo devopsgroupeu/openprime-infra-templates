@@ -34,14 +34,6 @@ appProjects:
         autoSync: true
       # @section helmCharts.loki.enabled end
 
-      # @section helmCharts.thanos.enabled begin
-      - name: thanos
-        path: external/bitnami/thanos/17.2.1
-        targetRevision: f/virostek
-        autoSync: true
-        skipValuesFile: true
-      # @section helmCharts.thanos.enabled end
-
       # @section helmCharts.tempo.enabled begin
       - name: tempo
         path: external/grafana/tempo-distributed/1.45.0
@@ -57,7 +49,6 @@ appProjects:
         path: external/ingress-nginx/ingress-nginx/4.13.0
         targetRevision: f/virostek
         autoSync: true
-        skipValuesFile: true
   # @section helmCharts.ingressNginx.enabled end
 
   # @section helmCharts.certManager.enabled begin
@@ -79,6 +70,10 @@ appProjects:
         targetRevision: f/virostek
         autoSync: true
   # @section helmCharts.awsLBController.enabled end
+      - name: karpenter
+        path: external/karpenter/karpenter/1.8.0
+        targetRevision: f/virostek
+        autoSync: true
   
   # Gateway API (Uncomment when IRSA is configured)
   # Gateway API provides next-generation ingress with VPC Lattice integration

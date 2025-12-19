@@ -96,57 +96,12 @@ resource "helm_release" "argocd" {
 
 
 # Using 'gavinbunney/kubectl' instead of official Kubernetes provider to allow applying manifest without checking for CRDs during plan
-resource "kubectl_manifest" "infra_apps" {
+resource "kubectl_manifest" "example_apps" {
   yaml_body = yamlencode({
     apiVersion = "argoproj.io/v1alpha1"
     kind       = "Application"
     metadata = {
-      name      = "infra-apps"
-      namespace = "argocd"
-      finalizers = [
-        "resources-finalizer.argocd.argoproj.io"
-      ]
-      annotations = {
-        "argocd.argoproj.io/sync-wave" = "2" # Default wave is 0 (0 is the earliest)
-      }
-    }
-    spec = {
-      project = "default"
-      source = {
-        repoURL        = var.git_repo_url
-        targetRevision = var.git_target_revision
-        path           = "templates/argocd/infra-apps"
-        directory = {
-          recurse = true
-        }
-      }
-      destination = {
-        name      = "in-cluster"
-        namespace = "argocd"
-      }
-      syncPolicy = {
-        automated = {
-          prune    = true
-          selfHeal = true
-        }
-        syncOptions = [
-          "CreateNamespace=true"
-        ]
-      }
-    }
-  })
-
-  wait = true
-
-  depends_on = [helm_release.argocd]
-}
-
-resource "kubectl_manifest" "support_resources" {
-  yaml_body = yamlencode({
-    apiVersion = "argoproj.io/v1alpha1"
-    kind       = "Application"
-    metadata = {
-      name      = "support-resources"
+      name      = "example-apps"
       namespace = "argocd"
       finalizers = [
         "resources-finalizer.argocd.argoproj.io"
@@ -160,7 +115,7 @@ resource "kubectl_manifest" "support_resources" {
       source = {
         repoURL        = var.git_repo_url
         targetRevision = var.git_target_revision
-        path           = "templates/argocd/support-resources"
+        path           = "templates/argocd/example-apps"
         directory = {
           recurse = true
         }

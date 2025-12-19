@@ -15,7 +15,7 @@ module "karpenter" {
 
 resource "local_file" "karpenter" {
   content = templatefile(
-    "${path.module}/../../argocd/support-resources/karpenter.yaml.tftpl",
+    "${path.module}/../../argocd/values/karpenter.yaml.tftpl",
     {
       cluster_name       = module.eks.cluster_name
       node_iam_role_name = module.karpenter.node_iam_role_name
@@ -23,6 +23,6 @@ resource "local_file" "karpenter" {
       capacity_type      = var.karpenter_nodepool_capacity_type
     }
   )
-  filename = trimsuffix("${path.module}/../../argocd/support-resources/karpenter.yaml.tftpl", ".tftpl")
+  filename = trimsuffix("${path.module}/../../argocd/values/karpenter.yaml.tftpl", ".tftpl")
 }
 # @section services.eks.karpenterEnabled end
