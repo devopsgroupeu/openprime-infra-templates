@@ -1,5 +1,4 @@
 global:
-  dnsService: rke2-coredns-rke2-coredns
   extraEnv:
     - name: S3_TEMPO_ENDPOINT
       valueFrom:
@@ -34,17 +33,6 @@ serviceAccount:
 rbac:
   create: false
   pspEnabled: false
-
-gateway:
-  enabled: true
-  ingress:
-    enabled: true
-    ingressClassName: nginx
-    hosts:
-      - host: tempo.openprime.io
-        paths:
-          - path: /api
-            pathType: Prefix
 
 distributor:
   replicas: 1

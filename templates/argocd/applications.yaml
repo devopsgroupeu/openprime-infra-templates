@@ -12,6 +12,7 @@ appProjects:
         targetRevision: f/virostek
         replace: true
         autoSync: true
+        skipValuesFile: true
       - name: kube-prometheus-stack
         path: external/prometheus-community/kube-prometheus-stack/75.9.0
         targetRevision: f/virostek
@@ -38,6 +39,7 @@ appProjects:
         path: external/bitnami/thanos/17.2.1
         targetRevision: f/virostek
         autoSync: true
+        skipValuesFile: true
       # @section helmCharts.thanos.enabled end
 
       # @section helmCharts.tempo.enabled begin
@@ -55,6 +57,7 @@ appProjects:
         path: external/ingress-nginx/ingress-nginx/4.13.0
         targetRevision: f/virostek
         autoSync: true
+        skipValuesFile: true
   # @section helmCharts.ingressNginx.enabled end
 
   # @section helmCharts.certManager.enabled begin
@@ -65,6 +68,7 @@ appProjects:
         path: external/cert-manager/cert-manager/1.18.2
         targetRevision: f/virostek
         autoSync: true
+        skipValuesFile: true
   # @section helmCharts.certManager.enabled end
 
   # @section helmCharts.awsLBController.enabled begin

@@ -1,7 +1,6 @@
 deploymentMode: SimpleScalable
 
 global:
-  dnsService: rke2-coredns-rke2-coredns
   extraEnv:
     - name: S3_ENDPOINT
       valueFrom:
@@ -31,11 +30,6 @@ global:
 gateway:
   enabled: false
 
-ingress:
-  enabled: true
-  ingressClassName: nginx
-  hosts:
-    - loki.openprime.io
 resultsCache:
   allocatedMemory: 256
   maxItemMemory:   4
@@ -95,20 +89,20 @@ loki:
 backend:
   replicas: 1
   persistence:
-    storageClass: openebs-hostpath
+    storageClass: gp2
     enableStatefulSetAutoDeletePVC: false
   extraArgs: [ "-config.expand-env=true" ]
 
 write:
   replicas: 1
   persistence:
-    storageClass: openebs-hostpath
+    storageClass: gp2
   extraArgs: [ "-config.expand-env=true" ]
 
 read:
   replicas: 1
   persistence:
-    storageClass: openebs-hostpath
+    storageClass: gp2
   extraArgs: [ "-config.expand-env=true" ]
 lokiCanary: { enabled: false }
 test:       { enabled: false }

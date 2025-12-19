@@ -30,8 +30,10 @@ spec:
       {{- if $application.skipCrds }}
       skipCrds: true
       {{- end }}
+      {{- if not $application.skipValuesFile }}
       valueFiles:
       - $values/templates/argocd/values/{{ $application.name }}.yaml
+      {{- end }}
   - repoURL: {{ $.Values.globals.repoURL | quote }}
     targetRevision: {{ $application.targetRevision | default "main" }}
     ref: values
