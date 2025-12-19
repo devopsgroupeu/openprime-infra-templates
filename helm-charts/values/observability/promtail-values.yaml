@@ -1,5 +1,0 @@
-# Promtail Values for AWS EKS
-# Custom values overlay for Promtail chart
-
-config:
-  logLevel: info
