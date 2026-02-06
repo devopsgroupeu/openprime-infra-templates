@@ -1,0 +1,201 @@
+---
+# GitLab CI/CD Pipeline for Terraform Deployment
+#
+# Pipeline Structure:
+# 1. VALIDATE stage - Format and validate (parallel)
+# 2. PLAN stage - Generate terraform plan
+# 3. APPLY stage - Deploy infrastructure (commented out for testing)
+# 4. DESTROY stage - Destroy infrastructure (manual only)
+
+variables:
+  # @param terraform.version
+  TF_VERSION: "1.11"
+  TF_ROOT: ${CI_PROJECT_DIR}/terraform
+  TF_IN_AUTOMATION: "true"
+  # @param aws.region
+  AWS_REGION: ${AWS_REGION:-eu-west-1}
+  # Backend configuration
+  # @param backend.s3.bucket
+  TF_STATE_BUCKET: ${TF_STATE_BUCKET}
+  TF_STATE_KEY: "${CI_ENVIRONMENT_NAME}/terraform.tfstate"
+
+# Cache Terraform plugins between jobs for faster execution
+cache:
+  key: "${CI_COMMIT_REF_SLUG}"
+  paths:
+    - ${TF_ROOT}/**/.terraform
+    - ${TF_ROOT}/**/.terraform.lock.hcl
+
+# Pipeline stages
+stages:
+  - validate  # Fast feedback: format and validate
+  - plan      # Generate execution plan
+  - apply     # Deploy infrastructure (commented out)
+  - destroy   # Destroy infrastructure (manual only)
+
+# ========================================================================
+# SHARED TEMPLATES
+# ========================================================================
+
+# Base template for Terraform jobs
+.terraform_base:
+  image:
+    name: hashicorp/terraform:${TF_VERSION}
+    entrypoint: [""]
+  before_script:
+    - cd ${TF_ROOT}/${TF_ENVIRONMENT}
+    - terraform --version
+    - |
+      terraform init \
+        -backend-config="bucket=${TF_STATE_BUCKET}" \
+        -backend-config="key=${TF_ENVIRONMENT}/terraform.tfstate" \
+        -backend-config="region=${AWS_REGION}" \
+        -backend-config="encrypt=true"
+
+# AWS Environment Template
+.aws_environment:
+  extends: .terraform_base
+  variables:
+    TF_ENVIRONMENT: "aws"
+  environment:
+    name: aws
+    deployment_tier: production
+
+
+# ========================================================================
+# VALIDATE STAGE - Format and validate Terraform code
+# ========================================================================
+
+validate:format:
+  stage: validate
+  image:
+    name: hashicorp/terraform:${TF_VERSION}
+    entrypoint: [""]
+  script:
+    - cd ${TF_ROOT}
+    - terraform fmt -check -recursive
+  allow_failure: true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+validate:aws:
+  extends: .aws_environment
+  stage: validate
+  script:
+    - terraform validate
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# validate:kubernetes:
+#   extends: .kubernetes_environment
+#   stage: validate
+#   script:
+#     - terraform validate
+#   rules:
+#     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+#     - if: '$CI_COMMIT_BRANCH == "main"'
+#   allow_failure: true  # Optional environment
+
+# ========================================================================
+# PLAN STAGE - Generate execution plan
+# ========================================================================
+
+plan:aws:
+  extends: .aws_environment
+  stage: plan
+  script:
+    - |
+      terraform plan \
+        -out=tfplan \
+        -var="region=${AWS_REGION}" \
+        -no-color | tee plan.txt
+    - terraform show -no-color tfplan > tfplan.txt
+  artifacts:
+    name: "terraform-plan-aws-${CI_COMMIT_SHORT_SHA}"
+    paths:
+      - ${TF_ROOT}/aws/tfplan
+      - ${TF_ROOT}/aws/tfplan.txt
+      - ${TF_ROOT}/aws/plan.txt
+    expire_in: 7 days
+    reports:
+      terraform: ${TF_ROOT}/aws/tfplan.json
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# plan:kubernetes:
+#   extends: .kubernetes_environment
+#   stage: plan
+#   script:
+#     - |
+#       terraform plan \
+#         -out=tfplan \
+#         -no-color | tee plan.txt
+#     - terraform show -no-color tfplan > tfplan.txt
+#   artifacts:
+#     name: "terraform-plan-k8s-${CI_COMMIT_SHORT_SHA}"
+#     paths:
+#       - ${TF_ROOT}/kubernetes/tfplan
+#       - ${TF_ROOT}/kubernetes/tfplan.txt
+#       - ${TF_ROOT}/kubernetes/plan.txt
+#     expire_in: 7 days
+#   rules:
+#     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+#     - if: '$CI_COMMIT_BRANCH == "main"'
+#   allow_failure: true  # Optional environment
+
+# ========================================================================
+# APPLY STAGE - COMMENTED OUT FOR TESTING
+# ========================================================================
+# These jobs automatically apply infrastructure changes when:
+# - apply:aws: Runs on main branch push, or manual trigger on MR
+# - apply:kubernetes: Requires manual approval even on main branch
+#
+# IMPORTANT: For testing, these jobs are commented out to prevent
+# accidental infrastructure creation. Uncomment when ready for production.
+# ========================================================================
+
+# apply:aws:
+#   extends: .aws_environment
+#   stage: apply
+#   script:
+#     - terraform apply -auto-approve tfplan
+#     - terraform output -json > outputs.json
+#   dependencies:
+#     - plan:aws
+#   artifacts:
+#     name: "terraform-outputs-aws-${CI_COMMIT_SHORT_SHA}"
+#     paths:
+#       - ${TF_ROOT}/aws/outputs.json
+#     expire_in: 30 days
+#   rules:
+#     - if: '$CI_COMMIT_BRANCH == "main"'
+#       when: on_success
+#     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+#       when: manual
+#   retry:
+#     max: 1
+#     when:
+#       - runner_system_failure
+#       - stuck_or_timeout_failure
+
+
+# ========================================================================
+# DESTROY STAGE - Manual destruction only
+# ========================================================================
+
+destroy:aws:
+  extends: .aws_environment
+  stage: destroy
+  script:
+    - |
+      terraform destroy \
+        -auto-approve \
+        -var="region=${AWS_REGION}"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual  # Always require manual trigger for destroy
+  dependencies: []
+
