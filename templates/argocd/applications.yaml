@@ -2,7 +2,7 @@ globals:
   # @param argocd.git_repo_url
   repoURL: git@github.com:devopsgroupeu/openprime-infra-templates.git
   # @param argocd.targetRevision
-  targetRevision: f/virostek
+  targetRevision: main
 
 appProjects:
   # @section helmCharts.awsLBController.enabled begin
@@ -98,9 +98,9 @@ appProjects:
   #   applications:
   #     - name: gateway-api-crds
   #       path: external/gateway-api/gateway-api-crds/1.0.0
-  #       targetRevision: f/virostek
+  #       targetRevision: main
   #     - name: aws-gateway-controller
   #       path: external/aws/aws-gateway-controller/1.0.0
-  #       targetRevision: f/virostek
+  #       targetRevision: main
 
 
