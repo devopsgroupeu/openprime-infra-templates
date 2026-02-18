@@ -1,6 +1,8 @@
-# @param argocd.git_repo_url
 globals:
+  # @param argocd.git_repo_url
   repoURL: git@github.com:devopsgroupeu/openprime-infra-templates.git
+  # @param argocd.targetRevision
+  targetRevision: f/virostek
 
 appProjects:
   # @section helmCharts.awsLBController.enabled begin
@@ -8,8 +10,9 @@ appProjects:
   - namespace: kube-system
     applications:
       - name: aws-lb-controller
-        path: external/eks/aws-load-balancer-controller/1.16.0
-        targetRevision: f/virostek
+        repoURL: https://aws.github.io/eks-charts
+        chart: aws-load-balancer-controller
+        targetRevision: 1.16.0
         autoSync: true
   # @section helmCharts.awsLBController.enabled end
 
@@ -17,14 +20,16 @@ appProjects:
   - namespace: kube-system
     applications:
       - name: karpenter-crds
-        path: external/karpenter/karpenter/1.8.3/crds
-        targetRevision: f/virostek
+        repoURL: oci://public.ecr.aws/karpenter
+        chart: karpenter-crd
+        targetRevision: 1.8.3
         replace: true
         autoSync: true
         skipValuesFile: true
       - name: karpenter
-        path: external/karpenter/karpenter/1.8.3
-        targetRevision: f/virostek
+        repoURL: oci://public.ecr.aws/karpenter
+        chart: karpenter
+        targetRevision: 1.8.3
         autoSync: true
         skipCrds: true
   # @section helmCharts.karpenter.enabled end
@@ -34,8 +39,9 @@ appProjects:
   - namespace: cert-manager
     applications:
       - name: cert-manager
-        path: external/cert-manager/cert-manager/1.18.2
-        targetRevision: f/virostek
+        repoURL: https://charts.jetstack.io
+        chart: cert-manager
+        targetRevision: 1.18.2
         autoSync: true
   # @section helmCharts.certManager.enabled end
 
@@ -44,8 +50,9 @@ appProjects:
   - namespace: ingress-nginx
     applications:
       - name: ingress-nginx
-        path: external/ingress-nginx/ingress-nginx/4.13.0
-        targetRevision: f/virostek
+        repoURL: https://kubernetes.github.io/ingress-nginx
+        chart: ingress-nginx
+        targetRevision: 4.13.0
         autoSync: true
   # @section helmCharts.ingressNginx.enabled end
 
@@ -53,37 +60,34 @@ appProjects:
   - namespace: monitoring
     applications:
       # @section helmCharts.prometheusStack.enabled begin
-      - name: kube-prometheus-stack-crds
-        path: external/prometheus-community/kube-prometheus-stack/75.9.0/charts/crds
-        targetRevision: f/virostek
-        replace: true
-        autoSync: true
-        skipValuesFile: true
       - name: kube-prometheus-stack
-        path: external/prometheus-community/kube-prometheus-stack/75.9.0
-        targetRevision: f/virostek
+        repoURL: https://prometheus-community.github.io/helm-charts
+        chart: kube-prometheus-stack
+        targetRevision: 75.9.0
         autoSync: true
-        skipCrds: true
       # @section helmCharts.prometheusStack.enabled end
 
       # @section helmCharts.promtail.enabled begin
       - name: promtail
-        path: external/grafana/promtail/6.17.0
-        targetRevision: f/virostek
+        repoURL: https://grafana.github.io/helm-charts
+        chart: promtail
+        targetRevision: 6.17.0
         autoSync: true
       # @section helmCharts.promtail.enabled end
 
       # @section helmCharts.loki.enabled begin
       - name: loki
-        path: external/grafana/loki/6.30.1
-        targetRevision: f/virostek
+        repoURL: https://grafana.github.io/helm-charts
+        chart: loki
+        targetRevision: 6.30.1
         autoSync: true
       # @section helmCharts.loki.enabled end
 
       # @section helmCharts.tempo.enabled begin
       - name: tempo
-        path: external/grafana/tempo-distributed/1.45.0
-        targetRevision: f/virostek
+        repoURL: https://grafana.github.io/helm-charts
+        chart: tempo-distributed
+        targetRevision: 1.45.0
         autoSync: true
       # @section helmCharts.tempo.enabled end
 

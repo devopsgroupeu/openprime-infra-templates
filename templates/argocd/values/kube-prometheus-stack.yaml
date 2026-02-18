@@ -23,7 +23,7 @@ defaultRules:
     KubeProxyDown: true
 
 crds:
-  enabled: false
+  enabled: true
 
 # ────────────────────────────────────────────────────────────
 # 2. Alertmanager & Grafana ingress

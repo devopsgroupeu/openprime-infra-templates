@@ -35,7 +35,7 @@ spec:
       - $values/templates/argocd/values/{{ $application.name }}.yaml
       {{- end }}
   - repoURL: {{ $.Values.globals.repoURL | quote }}
-    targetRevision: {{ $application.targetRevision | default "main" }}
+    targetRevision: {{ $.Values.globals.targetRevision | default "main" }}
     ref: values
   destination:
     namespace: {{ $appProject.namespace }}
