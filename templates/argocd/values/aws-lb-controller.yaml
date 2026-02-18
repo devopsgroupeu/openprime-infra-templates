@@ -1,0 +1,12 @@
+serviceAccount:
+  name: aws-lb-controller-sa
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::559050227177:role/brc7aeks-dev-aws-lb-controller-20251219140756968900000007
+
+clusterName: brc7aeks-dev
+region: eu-west-1
+vpcId: vpc-0e77da4ca66c298a3
+
+replicaCount: 2
+podDisruptionBudget:
+  maxUnavailable: 1

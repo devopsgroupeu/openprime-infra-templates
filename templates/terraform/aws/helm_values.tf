@@ -1,20 +1,16 @@
 locals {
-  helm_charts = {
+  # Get helm chart selections from services.eks.helmCharts
+  # Expected structure: { prometheusStack: { enabled: true, customValues: false }, ... }
+  helm_chart_selections = try(var.helm_charts, {})
 
-    # @section karpenter begin
-    karpenter = {
-      template_values_file = "${path.module}/../../helm/karpenter/values.yaml.tftpl"
-      values = {
-        cluster_name     = module.eks.cluster_name
-        cluster_endpoint = module.eks.cluster_endpoint
-        queue_name       = module.karpenter.queue_name
-      }
-    }
-    # @section karpenter end
-
+  # Define all possible helm chart configurations
+  # Values files are located in argocd/values/ directory
+  # Note: Karpenter is managed in karpenter.tf directly
+  all_helm_charts = {
     # @section promtail begin
     promtail = {
-      template_values_file = "${path.module}/../../helm/promtail/values.yaml.tftpl"
+      enabled              = try(local.helm_chart_selections["promtail"]["enabled"], false)
+      template_values_file = "${path.module}/../../argocd/values/promtail.yaml.tftpl"
       values = {
         logLevel = "info"
       }
@@ -23,7 +19,8 @@ locals {
 
     # @section aws_load_balancer_controller begin
     aws_load_balancer_controller = {
-      template_values_file = "${path.module}/../../helm/aws-load-balancer-controller/values.yaml.tftpl"
+      enabled              = try(local.helm_chart_selections["awsLoadBalancerController"]["enabled"], false)
+      template_values_file = "${path.module}/../../argocd/values/aws-lb-controller.yaml.tftpl"
       values = {
         service_account_name = local.aws_lb_service_account_name
         alb_role_arn         = module.alb_controller_irsa_role.arn
@@ -38,7 +35,8 @@ locals {
 
     # @section loki begin
     loki = {
-      template_values_file = "${path.module}/../../helm/loki/values.yaml.tftpl"
+      enabled              = try(local.helm_chart_selections["loki"]["enabled"], false)
+      template_values_file = "${path.module}/../../argocd/values/loki.yaml.tftpl"
       values = {
         region               = var.region
         loki_role_arn        = module.loki_role.arn
@@ -48,6 +46,54 @@ locals {
       }
     }
     # @section loki end
+
+    # @section cert_manager begin
+    cert_manager = {
+      enabled              = try(local.helm_chart_selections["certManager"]["enabled"], false)
+      template_values_file = "${path.module}/../../argocd/values/cert-manager.yaml.tftpl"
+      values = {
+        install_custom_resource_definitions = true
+        replica_count                       = 1
+        node_selector                       = "kubernetes.io/os: linux"
+        metrics                             = true
+        webhook_replica_count               = 1
+        webhook_node_selector               = "kubernetes.io/os: linux"
+        cainjector_replica_count            = 1
+        cainjector_node_selector            = "kubernetes.io/os: linux"
+      }
+    }
+    # @section cert_manager end
+
+    # @section ingress_nginx begin
+    ingress_nginx = {
+      enabled              = try(local.helm_chart_selections["ingressNginx"]["enabled"], false)
+      template_values_file = "${path.module}/../../argocd/values/ingress-nginx.yaml.tftpl"
+      values = {
+        cpu_request                       = "100m"
+        memory_request                    = "128Mi"
+        metrics_enabled                   = true
+        autoscaling_enabled               = true
+        autoscaling_min_replicas          = 1
+        autoscaling_max_replicas          = 5
+        autoscaling_target_cpu_percentage = 80
+        lb_backend_protocol               = "http"
+        lb_connection_idle_timeout        = "3600"
+        lb_type                           = "external"
+        lb_nlb_target_type                = "ip"
+        lb_scheme                         = "internet-facing"
+      }
+    }
+    # @section ingress_nginx end
+  }
+
+  # Filter to only enabled helm charts
+  helm_charts = {
+    for chart_name, chart_config in local.all_helm_charts :
+    chart_name => {
+      template_values_file = chart_config.template_values_file
+      values               = chart_config.values
+    }
+    if chart_config.enabled
   }
 }
 

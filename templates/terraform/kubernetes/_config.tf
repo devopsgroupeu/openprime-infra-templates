@@ -3,14 +3,14 @@ terraform {
 
   # @section backend begin
   backend "s3" {
-    # @param backend.s3.bucket
+    # @param terraformBackend.bucketName
     bucket = "my-terraform-state-bucket"
     key    = "kubernetes.tfstate"
-    # @param backend.s3.region
+    # @param region
     region = "eu-west-1"
-    # @param backend.s3.encrypt
+    # @param terraformBackend.encrypt
     encrypt = true
-    # @param backend.s3.useLockfile
+    # @param terraformBackend.useLockfile
     use_lockfile = true
   }
   # @section backend end
@@ -47,7 +47,7 @@ provider "aws" {
 }
 
 provider "helm" {
-  kubernetes {
+  kubernetes = {
     host                   = data.terraform_remote_state.aws.outputs.eks_cluster_endpoint
     cluster_ca_certificate = base64decode(data.terraform_remote_state.aws.outputs.eks_certificate_authority_data)
     token                  = data.aws_eks_cluster_auth.eks.token

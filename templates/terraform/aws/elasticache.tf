@@ -47,7 +47,8 @@ module "elasticache" {
 resource "random_password" "elasticache_auth_token" {
   count = var.elasticache_auth_token_enabled ? 1 : 0
 
-  length  = 32
-  special = true
+  length           = 32
+  special          = true
+  override_special = "!#$%&*()-_=+[]{}|:;<>,.?"
 }
 # @section services.elasticache.enabled end
