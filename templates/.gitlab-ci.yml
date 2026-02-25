@@ -23,7 +23,7 @@ variables:
 cache:
   key: "${CI_COMMIT_REF_SLUG}"
   paths:
-    - ${TF_ROOT}/**/.terraform
+    - ${TF_ROOT}/**/.terraform/providers
     - ${TF_ROOT}/**/.terraform.lock.hcl
 
 # Pipeline stages
@@ -45,8 +45,10 @@ stages:
   before_script:
     - cd ${TF_ROOT}/${TF_ENVIRONMENT}
     - terraform --version
+    - rm -f .terraform/terraform.tfstate
     - |
       terraform init \
+        -reconfigure \
         -backend-config="bucket=${TF_STATE_BUCKET}" \
         -backend-config="key=${TF_ENVIRONMENT}/terraform.tfstate" \
         -backend-config="region=${AWS_REGION}" \
