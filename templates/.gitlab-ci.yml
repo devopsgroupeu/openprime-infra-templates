@@ -4,7 +4,7 @@
 # Pipeline Structure:
 # 1. VALIDATE stage - Format and validate (parallel)
 # 2. PLAN stage - Generate terraform plan
-# 3. APPLY stage - Deploy infrastructure (commented out for testing)
+# 3. APPLY stage - Deploy infrastructure (manual approval required)
 # 4. DESTROY stage - Destroy infrastructure (manual only)
 
 variables:
@@ -30,7 +30,7 @@ cache:
 stages:
   - validate  # Fast feedback: format and validate
   - plan      # Generate execution plan
-  - apply     # Deploy infrastructure (commented out)
+  - apply     # Deploy infrastructure (manual approval required)
   - destroy   # Destroy infrastructure (manual only)
 
 # ========================================================================
@@ -88,15 +88,6 @@ validate:aws:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "main"'
 
-# validate:kubernetes:
-#   extends: .kubernetes_environment
-#   stage: validate
-#   script:
-#     - terraform validate
-#   rules:
-#     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-#     - if: '$CI_COMMIT_BRANCH == "main"'
-#   allow_failure: true  # Optional environment
 
 # ========================================================================
 # PLAN STAGE - Generate execution plan
@@ -125,61 +116,31 @@ plan:aws:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "main"'
 
-# plan:kubernetes:
-#   extends: .kubernetes_environment
-#   stage: plan
-#   script:
-#     - |
-#       terraform plan \
-#         -out=tfplan \
-#         -no-color | tee plan.txt
-#     - terraform show -no-color tfplan > tfplan.txt
-#   artifacts:
-#     name: "terraform-plan-k8s-${CI_COMMIT_SHORT_SHA}"
-#     paths:
-#       - ${TF_ROOT}/kubernetes/tfplan
-#       - ${TF_ROOT}/kubernetes/tfplan.txt
-#       - ${TF_ROOT}/kubernetes/plan.txt
-#     expire_in: 7 days
-#   rules:
-#     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-#     - if: '$CI_COMMIT_BRANCH == "main"'
-#   allow_failure: true  # Optional environment
 
 # ========================================================================
-# APPLY STAGE - COMMENTED OUT FOR TESTING
-# ========================================================================
-# These jobs automatically apply infrastructure changes when:
-# - apply:aws: Runs on main branch push, or manual trigger on MR
-# - apply:kubernetes: Requires manual approval even on main branch
-#
-# IMPORTANT: For testing, these jobs are commented out to prevent
-# accidental infrastructure creation. Uncomment when ready for production.
+# APPLY STAGE - Requires manual approval via GitLab Environment protection
 # ========================================================================
 
-# apply:aws:
-#   extends: .aws_environment
-#   stage: apply
-#   script:
-#     - terraform apply -auto-approve tfplan
-#     - terraform output -json > outputs.json
-#   dependencies:
-#     - plan:aws
-#   artifacts:
-#     name: "terraform-outputs-aws-${CI_COMMIT_SHORT_SHA}"
-#     paths:
-#       - ${TF_ROOT}/aws/outputs.json
-#     expire_in: 30 days
-#   rules:
-#     - if: '$CI_COMMIT_BRANCH == "main"'
-#       when: on_success
-#     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-#       when: manual
-#   retry:
-#     max: 1
-#     when:
-#       - runner_system_failure
-#       - stuck_or_timeout_failure
+apply:aws:
+  extends: .aws_environment
+  stage: apply
+  environment:
+    name: production
+  script:
+    - terraform apply -auto-approve tfplan
+    - terraform output -json > outputs.json
+  dependencies:
+    - plan:aws
+  artifacts:
+    name: "terraform-outputs-aws-${CI_COMMIT_SHORT_SHA}"
+    paths:
+      - ${TF_ROOT}/aws/outputs.json
+    expire_in: 30 days
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: manual
 
 
 # ========================================================================
