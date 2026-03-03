@@ -2,10 +2,11 @@
 # GitLab CI/CD Pipeline for Terraform Deployment
 #
 # Pipeline Structure:
-# 1. VALIDATE stage - Format and validate (parallel)
-# 2. PLAN stage - Generate terraform plan
-# 3. APPLY stage - Deploy infrastructure (manual approval required)
-# 4. DESTROY stage - Destroy infrastructure (manual only)
+# 1. FORMAT stage   - Auto-format Terraform code
+# 2. VALIDATE stage - Validate Terraform configuration
+# 3. PLAN stage     - Generate Terraform plan
+# 4. APPLY stage    - Deploy infrastructure (manual approval required)
+# 5. DESTROY stage  - Destroy infrastructure (manual only)
 
 variables:
   # @param terraform.version
@@ -28,7 +29,8 @@ cache:
 
 # Pipeline stages
 stages:
-  - validate  # Fast feedback: format and validate
+  - format    # Auto-format Terraform code
+  - validate  # Validate Terraform configuration
   - plan      # Generate execution plan
   - apply     # Deploy infrastructure (manual approval required)
   - destroy   # Destroy infrastructure (manual only)
@@ -65,21 +67,24 @@ stages:
 
 
 # ========================================================================
-# VALIDATE STAGE - Format and validate Terraform code
+# FORMAT STAGE - Auto-format Terraform code
 # ========================================================================
 
-validate:format:
-  stage: validate
+format:aws:
+  stage: format
   image:
     name: hashicorp/terraform:${TF_VERSION}
     entrypoint: [""]
   script:
     - cd ${TF_ROOT}
-    - terraform fmt -check -recursive
-  allow_failure: true
+    - terraform fmt -recursive
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "main"'
+
+# ========================================================================
+# VALIDATE STAGE - Validate Terraform configuration
+# ========================================================================
 
 validate:aws:
   extends: .aws_environment
