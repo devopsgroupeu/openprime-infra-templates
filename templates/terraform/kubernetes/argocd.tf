@@ -1,7 +1,24 @@
 # Retrieve SSH private key from AWS Secrets Manager
-# YOU NEED TO CREATE THE SECRET BEFOREHAND: `aws secretsmanager create-secret --name argocd/git-ssh-private-key --secret-string "$(cat ~/.ssh/id_ed25519)"`
+# YOU NEED TO CREATE THE SECRET BEFOREHAND:
+#   aws secretsmanager create-secret \
+#     --name argocd/git-ssh-private-key \
+#     --secret-string file:///path/to/private-key
+# Also add the corresponding public key as a deploy key to your git repository.
 data "aws_secretsmanager_secret_version" "argocd_ssh_key" {
   secret_id = "argocd/git-ssh-private-key"
+}
+
+# Retrieve Keycloak OIDC client secret from AWS Secrets Manager
+# YOU NEED TO CREATE:
+#   1. A Keycloak client named "argocd" in the "openprime" realm with:
+#      - Client type: OpenID Connect (confidential)
+#      - Valid redirect URIs: https://argocd.<your-domain>/dex/callback
+#      - Copy the client secret
+#   2. aws secretsmanager create-secret \
+#        --name argocd/keycloak-client-secret \
+#        --secret-string "<keycloak-argocd-client-secret>"
+data "aws_secretsmanager_secret_version" "argocd_keycloak_secret" {
+  secret_id = "argocd/keycloak-client-secret"
 }
 
 resource "helm_release" "argocd" {
@@ -65,6 +82,38 @@ resource "helm_release" "argocd" {
       name  = "server.ingress.aws.backendProtocolVersion"
       value = "GRPC"
     },
+    # Keycloak SSO via Dex — users log in with their existing Keycloak accounts
+    # The client secret is resolved from the argocd-oidc-keycloak Secret (see below)
+    {
+      name  = "configs.cm.dex\\.config"
+      value = <<-EOT
+        connectors:
+          - type: oidc
+            id: keycloak
+            name: Keycloak
+            config:
+              issuer: ${var.keycloak_url}/realms/openprime
+              clientID: argocd
+              clientSecret: $oidc.keycloak.clientSecret
+              redirectURI: https://argocd.openprime.io/dex/callback
+              scopes:
+                - openid
+                - profile
+                - email
+                - groups
+              getUserInfo: true
+      EOT
+    },
+    # RBAC — all authenticated Keycloak users get read-only; members of
+    # the "openprime-admins" Keycloak group get full admin.
+    {
+      name  = "configs.rbac.policy\\.csv"
+      value = "g, openprime-admins, role:admin\ng, openprime-users, role:readonly"
+    },
+    {
+      name  = "configs.rbac.policy\\.default"
+      value = "role:readonly"
+    },
     # ACM Certificate
     # {
     #   name  = "server.ingress.annotations.alb\\.ingress\\.kubernetes\\.io/certificate-arn"
@@ -92,6 +141,27 @@ resource "helm_release" "argocd" {
     #   value = 2
     # },
   ]
+}
+
+# Secret holding the Keycloak OIDC client secret for Dex
+# Dex resolves $oidc.keycloak.clientSecret from this Secret automatically
+resource "kubectl_manifest" "argocd_oidc_secret" {
+  yaml_body = yamlencode({
+    apiVersion = "v1"
+    kind       = "Secret"
+    metadata = {
+      name      = "argocd-oidc-keycloak"
+      namespace = "argocd"
+      labels = {
+        "app.kubernetes.io/part-of" = "argocd"
+      }
+    }
+    stringData = {
+      "oidc.keycloak.clientSecret" = data.aws_secretsmanager_secret_version.argocd_keycloak_secret.secret_string
+    }
+  })
+
+  depends_on = [helm_release.argocd]
 }
 
 

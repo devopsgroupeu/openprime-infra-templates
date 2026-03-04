@@ -47,3 +47,13 @@ variable "git_target_revision" {
   type        = string
   description = "Target branch to sync from"
 }
+
+# -------------------------------------------------------------------
+# KEYCLOAK SSO
+# -------------------------------------------------------------------
+
+variable "keycloak_url" {
+  type        = string
+  description = "Base URL of the Keycloak instance (e.g. https://keycloak.example.com)"
+  default     = "http://keycloak:8080"
+}
