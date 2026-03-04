@@ -90,23 +90,8 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: ${{ env.AWS_REGION }}
-
       - name: Terraform Init
-        run: |
-          rm -f .terraform/terraform.tfstate
-          terraform init \
-            -reconfigure \
-            -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
-            -backend-config="key=aws/terraform.tfstate" \
-            -backend-config="region=${{ secrets.TF_STATE_BUCKET_REGION || env.AWS_REGION }}" \
-            -backend-config="encrypt=true"
+        run: terraform init -backend=false
 
       - name: Terraform Validate
         run: terraform validate -no-color

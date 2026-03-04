@@ -89,6 +89,10 @@ format:aws:
 validate:aws:
   extends: .aws_environment
   stage: validate
+  before_script:
+    - cd ${TF_ROOT}/aws
+    - terraform --version
+    - terraform init -backend=false
   script:
     - terraform validate
   rules:
