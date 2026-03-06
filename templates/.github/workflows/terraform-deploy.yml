@@ -408,7 +408,7 @@ jobs:
     name: "destroy:k8s"
     runs-on: ubuntu-latest
     needs: [apply-k8s]
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.terraform_action == 'destroy'
+    if: always() && github.event_name == 'workflow_dispatch' && github.event.inputs.terraform_action == 'destroy'
     environment: production
 
     defaults:
