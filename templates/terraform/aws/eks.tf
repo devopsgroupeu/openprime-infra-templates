@@ -113,6 +113,22 @@ module "eks" {
   subnet_ids               = module.vpc.private_subnets
   control_plane_subnet_ids = module.vpc.intra_subnets
 
+  access_entries = {
+    github_runner = {
+      kubernetes_groups = []
+      principal_arn     = "arn:aws:iam::559050227177:role/dev-github-runner-access" # TODO: set dynamically
+
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
+    }
+  }
+
   eks_managed_node_groups = {
     default = {
       ami_type                       = var.default_node_group_ami_type
