@@ -12,7 +12,7 @@ metadata:
 spec:
   ingressClassName: alb
   rules:
-  - host: dummy.eks.devopsgroup.com
+  - host: dummy.openprime.io
     http:
       paths:
       - path: /dummy-503
