@@ -113,7 +113,11 @@ resource "helm_release" "argocd" {
         issuer: ${var.keycloak_url}/realms/openprime
         clientID: argocd
         clientSecret: $oidc.keycloak.clientSecret
-        requestedScopes: ["openid", "profile", "email", "groups"]
+        requestedScopes:
+        - openid
+        - profile
+        - email
+        - groups
       EOT
     },
     # ACM Certificate
