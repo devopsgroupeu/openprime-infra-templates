@@ -185,7 +185,7 @@ resource "kubectl_manifest" "example_apps" {
       source = {
         repoURL        = var.git_repo_url
         targetRevision = var.git_target_revision
-        path           = "templates/argocd/example-apps"
+        path           = "argocd/example-apps"
         directory = {
           recurse = true
         }
@@ -230,7 +230,7 @@ resource "kubectl_manifest" "support_resources" {
       source = {
         repoURL        = var.git_repo_url
         targetRevision = var.git_target_revision
-        path           = "templates/argocd/support-resources"
+        path           = "argocd/support-resources"
         directory = {
           recurse = true
         }
@@ -272,11 +272,11 @@ resource "kubectl_manifest" "app_of_apps" {
       project = "default"
       source = {
         repoURL        = var.git_repo_url
-        path           = "templates/argocd/charts/internal/app-of-apps"
+        path           = "argocd/charts/internal/app-of-apps"
         targetRevision = var.git_target_revision
         helm = {
           valueFiles = [
-            "$values/templates/argocd/applications.yaml"
+            "$values/argocd/applications.yaml"
           ]
         }
       }
