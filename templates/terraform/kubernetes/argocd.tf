@@ -29,6 +29,23 @@ resource "helm_release" "argocd" {
   version          = "9.1.4"
   create_namespace = true
 
+  # RBAC — all authenticated Keycloak users get read-only; members of
+  # the "openprime-admins" Keycloak group get full admin.
+  values = [
+    yamlencode({
+      configs = {
+        rbac = {
+          "policy.csv" = <<-EOT
+            g, openprime-admins, role:admin
+            g, openprime-users, role:readonly
+          EOT
+
+          "policy.default" = "role:readonly"
+        }
+      }
+    })
+  ]
+
   set = [
     {
       name  = "global.domain"
@@ -103,16 +120,6 @@ resource "helm_release" "argocd" {
                 - groups
               getUserInfo: true
       EOT
-    },
-    # RBAC — all authenticated Keycloak users get read-only; members of
-    # the "openprime-admins" Keycloak group get full admin.
-    {
-      name  = "configs.rbac.policy\\.csv"
-      value = "g, openprime-admins, role:admin\ng, openprime-users, role:readonly"
-    },
-    {
-      name  = "configs.rbac.policy\\.default"
-      value = "role:readonly"
     },
     # ACM Certificate
     # {
