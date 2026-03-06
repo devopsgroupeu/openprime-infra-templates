@@ -17,7 +17,7 @@ locals {
     }
     # @section helmCharts.promtail.enabled end
 
-    # @section helmCharts.awsLoadBalancerController.enabled begin
+    # @section helmCharts.awsLBController.enabled begin
     aws_load_balancer_controller = {
       enabled              = try(local.helm_chart_selections["awsLoadBalancerController"]["enabled"], false)
       template_values_file = "${path.module}/../../argocd/values/aws-lb-controller.yaml.tftpl"
@@ -31,7 +31,7 @@ locals {
         pdb_max_unavailable  = var.aws_lb_pdb_max_unavailable
       }
     }
-    # @section helmCharts.awsLoadBalancerController.enabled end
+    # @section helmCharts.awsLBController.enabled end
 
     # @section helmCharts.loki.enabled begin
     loki = {
