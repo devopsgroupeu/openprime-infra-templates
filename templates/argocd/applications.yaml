@@ -16,24 +16,6 @@ appProjects:
         autoSync: true
   # @section services.eks.helmCharts.awsLoadBalancerController.enabled end
 
-  # @section services.eks.karpenterEnabled begin
-  - namespace: kube-system
-    applications:
-      - name: karpenter-crds
-        repoURL: oci://public.ecr.aws/karpenter
-        chart: karpenter-crd
-        targetRevision: 1.8.3
-        replace: true
-        autoSync: true
-        skipValuesFile: true
-      - name: karpenter
-        repoURL: oci://public.ecr.aws/karpenter
-        chart: karpenter
-        targetRevision: 1.8.3
-        autoSync: true
-        skipCrds: true
-  # @section services.eks.karpenterEnabled end
-
   # @section services.eks.helmCharts.certManager.enabled begin
   ## Certificate Management
   - namespace: cert-manager
