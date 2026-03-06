@@ -114,10 +114,8 @@ resource "helm_release" "argocd" {
               clientSecret: $oidc.keycloak.clientSecret
               redirectURI: https://argocd.openprime.io/dex/callback
               scopes:
-                - openid
                 - profile
                 - email
-                - groups
               getUserInfo: true
       EOT
     },
