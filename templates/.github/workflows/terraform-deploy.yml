@@ -235,7 +235,7 @@ jobs:
   destroy-aws:
     name: "destroy:aws"
     runs-on: ubuntu-latest
-    needs: [apply-aws]
+    needs: [apply-aws, destroy-k8s]
     if: always() && github.event_name == 'workflow_dispatch' && github.event.inputs.terraform_action == 'destroy'
     environment: production
 
