@@ -16,9 +16,9 @@ resource "helm_release" "karpenter" {
       karpenter.sh/controller: 'true'
     dnsPolicy: Default
     settings:
-      clusterName: ${module.eks.cluster_name}
-      clusterEndpoint: ${module.eks.cluster_endpoint}
-      interruptionQueue: ${module.karpenter.queue_name}
+      clusterName: ${data.terraform_remote_state.aws.outputs.eks_cluster_name}
+      clusterEndpoint: ${data.terraform_remote_state.aws.outputs.eks_cluster_endpoint}
+      interruptionQueue: ${data.terraform_remote_state.aws.outputs.karpenter_interruption_queue_name}
     webhook:
       enabled: false
     EOT
