@@ -41,6 +41,7 @@ resource "helm_release" "argocd" {
           EOT
 
           "policy.default" = "role:readonly"
+          "scopes"         = "[groups]"
         }
       }
     })
@@ -99,24 +100,20 @@ resource "helm_release" "argocd" {
       name  = "server.ingress.aws.backendProtocolVersion"
       value = "GRPC"
     },
-    # Keycloak SSO via Dex — users log in with their existing Keycloak accounts
+    {
+      name  = "configs.cm.url"
+      value = "https://argocd.openprime.io"
+    },
+    # Keycloak SSO via native OIDC — users log in with their existing Keycloak accounts
     # The client secret is resolved from the argocd-oidc-keycloak Secret (see below)
     {
-      name  = "configs.cm.dex\\.config"
+      name  = "configs.cm.oidc\\.config"
       value = <<-EOT
-        connectors:
-          - type: oidc
-            id: keycloak
-            name: Keycloak
-            config:
-              issuer: ${var.keycloak_url}/realms/openprime
-              clientID: argocd
-              clientSecret: $oidc.keycloak.clientSecret
-              redirectURI: https://argocd.openprime.io/dex/callback
-              scopes:
-                - profile
-                - email
-              getUserInfo: true
+        name: Keycloak
+        issuer: ${var.keycloak_url}/realms/openprime
+        clientID: argocd
+        clientSecret: $oidc.keycloak.clientSecret
+        requestedScopes: ["openid", "profile", "email", "groups"]
       EOT
     },
     # ACM Certificate
