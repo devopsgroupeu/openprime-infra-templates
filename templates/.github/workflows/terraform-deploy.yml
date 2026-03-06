@@ -184,7 +184,7 @@ jobs:
         working-directory: ./terraform/aws
 
     permissions:
-      contents: read
+      contents: write
 
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -195,7 +195,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -213,6 +213,20 @@ jobs:
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
+
+      - name: Commit generated ArgoCD config files
+        run: |
+          git config user.email "ci-bot@openprime.io"
+          git config user.name "OpenPrime CI"
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          git add argocd/values/ argocd/support-resources/ || true
+          if git diff --cached --quiet; then
+            echo "No generated ArgoCD files changed."
+          else
+            git commit -m "ci: regenerate ArgoCD configs from Terraform outputs [skip ci]"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
+        working-directory: ${{ github.workspace }}
 
   # ========================================================================
   # DESTROY JOB - Manual only, independent of apply
