@@ -12,7 +12,7 @@ data "aws_secretsmanager_secret_version" "argocd_ssh_key" {
 # YOU NEED TO CREATE:
 #   1. A Keycloak client named "argocd" in the "openprime" realm with:
 #      - Client type: OpenID Connect (confidential)
-#      - Valid redirect URIs: https://argocd.<your-domain>/dex/callback
+#      - Valid redirect URIs: https://argocd.<your-domain>/auth/callback
 #      - Copy the client secret
 #   2. aws secretsmanager create-secret \
 #        --name argocd/keycloak-client-secret \
@@ -34,6 +34,11 @@ resource "helm_release" "argocd" {
   values = [
     yamlencode({
       configs = {
+        secret = {
+          extra = {
+            "oidc.keycloak.clientSecret" = data.aws_secretsmanager_secret_version.argocd_keycloak_secret.secret_string
+          }
+        }
         rbac = {
           "policy.csv" = <<-EOT
             g, openprime-admins, role:admin
@@ -148,28 +153,6 @@ resource "helm_release" "argocd" {
     # },
   ]
 }
-
-# Secret holding the Keycloak OIDC client secret for Dex
-# Dex resolves $oidc.keycloak.clientSecret from this Secret automatically
-resource "kubectl_manifest" "argocd_oidc_secret" {
-  yaml_body = yamlencode({
-    apiVersion = "v1"
-    kind       = "Secret"
-    metadata = {
-      name      = "argocd-oidc-keycloak"
-      namespace = "argocd"
-      labels = {
-        "app.kubernetes.io/part-of" = "argocd"
-      }
-    }
-    stringData = {
-      "oidc.keycloak.clientSecret" = data.aws_secretsmanager_secret_version.argocd_keycloak_secret.secret_string
-    }
-  })
-
-  depends_on = [helm_release.argocd]
-}
-
 
 # Using 'gavinbunney/kubectl' instead of official Kubernetes provider to allow applying manifest without checking for CRDs during plan
 resource "kubectl_manifest" "example_apps" {
