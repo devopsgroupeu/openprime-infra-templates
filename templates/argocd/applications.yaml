@@ -1,11 +1,11 @@
 globals:
-  # @param argocd.git_repo_url
+  # @param gitRepository.url
   repoURL: git@github.com:devopsgroupeu/openprime-infra-templates.git
-  # @param argocd.targetRevision
+  # @param gitRepository.branch
   targetRevision: main
 
 appProjects:
-  # @section helmCharts.awsLBController.enabled begin
+  # @section services.eks.helmCharts.awsLoadBalancerController.enabled begin
   ## Infrastructure - must deploy first for webhooks
   - namespace: kube-system
     applications:
@@ -14,9 +14,9 @@ appProjects:
         chart: aws-load-balancer-controller
         targetRevision: 1.16.0
         autoSync: true
-  # @section helmCharts.awsLBController.enabled end
+  # @section services.eks.helmCharts.awsLoadBalancerController.enabled end
 
-  # @section helmCharts.karpenter.enabled begin
+  # @section services.eks.helmCharts.karpenter.enabled begin
   - namespace: kube-system
     applications:
       - name: karpenter-crds
@@ -32,9 +32,9 @@ appProjects:
         targetRevision: 1.8.3
         autoSync: true
         skipCrds: true
-  # @section helmCharts.karpenter.enabled end
+  # @section services.eks.helmCharts.karpenter.enabled end
 
-  # @section helmCharts.certManager.enabled begin
+  # @section services.eks.helmCharts.certManager.enabled begin
   ## Certificate Management
   - namespace: cert-manager
     applications:
@@ -43,9 +43,9 @@ appProjects:
         chart: cert-manager
         targetRevision: 1.18.2
         autoSync: true
-  # @section helmCharts.certManager.enabled end
+  # @section services.eks.helmCharts.certManager.enabled end
 
-  # @section helmCharts.ingressNginx.enabled begin
+  # @section services.eks.helmCharts.ingressNginx.enabled begin
   ## Ingress
   - namespace: ingress-nginx
     applications:
@@ -54,42 +54,42 @@ appProjects:
         chart: ingress-nginx
         targetRevision: 4.13.0
         autoSync: true
-  # @section helmCharts.ingressNginx.enabled end
+  # @section services.eks.helmCharts.ingressNginx.enabled end
 
   ## Observability Stack
   - namespace: monitoring
     applications:
-      # @section helmCharts.prometheusStack.enabled begin
+      # @section services.eks.helmCharts.prometheusStack.enabled begin
       - name: kube-prometheus-stack
         repoURL: https://prometheus-community.github.io/helm-charts
         chart: kube-prometheus-stack
         targetRevision: 75.9.0
         autoSync: true
-      # @section helmCharts.prometheusStack.enabled end
+      # @section services.eks.helmCharts.prometheusStack.enabled end
 
-      # @section helmCharts.promtail.enabled begin
+      # @section services.eks.helmCharts.promtail.enabled begin
       - name: promtail
         repoURL: https://grafana.github.io/helm-charts
         chart: promtail
         targetRevision: 6.17.0
         autoSync: true
-      # @section helmCharts.promtail.enabled end
+      # @section services.eks.helmCharts.promtail.enabled end
 
-      # @section helmCharts.loki.enabled begin
+      # @section services.eks.helmCharts.loki.enabled begin
       - name: loki
         repoURL: https://grafana.github.io/helm-charts
         chart: loki
         targetRevision: 6.30.1
         autoSync: true
-      # @section helmCharts.loki.enabled end
+      # @section services.eks.helmCharts.loki.enabled end
 
-      # @section helmCharts.tempo.enabled begin
+      # @section services.eks.helmCharts.tempo.enabled begin
       - name: tempo
         repoURL: https://grafana.github.io/helm-charts
         chart: tempo-distributed
         targetRevision: 1.45.0
         autoSync: true
-      # @section helmCharts.tempo.enabled end
+      # @section services.eks.helmCharts.tempo.enabled end
 
   # Gateway API (Uncomment when IRSA is configured)
   # Gateway API provides next-generation ingress with VPC Lattice integration
