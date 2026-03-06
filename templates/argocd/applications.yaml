@@ -47,6 +47,7 @@ appProjects:
         chart: kube-prometheus-stack
         targetRevision: 75.9.0
         autoSync: true
+        serverSideApply: true
       # @section services.eks.helmCharts.prometheusStack.enabled end
 
       # @section services.eks.helmCharts.promtail.enabled begin

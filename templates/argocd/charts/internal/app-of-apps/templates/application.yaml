@@ -59,6 +59,9 @@ spec:
     {{- if $application.replace }}
     - Replace=true
     {{- end }}
+    {{- if $application.serverSideApply }}
+    - ServerSideApply=true
+    {{- end }}
     {{- end }}
   {{- end }}
 {{- end }}
