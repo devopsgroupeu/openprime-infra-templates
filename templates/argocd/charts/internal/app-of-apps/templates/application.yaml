@@ -21,7 +21,7 @@ spec:
     directory:
       recurse: true
     {{- end }}
-    path: "templates/argocd/charts/{{ $application.path }}"
+    path: "argocd/charts/{{ $application.path }}"
     {{- end }}
     {{- if $application.chart }}
     chart: {{ $application.chart }}
@@ -32,7 +32,7 @@ spec:
       {{- end }}
       {{- if not $application.skipValuesFile }}
       valueFiles:
-      - $values/templates/argocd/values/{{ $application.name }}.yaml
+      - $values/argocd/values/{{ $application.name }}.yaml
       {{- end }}
   - repoURL: {{ $.Values.globals.repoURL | quote }}
     targetRevision: {{ $.Values.globals.targetRevision | default "main" }}
