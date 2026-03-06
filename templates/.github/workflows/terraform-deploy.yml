@@ -308,7 +308,7 @@ jobs:
   plan-k8s:
     name: "plan:k8s"
     runs-on: ubuntu-latest
-    needs: [validate-k8s]
+    needs: [validate-k8s, apply-aws]
 
     defaults:
       run:
