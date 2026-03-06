@@ -79,6 +79,22 @@ promtail:
 loki:
   enable: true
 
+helmCharts:
+  promtail:
+    enabled: true
+  loki:
+    enabled: true
+  awsLoadBalancerController:
+    enabled: true
+  certManager:
+    enabled: true
+  ingressNginx:
+    enabled: true
+  prometheusStack:
+    enabled: true
+  karpenter:
+    enabled: true
+
 alerts:
   common_alerts: true
   slack: true

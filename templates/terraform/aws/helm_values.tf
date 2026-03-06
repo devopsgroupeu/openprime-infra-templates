@@ -7,7 +7,7 @@ locals {
   # Values files are located in argocd/values/ directory
   # Note: Karpenter is managed in karpenter.tf directly
   all_helm_charts = {
-    # @section promtail begin
+    # @section helmCharts.promtail.enabled begin
     promtail = {
       enabled              = try(local.helm_chart_selections["promtail"]["enabled"], false)
       template_values_file = "${path.module}/../../argocd/values/promtail.yaml.tftpl"
@@ -15,9 +15,9 @@ locals {
         logLevel = "info"
       }
     }
-    # @section promtail end
+    # @section helmCharts.promtail.enabled end
 
-    # @section aws_load_balancer_controller begin
+    # @section helmCharts.awsLoadBalancerController.enabled begin
     aws_load_balancer_controller = {
       enabled              = try(local.helm_chart_selections["awsLoadBalancerController"]["enabled"], false)
       template_values_file = "${path.module}/../../argocd/values/aws-lb-controller.yaml.tftpl"
@@ -31,9 +31,9 @@ locals {
         pdb_max_unavailable  = var.aws_lb_pdb_max_unavailable
       }
     }
-    # @section aws_load_balancer_controller end
+    # @section helmCharts.awsLoadBalancerController.enabled end
 
-    # @section loki begin
+    # @section helmCharts.loki.enabled begin
     loki = {
       enabled              = try(local.helm_chart_selections["loki"]["enabled"], false)
       template_values_file = "${path.module}/../../argocd/values/loki.yaml.tftpl"
@@ -45,9 +45,9 @@ locals {
         s3_bucket_ruler      = module.loki_s3_buckets["ruler"].s3_bucket_id
       }
     }
-    # @section loki end
+    # @section helmCharts.loki.enabled end
 
-    # @section cert_manager begin
+    # @section helmCharts.certManager.enabled begin
     cert_manager = {
       enabled              = try(local.helm_chart_selections["certManager"]["enabled"], false)
       template_values_file = "${path.module}/../../argocd/values/cert-manager.yaml.tftpl"
@@ -62,9 +62,9 @@ locals {
         cainjector_node_selector            = "kubernetes.io/os: linux"
       }
     }
-    # @section cert_manager end
+    # @section helmCharts.certManager.enabled end
 
-    # @section ingress_nginx begin
+    # @section helmCharts.ingressNginx.enabled begin
     ingress_nginx = {
       enabled              = try(local.helm_chart_selections["ingressNginx"]["enabled"], false)
       template_values_file = "${path.module}/../../argocd/values/ingress-nginx.yaml.tftpl"
@@ -83,7 +83,7 @@ locals {
         lb_scheme                         = "internet-facing"
       }
     }
-    # @section ingress_nginx end
+    # @section helmCharts.ingressNginx.enabled end
   }
 
   # Filter to only enabled helm charts
