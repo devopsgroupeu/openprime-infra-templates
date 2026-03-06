@@ -16,7 +16,7 @@ appProjects:
         autoSync: true
   # @section services.eks.helmCharts.awsLoadBalancerController.enabled end
 
-  # @section services.eks.helmCharts.karpenter.enabled begin
+  # @section services.eks.karpenterEnabled begin
   - namespace: kube-system
     applications:
       - name: karpenter-crds
@@ -32,7 +32,7 @@ appProjects:
         targetRevision: 1.8.3
         autoSync: true
         skipCrds: true
-  # @section services.eks.helmCharts.karpenter.enabled end
+  # @section services.eks.karpenterEnabled end
 
   # @section services.eks.helmCharts.certManager.enabled begin
   ## Certificate Management
