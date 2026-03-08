@@ -154,7 +154,41 @@ resource "helm_release" "argocd" {
   ]
 }
 
-# Using 'gavinbunney/kubectl' instead of official Kubernetes provider to allow applying manifest without checking for CRDs during plan
+# Git repository credentials — Applications depend on this so that
+# during `terraform destroy` the secret is removed AFTER ArgoCD has
+# finished finalizing (cleaning up child resources via the repo).
+resource "kubectl_manifest" "repo_secret" {
+  yaml_body = yamlencode({
+    apiVersion = "v1"
+    kind       = "Secret"
+    metadata = {
+      name      = "argocd-repo"
+      namespace = "argocd"
+      labels = {
+        "argocd.argoproj.io/secret-type" = "repository"
+      }
+    }
+    stringData = {
+      type          = "git"
+      name          = "github"
+      project       = "default"
+      url           = var.git_repo_url
+      sshPrivateKey = data.aws_secretsmanager_secret_version.argocd_ssh_key.secret_string
+    }
+  })
+
+  wait = true
+
+  depends_on = [helm_release.argocd]
+}
+
+# ArgoCD Applications — all depend on repo_secret so that during
+# destroy, Terraform deletes Applications first (triggering ArgoCD
+# finalizer cleanup with SSH key still available), then removes
+# the repo secret, then the ArgoCD helm release.
+
+# Using 'gavinbunney/kubectl' instead of official Kubernetes provider
+# to allow applying manifest without checking for CRDs during plan.
 resource "kubectl_manifest" "example_apps" {
   yaml_body = yamlencode({
     apiVersion = "argoproj.io/v1alpha1"
@@ -162,10 +196,9 @@ resource "kubectl_manifest" "example_apps" {
     metadata = {
       name      = "example-apps"
       namespace = "argocd"
-      # No finalizer — during destroy, ArgoCD may not be able to
-      # reconcile (e.g. SSH unavailable). Child resources are deleted
-      # with the cluster anyway.
-
+      finalizers = [
+        "resources-finalizer.argocd.argoproj.io"
+      ]
       annotations = {
         "argocd.argoproj.io/sync-wave" = "3"
       }
@@ -198,7 +231,7 @@ resource "kubectl_manifest" "example_apps" {
 
   wait = true
 
-  depends_on = [helm_release.argocd]
+  depends_on = [kubectl_manifest.repo_secret]
 }
 
 resource "kubectl_manifest" "support_resources" {
@@ -208,10 +241,9 @@ resource "kubectl_manifest" "support_resources" {
     metadata = {
       name      = "support-resources"
       namespace = "argocd"
-      # No finalizer — during destroy, ArgoCD may not be able to
-      # reconcile (e.g. SSH unavailable). Child resources are deleted
-      # with the cluster anyway.
-
+      finalizers = [
+        "resources-finalizer.argocd.argoproj.io"
+      ]
       annotations = {
         "argocd.argoproj.io/sync-wave" = "3"
       }
@@ -242,10 +274,9 @@ resource "kubectl_manifest" "support_resources" {
     }
   })
 
-
   wait = true
 
-  depends_on = [helm_release.argocd]
+  depends_on = [kubectl_manifest.repo_secret]
 }
 
 resource "kubectl_manifest" "app_of_apps" {
@@ -255,10 +286,9 @@ resource "kubectl_manifest" "app_of_apps" {
     metadata = {
       name      = "app-of-apps"
       namespace = "argocd"
-      # No finalizer — during destroy, ArgoCD may not be able to
-      # reconcile (e.g. SSH unavailable). Child resources are deleted
-      # with the cluster anyway.
-
+      finalizers = [
+        "resources-finalizer.argocd.argoproj.io"
+      ]
     }
     spec = {
       project = "default"
@@ -290,30 +320,5 @@ resource "kubectl_manifest" "app_of_apps" {
 
   wait = true
 
-  depends_on = [helm_release.argocd]
-}
-
-resource "kubectl_manifest" "repo_secret" {
-  yaml_body = yamlencode({
-    apiVersion = "v1"
-    kind       = "Secret"
-    metadata = {
-      name      = "argocd-repo"
-      namespace = "argocd"
-      labels = {
-        "argocd.argoproj.io/secret-type" = "repository"
-      }
-    }
-    stringData = {
-      type          = "git"
-      name          = "github"
-      project       = "default"
-      url           = var.git_repo_url
-      sshPrivateKey = data.aws_secretsmanager_secret_version.argocd_ssh_key.secret_string
-    }
-  })
-
-  wait = true
-
-  depends_on = [helm_release.argocd]
+  depends_on = [kubectl_manifest.repo_secret]
 }
