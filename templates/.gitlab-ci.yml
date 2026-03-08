@@ -67,7 +67,7 @@ format:aws:
     entrypoint: [""]
   script:
     - cd ${TF_ROOT}/aws
-    - terraform fmt -recursive
+    - terraform fmt -check -recursive
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -79,7 +79,7 @@ format:k8s:
     entrypoint: [""]
   script:
     - cd ${TF_ROOT}/kubernetes
-    - terraform fmt -recursive
+    - terraform fmt -check -recursive
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -94,11 +94,17 @@ validate:aws:
   image:
     name: hashicorp/terraform:${TF_VERSION}
     entrypoint: [""]
+  variables:
+    TFLINT_VERSION: "0.55.3"
   script:
     - cd ${TF_ROOT}/aws
     - terraform --version
     - terraform init -backend=false
     - terraform validate
+    - wget -qO /tmp/tflint.zip "https://github.com/terraform-linters/tflint/releases/download/v${TFLINT_VERSION}/tflint_linux_amd64.zip"
+    - unzip -o /tmp/tflint.zip -d /usr/local/bin
+    - tflint --init
+    - tflint --format compact --no-color
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -109,11 +115,17 @@ validate:k8s:
   image:
     name: hashicorp/terraform:${TF_VERSION}
     entrypoint: [""]
+  variables:
+    TFLINT_VERSION: "0.55.3"
   script:
     - cd ${TF_ROOT}/kubernetes
     - terraform --version
     - terraform init -backend=false
     - terraform validate
+    - wget -qO /tmp/tflint.zip "https://github.com/terraform-linters/tflint/releases/download/v${TFLINT_VERSION}/tflint_linux_amd64.zip"
+    - unzip -o /tmp/tflint.zip -d /usr/local/bin
+    - tflint --init
+    - tflint --format compact --no-color
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -125,6 +137,7 @@ validate:k8s:
 plan:aws:
   extends: .terraform_base
   stage: plan
+  needs: [validate:aws]
   script:
     - terraform plan -out=tfplan -no-color | tee plan.txt
     - terraform show -no-color tfplan > tfplan.txt
@@ -146,6 +159,7 @@ plan:aws:
 plan:k8s:
   extends: .terraform_base_k8s
   stage: plan
+  needs: [validate:k8s, apply:aws]
   script:
     - terraform plan -out=tfplan -no-color | tee plan.txt
     - terraform show -no-color tfplan > tfplan.txt
@@ -161,7 +175,8 @@ plan:k8s:
     reports:
       terraform: ${TF_ROOT}/kubernetes/tfplan.json
   rules:
-    - when: never
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
 
 # ========================================================================
 # APPLY STAGE - Requires manual approval via GitLab Environment protection
@@ -170,13 +185,26 @@ plan:k8s:
 apply:aws:
   extends: .terraform_base
   stage: apply
+  needs:
+    - job: plan:aws
+      artifacts: true
   environment:
     name: production
   script:
     - terraform apply -auto-approve tfplan
     - terraform output -json > outputs.json
-  dependencies:
-    - plan:aws
+    - |
+      git config user.email "ci-bot@openprime.io"
+      git config user.name "OpenPrime CI"
+      cd ${CI_PROJECT_DIR}
+      git add argocd/values/ argocd/support-resources/ || true
+      if git diff --cached --quiet; then
+        echo "No generated ArgoCD files changed."
+      else
+        git commit -m "ci: regenerate ArgoCD configs from Terraform outputs [skip ci]"
+        # Requires CI_JOB_TOKEN write access: Settings → CI/CD → Token Access
+        git push "https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git" HEAD:${CI_COMMIT_REF_NAME} || echo "Warning: Failed to push ArgoCD configs"
+      fi
   artifacts:
     name: "terraform-outputs-aws-${CI_COMMIT_SHORT_SHA}"
     paths:
@@ -189,20 +217,23 @@ apply:aws:
 apply:k8s:
   extends: .terraform_base_k8s
   stage: apply
+  needs:
+    - job: plan:k8s
+      artifacts: true
+    - job: apply:aws
   environment:
     name: production
   script:
     - terraform apply -auto-approve tfplan
     - terraform output -json > outputs.json
-  dependencies:
-    - plan:k8s
   artifacts:
     name: "terraform-outputs-k8s-${CI_COMMIT_SHORT_SHA}"
     paths:
       - ${TF_ROOT}/kubernetes/outputs.json
     expire_in: 30 days
   rules:
-    - when: never
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
 
 # ========================================================================
 # DESTROY STAGE - Manual destruction only
@@ -217,7 +248,8 @@ destroy:k8s:
     - terraform destroy -auto-approve
   dependencies: []
   rules:
-    - when: never
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
 
 destroy:aws:
   extends: .terraform_base
@@ -230,6 +262,7 @@ destroy:aws:
   needs:
     - job: destroy:k8s
       optional: true
+      artifacts: false
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: manual
