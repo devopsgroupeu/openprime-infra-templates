@@ -34,6 +34,7 @@ resource "helm_release" "karpenter_crd" {
   chart      = "karpenter-crd"
   version    = "1.9.0"
 
-  max_history = 10 # Keeps the last 10 release versions
+  timeout     = 600 # CRD cleanup can be slow during destroy
+  max_history = 10
 }
 # @section services.eks.karpenterEnabled end

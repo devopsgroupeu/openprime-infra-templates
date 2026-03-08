@@ -162,9 +162,10 @@ resource "kubectl_manifest" "example_apps" {
     metadata = {
       name      = "example-apps"
       namespace = "argocd"
-      finalizers = [
-        "resources-finalizer.argocd.argoproj.io"
-      ]
+      # No finalizer — during destroy, ArgoCD may not be able to
+      # reconcile (e.g. SSH unavailable). Child resources are deleted
+      # with the cluster anyway.
+
       annotations = {
         "argocd.argoproj.io/sync-wave" = "3"
       }
@@ -207,9 +208,10 @@ resource "kubectl_manifest" "support_resources" {
     metadata = {
       name      = "support-resources"
       namespace = "argocd"
-      finalizers = [
-        "resources-finalizer.argocd.argoproj.io"
-      ]
+      # No finalizer — during destroy, ArgoCD may not be able to
+      # reconcile (e.g. SSH unavailable). Child resources are deleted
+      # with the cluster anyway.
+
       annotations = {
         "argocd.argoproj.io/sync-wave" = "3"
       }
@@ -253,9 +255,10 @@ resource "kubectl_manifest" "app_of_apps" {
     metadata = {
       name      = "app-of-apps"
       namespace = "argocd"
-      finalizers = [
-        "resources-finalizer.argocd.argoproj.io"
-      ]
+      # No finalizer — during destroy, ArgoCD may not be able to
+      # reconcile (e.g. SSH unavailable). Child resources are deleted
+      # with the cluster anyway.
+
     }
     spec = {
       project = "default"
