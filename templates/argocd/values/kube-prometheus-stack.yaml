@@ -5,14 +5,13 @@
 # 1. Core components we don’t want Prometheus to scrape
 # ────────────────────────────────────────────────────────────
 kubeControllerManager:
-  serviceMonitor:
-    enabled: false
+  enabled: false
 kubeEtcd:
-  serviceMonitor:
-    enabled: false
+  enabled: false
+kubeProxy:
+  enabled: false
 kubeScheduler:
-  serviceMonitor:
-    enabled: false
+  enabled: false
 
 defaultRules:
   disabled:
