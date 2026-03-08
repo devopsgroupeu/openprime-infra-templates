@@ -184,16 +184,18 @@ jobs:
           retention-days: 7
 
   # ========================================================================
-  # APPLY JOB - Requires manual trigger via workflow_dispatch
-  # Configure "production" GitHub Environment with required reviewers for
-  # an additional approval gate before deployment.
+  # APPLY JOB - Protected by GitHub Environment approval
+  # Configure "production" GitHub Environment with required reviewers.
+  # On push to main: runs after plan, waits for Environment approval.
+  # On workflow_dispatch with "apply": runs after plan, waits for approval.
+  # Skipped on pull_request events.
   # ========================================================================
 
   apply-aws:
     name: "apply:aws"
     runs-on: ubuntu-latest
     needs: [plan-aws]
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.terraform_action == 'apply'
+    if: github.event_name != 'pull_request'
     environment: production
 
     defaults:
@@ -382,16 +384,15 @@ jobs:
           retention-days: 7
 
   # ========================================================================
-  # APPLY KUBERNETES JOB - Requires manual trigger via workflow_dispatch
-  # Configure "production" GitHub Environment with required reviewers for
-  # an additional approval gate before deployment.
+  # APPLY KUBERNETES JOB - Protected by GitHub Environment approval
+  # Runs after AWS apply completes. Waits for Environment approval.
   # ========================================================================
 
   apply-k8s:
     name: "apply:k8s"
     runs-on: ubuntu-latest
     needs: [plan-k8s, apply-aws]
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.terraform_action == 'apply'
+    if: github.event_name != 'pull_request'
     environment: production
 
     defaults:
