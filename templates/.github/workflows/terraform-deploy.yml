@@ -183,7 +183,6 @@ jobs:
           name: tfplan-aws
           path: ./terraform/aws/tfplan
           retention-days: 7
-          archive: false
 
   # ========================================================================
   # APPLY JOB - Protected by GitHub Environment approval
@@ -395,7 +394,6 @@ jobs:
           name: tfplan-k8s
           path: ./terraform/kubernetes/tfplan
           retention-days: 7
-          archive: false
 
   # ========================================================================
   # APPLY KUBERNETES JOB - Protected by GitHub Environment approval
