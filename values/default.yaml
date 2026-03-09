@@ -90,6 +90,8 @@ helmCharts:
     enabled: true
   ingressNginx:
     enabled: true
+  externalDns:
+    enabled: true
   prometheusStack:
     enabled: true
   karpenter:

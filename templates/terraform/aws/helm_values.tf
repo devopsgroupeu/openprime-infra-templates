@@ -84,6 +84,18 @@ locals {
       }
     }
     # @section services.eks.helmCharts.ingressNginx.enabled end
+
+    # @section services.eks.helmCharts.externalDns.enabled begin
+    external_dns = {
+      enabled              = try(local.helm_chart_selections["externalDns"]["enabled"], false)
+      template_values_file = "${path.module}/../../argocd/values/external-dns.yaml.tftpl"
+      values = {
+        service_account_name  = "external-dns-sa"
+        external_dns_role_arn = module.external_dns_irsa_role.iam_role_arn
+        region                = var.region
+      }
+    }
+    # @section services.eks.helmCharts.externalDns.enabled end
   }
 
   # Filter to only enabled helm charts

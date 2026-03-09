@@ -1,0 +1,14 @@
+serviceAccount:
+  create: true
+  name: ${service_account_name}
+  annotations:
+    eks.amazonaws.com/role-arn: ${external_dns_role_arn}
+
+domainFilters:
+  - openprime.io
+
+provider: aws
+
+env:
+  - name: AWS_DEFAULT_REGION
+    value: ${region}

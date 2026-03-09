@@ -27,6 +27,17 @@ appProjects:
         autoSync: true
   # @section services.eks.helmCharts.certManager.enabled end
 
+  # @section services.eks.helmCharts.externalDns.enabled begin
+  ## DNS Management
+  - namespace: external-dns
+    applications:
+      - name: external-dns
+        repoURL: https://kubernetes-sigs.github.io/external-dns/
+        chart: external-dns
+        targetRevision: 1.20.0
+        autoSync: true
+  # @section services.eks.helmCharts.externalDns.enabled end
+
   # @section services.eks.helmCharts.ingressNginx.enabled begin
   ## Ingress
   - namespace: ingress-nginx
