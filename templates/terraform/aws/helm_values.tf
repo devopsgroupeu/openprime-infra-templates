@@ -91,7 +91,7 @@ locals {
       template_values_file = "${path.module}/../../argocd/values/external-dns.yaml.tftpl"
       values = {
         service_account_name  = "external-dns-sa"
-        external_dns_role_arn = module.external_dns_irsa_role.iam_role_arn
+        external_dns_role_arn = module.external_dns_irsa_role.name
         region                = var.region
       }
     }
