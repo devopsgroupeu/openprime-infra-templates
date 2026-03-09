@@ -1,13 +1,3 @@
-# Retrieve SSH private key from AWS Secrets Manager
-# YOU NEED TO CREATE THE SECRET BEFOREHAND:
-#   aws secretsmanager create-secret \
-#     --name argocd/git-ssh-private-key \
-#     --secret-string file:///path/to/private-key
-# Also add the corresponding public key as a deploy key to your git repository.
-data "aws_secretsmanager_secret_version" "argocd_ssh_key" {
-  secret_id = "argocd/git-ssh-private-key"
-}
-
 resource "helm_release" "argocd" {
   namespace        = "argocd"
   name             = "argocd"
@@ -121,7 +111,7 @@ resource "kubectl_manifest" "repo_secret" {
       name          = "github"
       project       = "default"
       url           = var.git_repo_url
-      sshPrivateKey = data.aws_secretsmanager_secret_version.argocd_ssh_key.secret_string
+      sshPrivateKey = var.git_repo_ssh_key
     }
   })
 

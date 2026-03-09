@@ -47,3 +47,9 @@ variable "git_target_revision" {
   type        = string
   description = "Target branch to sync from"
 }
+
+variable "git_repo_ssh_key" {
+  type        = string
+  description = "Private SSH Key of the Git repository to be used by ArgoCD"
+  sensitive   = true
+}
