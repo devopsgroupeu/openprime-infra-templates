@@ -159,10 +159,7 @@ plan:aws:
 plan:k8s:
   extends: .terraform_base_k8s
   stage: plan
-  needs:
-    - job: validate:k8s
-    - job: apply:aws
-      optional: true
+  needs: [validate:k8s]
   script:
     - terraform plan -out=tfplan -no-color | tee plan.txt
     - terraform show -no-color tfplan > tfplan.txt
@@ -223,8 +220,6 @@ apply:k8s:
   needs:
     - job: plan:k8s
       artifacts: true
-    - job: apply:aws
-      optional: true
   environment:
     name: production
   script:
