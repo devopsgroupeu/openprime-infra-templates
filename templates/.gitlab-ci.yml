@@ -1,10 +1,9 @@
 # GitLab CI/CD Pipeline for Terraform Deployment
 #
 # Pipeline Structure:
-# 1. VALIDATE stage - Validate Terraform configuration
-# 2. PLAN stage     - Generate Terraform plan
-# 3. APPLY stage    - Deploy infrastructure (manual approval required)
-# 4. DESTROY stage  - Destroy infrastructure (manual only)
+#   AWS:  format → validate → plan → apply
+#   K8s:  format → validate → plan (after AWS apply) → apply
+#   Destroy: destroy:k8s → destroy:aws
 
 variables:
   # @param terraform.version
@@ -24,13 +23,15 @@ cache:
     - ${TF_ROOT}/kubernetes/.terraform/providers
     - ${TF_ROOT}/kubernetes/.terraform.lock.hcl
 
-# Pipeline stages
+# Pipeline stages — separated per layer so K8s depends on AWS
 stages:
-  - format    # Format Terraform code
-  - validate  # Validate Terraform configuration
-  - plan      # Generate execution plan
-  - apply     # Deploy infrastructure (manual approval required)
-  - destroy   # Destroy infrastructure (manual only)
+  - format
+  - validate
+  - plan:aws
+  - apply:aws
+  - plan:k8s
+  - apply:k8s
+  - destroy
 
 # ========================================================================
 # SHARED TEMPLATES
@@ -131,12 +132,12 @@ validate:k8s:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
 # ========================================================================
-# PLAN STAGE - Generate execution plan
+# PLAN AWS STAGE
 # ========================================================================
 
 plan:aws:
   extends: .terraform_base
-  stage: plan
+  stage: plan:aws
   needs: [validate:aws]
   script:
     - terraform plan -out=tfplan -no-color | tee plan.txt
@@ -156,35 +157,13 @@ plan:aws:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "main"'
 
-plan:k8s:
-  extends: .terraform_base_k8s
-  stage: plan
-  needs: [validate:k8s]
-  script:
-    - terraform plan -out=tfplan -no-color | tee plan.txt
-    - terraform show -no-color tfplan > tfplan.txt
-    - terraform show -json tfplan > tfplan.json
-  artifacts:
-    name: "terraform-plan-k8s-${CI_COMMIT_SHORT_SHA}"
-    paths:
-      - ${TF_ROOT}/kubernetes/tfplan
-      - ${TF_ROOT}/kubernetes/tfplan.txt
-      - ${TF_ROOT}/kubernetes/tfplan.json
-      - ${TF_ROOT}/kubernetes/plan.txt
-    expire_in: 7 days
-    reports:
-      terraform: ${TF_ROOT}/kubernetes/tfplan.json
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual
-
 # ========================================================================
-# APPLY STAGE - Requires manual approval via GitLab Environment protection
+# APPLY AWS STAGE - Requires manual approval
 # ========================================================================
 
 apply:aws:
   extends: .terraform_base
-  stage: apply
+  stage: apply:aws
   needs:
     - job: plan:aws
       artifacts: true
@@ -214,12 +193,47 @@ apply:aws:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: manual
 
+# ========================================================================
+# PLAN K8S STAGE - Runs after AWS apply
+# ========================================================================
+
+plan:k8s:
+  extends: .terraform_base_k8s
+  stage: plan:k8s
+  needs:
+    - job: validate:k8s
+    - job: apply:aws
+      optional: true
+  script:
+    - terraform plan -out=tfplan -no-color | tee plan.txt
+    - terraform show -no-color tfplan > tfplan.txt
+    - terraform show -json tfplan > tfplan.json
+  artifacts:
+    name: "terraform-plan-k8s-${CI_COMMIT_SHORT_SHA}"
+    paths:
+      - ${TF_ROOT}/kubernetes/tfplan
+      - ${TF_ROOT}/kubernetes/tfplan.txt
+      - ${TF_ROOT}/kubernetes/tfplan.json
+      - ${TF_ROOT}/kubernetes/plan.txt
+    expire_in: 7 days
+    reports:
+      terraform: ${TF_ROOT}/kubernetes/tfplan.json
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+
+# ========================================================================
+# APPLY K8S STAGE - Requires manual approval, runs after AWS apply
+# ========================================================================
+
 apply:k8s:
   extends: .terraform_base_k8s
-  stage: apply
+  stage: apply:k8s
   needs:
     - job: plan:k8s
       artifacts: true
+    - job: apply:aws
+      optional: true
   environment:
     name: production
   script:
