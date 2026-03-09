@@ -178,11 +178,12 @@ jobs:
         run: exit 1
 
       - name: Upload Terraform Plan
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tfplan-aws
           path: ./terraform/aws/tfplan
           retention-days: 7
+          archive: false
 
   # ========================================================================
   # APPLY JOB - Protected by GitHub Environment approval
@@ -238,11 +239,12 @@ jobs:
         run: terraform output -json > tf-outputs-aws.json
 
       - name: Upload Terraform Outputs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tf-outputs-aws
           path: ./terraform/aws/tf-outputs-aws.json
           retention-days: 30
+          archive: false
 
       - name: Commit generated ArgoCD config files
         continue-on-error: true
@@ -388,11 +390,12 @@ jobs:
         run: exit 1
 
       - name: Upload Terraform Plan
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tfplan-k8s
           path: ./terraform/kubernetes/tfplan
           retention-days: 7
+          archive: false
 
   # ========================================================================
   # APPLY KUBERNETES JOB - Protected by GitHub Environment approval
@@ -445,11 +448,12 @@ jobs:
         run: terraform output -json > tf-outputs-k8s.json
 
       - name: Upload Terraform Outputs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tf-outputs-k8s
           path: ./terraform/kubernetes/tf-outputs-k8s.json
           retention-days: 30
+          archive: false
 
   # ========================================================================
   # DESTROY KUBERNETES JOB - Manual only, independent of apply
