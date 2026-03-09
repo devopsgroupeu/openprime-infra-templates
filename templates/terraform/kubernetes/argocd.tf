@@ -8,19 +8,6 @@ data "aws_secretsmanager_secret_version" "argocd_ssh_key" {
   secret_id = "argocd/git-ssh-private-key"
 }
 
-# Retrieve Keycloak OIDC client secret from AWS Secrets Manager
-# YOU NEED TO CREATE:
-#   1. A Keycloak client named "argocd" in the "openprime" realm with:
-#      - Client type: OpenID Connect (confidential)
-#      - Valid redirect URIs: https://argocd.<your-domain>/auth/callback
-#      - Copy the client secret
-#   2. aws secretsmanager create-secret \
-#        --name argocd/keycloak-client-secret \
-#        --secret-string "<keycloak-argocd-client-secret>"
-data "aws_secretsmanager_secret_version" "argocd_keycloak_secret" {
-  secret_id = "argocd/keycloak-client-secret"
-}
-
 resource "helm_release" "argocd" {
   namespace        = "argocd"
   name             = "argocd"
@@ -28,29 +15,6 @@ resource "helm_release" "argocd" {
   chart            = "argo-cd"
   version          = "9.1.4"
   create_namespace = true
-
-  # RBAC — all authenticated Keycloak users get read-only; members of
-  # the "openprime-admins" Keycloak group get full admin.
-  values = [
-    yamlencode({
-      configs = {
-        secret = {
-          extra = {
-            "oidc.keycloak.clientSecret" = data.aws_secretsmanager_secret_version.argocd_keycloak_secret.secret_string
-          }
-        }
-        rbac = {
-          "policy.csv" = <<-EOT
-            g, openprime-admins, role:admin
-            g, openprime-users, role:readonly
-          EOT
-
-          "policy.default" = "role:readonly"
-          "scopes"         = "[groups]"
-        }
-      }
-    })
-  ]
 
   set = [
     {
@@ -108,22 +72,6 @@ resource "helm_release" "argocd" {
     {
       name  = "configs.cm.url"
       value = "https://argocd.openprime.io"
-    },
-    # Keycloak SSO via native OIDC — users log in with their existing Keycloak accounts
-    # The client secret is resolved from the argocd-oidc-keycloak Secret (see below)
-    {
-      name  = "configs.cm.oidc\\.config"
-      value = <<-EOT
-        name: Keycloak
-        issuer: ${var.keycloak_url}/realms/openprime
-        clientID: argocd
-        clientSecret: $oidc.keycloak.clientSecret
-        requestedScopes:
-        - openid
-        - profile
-        - email
-        - groups
-      EOT
     },
     # ACM Certificate
     # {
