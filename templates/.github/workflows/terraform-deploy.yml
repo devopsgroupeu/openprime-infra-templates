@@ -234,6 +234,16 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
 
+      - name: Export Terraform Outputs
+        run: terraform output -json > tf-outputs-aws.json
+
+      - name: Upload Terraform Outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: tf-outputs-aws
+          path: ./terraform/aws/tf-outputs-aws.json
+          retention-days: 30
+
       - name: Commit generated ArgoCD config files
         continue-on-error: true
         run: |
@@ -430,6 +440,16 @@ jobs:
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
+
+      - name: Export Terraform Outputs
+        run: terraform output -json > tf-outputs-k8s.json
+
+      - name: Upload Terraform Outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: tf-outputs-k8s
+          path: ./terraform/kubernetes/tf-outputs-k8s.json
+          retention-days: 30
 
   # ========================================================================
   # DESTROY KUBERNETES JOB - Manual only, independent of apply
