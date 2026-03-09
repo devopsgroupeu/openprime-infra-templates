@@ -32,7 +32,7 @@ env:
   # @param terraform.version
   TF_VERSION: "1.11"
   TF_IN_AUTOMATION: "true"
-  TF_VAR_git_repo_ssh_key: ${{ vars.TF_VAR_git_repo_ssh_key }}
+  TF_VAR_git_repo_ssh_key: ${{ secrets.TF_VAR_GIT_REPO_SSH_KEY }}
 
 jobs:
   # ========================================================================
