@@ -1,6 +1,6 @@
 # @section services.msk.enabled begin
 locals {
-  msk_cluster_name = "${var.global_prefix}msk-${var.environment_short}"
+  msk_cluster_name = "${var.global_prefix}msk-${var.environment}"
 }
 
 module "msk" {

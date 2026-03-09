@@ -1,6 +1,6 @@
 # @section services.eks.enabled begin
 locals {
-  cluster_name                 = "${var.global_prefix}eks-${var.environment_short}"
+  cluster_name                 = "${var.global_prefix}eks-${var.environment}"
   service_account_namespace    = "kube-system"
   ebs_csi_service_account_name = "ebs-csi-controller-sa"
   efs_csi_service_account_name = "efs-csi-controller-sa"

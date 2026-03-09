@@ -5,7 +5,7 @@ module "s3_buckets" {
 
   for_each = toset(var.s3_bucket_names)
 
-  bucket = "${var.global_prefix}-${each.value}-${var.environment_short}"
+  bucket = "${var.global_prefix}-${each.value}-${var.environment}"
 
   block_public_acls       = true
   block_public_policy     = true

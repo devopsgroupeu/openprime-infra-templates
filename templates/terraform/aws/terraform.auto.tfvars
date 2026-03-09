@@ -8,8 +8,6 @@ region = "eu-west-1"
 global_prefix = "my-project"
 # @param name
 environment = "development"
-# @param global.environment_short
-environment_short = "dev"
 
 # -------------------------------------------------------------------
 # VPC

@@ -5,7 +5,7 @@ module "lambda_functions" {
 
   for_each = toset(var.lambda_function_names)
 
-  function_name = "${var.global_prefix}-${each.value}-${var.environment_short}"
+  function_name = "${var.global_prefix}-${each.value}-${var.environment}"
   description   = "Lambda function ${each.value}"
   handler       = "index.handler"
   runtime       = "nodejs24.x"

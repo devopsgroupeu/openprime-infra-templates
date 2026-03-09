@@ -20,12 +20,6 @@ variable "environment" {
   default     = "development"
 }
 
-variable "environment_short" {
-  description = "Short name of the environment (e.g., dev)"
-  type        = string
-  default     = "dev"
-}
-
 variable "global_tags" {
   type        = map(string)
   description = "Global tags to be used in almost every resource created by this code"

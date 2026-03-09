@@ -5,7 +5,7 @@ module "sqs_queues" {
 
   for_each = toset(var.sqs_queue_names)
 
-  name = "${var.global_prefix}-${each.value}-${var.environment_short}"
+  name = "${var.global_prefix}-${each.value}-${var.environment}"
 
   fifo_queue                  = var.sqs_fifo_queues
   content_based_deduplication = var.sqs_content_based_deduplication
@@ -21,7 +21,7 @@ module "sqs_queues" {
 
   ## Dead letter queue
   create_dlq                    = var.sqs_create_dlq
-  dlq_name                      = var.sqs_create_dlq ? "${var.global_prefix}-${each.value}-dlq-${var.environment_short}" : null
+  dlq_name                      = var.sqs_create_dlq ? "${var.global_prefix}-${each.value}-dlq-${var.environment}" : null
   dlq_message_retention_seconds = 1209600
   redrive_policy = var.sqs_create_dlq ? {
     maxReceiveCount = var.sqs_max_receive_count
