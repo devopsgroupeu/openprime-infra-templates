@@ -197,14 +197,14 @@ jobs:
     name: "apply:aws"
     runs-on: ubuntu-latest
     needs: [plan-aws]
-    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.terraform_action == 'apply')
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.terraform_action == 'apply'
 
     defaults:
       run:
         working-directory: ./terraform/aws
 
     permissions:
-      issues: write
+      # issues: write
       contents: write
 
     env:
@@ -232,16 +232,16 @@ jobs:
           name: tfplan-aws
           path: ./terraform/aws
 
-      - name: Manual Workflow Approval
-        uses: trstringer/manual-approval@v1.12.0
-        with:
-          secret: ${{ github.TOKEN }}
-          approvers: andrej-rabek,avirostek,Sbekes
-          minimum-approvals: 1
-          issue-title: "Deploying infrastructure using terrafrom apply"
-          issue-body: "Please approve or deny the deployment"
-          fail-on-denial: true
-          polling-interval-seconds: 15
+      # - name: Manual Workflow Approval
+      #   uses: trstringer/manual-approval@v1.12.0
+      #   with:
+      #     secret: ${{ github.TOKEN }}
+      #     approvers: andrej-rabek,avirostek,Sbekes
+      #     minimum-approvals: 1
+      #     issue-title: "Deploying infrastructure using terrafrom apply"
+      #     issue-body: "Please approve or deny the deployment"
+      #     fail-on-denial: true
+      #     polling-interval-seconds: 15
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
@@ -418,7 +418,7 @@ jobs:
     name: "apply:k8s"
     runs-on: ubuntu-latest
     needs: [plan-k8s, apply-aws]
-    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.terraform_action == 'apply')
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.terraform_action == 'apply'
 
     defaults:
       run:
@@ -426,7 +426,7 @@ jobs:
 
     permissions:
       contents: read
-      issues: write
+      # issues: write
 
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -453,16 +453,16 @@ jobs:
           name: tfplan-k8s
           path: ./terraform/kubernetes
 
-      - name: Manual Workflow Approval
-        uses: trstringer/manual-approval@v1.12.0
-        with:
-          secret: ${{ github.TOKEN }}
-          approvers: andrej-rabek,avirostek,Sbekes
-          minimum-approvals: 1
-          issue-title: "Deploying infrastructure using terrafrom apply"
-          issue-body: "Please approve or deny the deployment"
-          fail-on-denial: true
-          polling-interval-seconds: 15
+      # - name: Manual Workflow Approval
+      #   uses: trstringer/manual-approval@v1.12.0
+      #   with:
+      #     secret: ${{ github.TOKEN }}
+      #     approvers: andrej-rabek,avirostek,Sbekes
+      #     minimum-approvals: 1
+      #     issue-title: "Deploying infrastructure using terrafrom apply"
+      #     issue-body: "Please approve or deny the deployment"
+      #     fail-on-denial: true
+      #     polling-interval-seconds: 15
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
