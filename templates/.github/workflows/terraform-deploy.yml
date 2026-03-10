@@ -204,6 +204,7 @@ jobs:
         working-directory: ./terraform/aws
 
     permissions:
+      issues: write
       contents: write
 
     env:
@@ -425,6 +426,7 @@ jobs:
 
     permissions:
       contents: read
+      issues: write
 
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
