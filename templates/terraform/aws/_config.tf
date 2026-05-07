@@ -36,8 +36,9 @@ provider "aws" {
 
   default_tags {
     tags = merge({
-      "OpenPrime" = "true"
-      "Terraform" = "true"
+      "OpenPrime"  = "true"
+      "Terraform"  = "true"
+      "aws-apn-id" = "pc:4lhqeluzjfvpd9gxqab2fs3y0"
     }, var.global_tags)
   }
 }
