@@ -43,7 +43,9 @@ module "cloudfront_distributions" {
     restriction_type = "none"
   }
 
+  # @section services.waf.enabled begin
   web_acl_id = var.cloudfront_enable_waf ? try(aws_wafv2_web_acl.waf, null) : null
+  # @section services.waf.enabled end
 
   logging_config = var.cloudfront_enable_logging ? {
     bucket          = "${var.cloudfront_logging_bucket}.s3.amazonaws.com"
