@@ -13,6 +13,7 @@ module "ebs_csi_irsa_role" {
   version = "~> 6.2"
 
   name                  = "${local.cluster_name}-ebs-csi"
+  use_name_prefix       = false
   attach_ebs_csi_policy = true
 
   oidc_providers = {
@@ -28,6 +29,7 @@ module "efs_csi_irsa_role" {
   version = "~> 6.2"
 
   name                  = "${local.cluster_name}-efs-csi"
+  use_name_prefix       = false
   attach_efs_csi_policy = true
 
   oidc_providers = {
@@ -43,6 +45,7 @@ module "vpc_cni_irsa_role" {
   version = "~> 6.2"
 
   name                  = "${local.cluster_name}-vpc-cni"
+  use_name_prefix       = false
   attach_vpc_cni_policy = true
   vpc_cni_enable_ipv4   = true
 
@@ -59,6 +62,7 @@ module "alb_controller_irsa_role" {
   version = "~> 6.2"
 
   name                                   = "${local.cluster_name}-aws-lb-controller"
+  use_name_prefix                        = false
   attach_load_balancer_controller_policy = true
 
   oidc_providers = {
@@ -74,6 +78,7 @@ module "external_dns_irsa_role" {
   version = "~> 6.2"
 
   name                       = "${local.cluster_name}-external-dns"
+  use_name_prefix            = false
   attach_external_dns_policy = true
 
   external_dns_hosted_zone_arns = ["arn:aws:route53:::hostedzone/*"]

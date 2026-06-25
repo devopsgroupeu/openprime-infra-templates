@@ -30,7 +30,8 @@ module "loki_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
   version = "~> 6.2"
 
-  name = local.general_name
+  name            = local.general_name
+  use_name_prefix = false
 
   policies = {
     LokiPolicy = module.loki_policy.arn
