@@ -80,7 +80,7 @@ default_node_group_iam_additional_policies = {
   AmazonEBSCSIDriverPolicy = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
 }
 
-# @param services.eks.addonCoredns MostRecent
+# @param services.eks.addonCorednsMostRecent
 eks_addon_coredns_most_recent = true
 # @param services.eks.addonPodIdentityMostRecent
 eks_addon_pod_identity_most_recent = true
