@@ -5,7 +5,8 @@ terraform {
   backend "s3" {
     # @param terraformBackend.bucketName
     bucket = "my-terraform-state-bucket"
-    key    = "kubernetes.tfstate"
+    # @param terraformBackend.kubernetesStateKey
+    key = "kubernetes.tfstate"
     # @param region
     region = "eu-west-1"
     # @param terraformBackend.encrypt
