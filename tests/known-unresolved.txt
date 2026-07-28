@@ -1,0 +1,26 @@
+# @param paths that no producer currently supplies, so the template default
+# always ships. Baselined so the gate fails on NEW ones instead of staying red
+# on known debt. This list should only ever shrink - every entry is a bug.
+#
+# Verified 2026-07-28 against openprime-app-backend prepareInjectoData
+# (src/services/environmentService.js:294).
+
+# Declared in templates/.gitlab-ci.yml above `TF_STATE_BUCKET: ${TF_STATE_BUCKET}`.
+# The backend sends terraformBackend.bucketName; nothing ever sends backend.s3.*
+# (that namespace belongs to the retired local/data fixture contract). The
+# generated GitLab pipeline therefore keeps an unset ${TF_STATE_BUCKET}.
+backend.s3.bucket
+
+# Declared in templates/.github/workflows/terraform-deploy.yml and
+# templates/.gitlab-ci.yml above `TF_VERSION: "1.11"`. No producer sends a
+# terraform.* namespace, so this knob is unwired. Harmless today only because
+# the hardcoded default happens to be the intended version.
+terraform.version
+
+# Supplying this one is worse than leaving it unset: its value line opens a
+# MULTI-LINE HCL map, and Injecto rewrites only the single line following the
+# decorator. Substituting it emits `key = {"a":"b"}` and orphans the remaining
+# map body plus its closing brace, producing terraform that fails to parse
+# ("Argument or block definition is required"). Verified 2026-07-28.
+# Needs an explicit opt-out in the decorator grammar before it can be supplied.
+services.eks.defaultNodeGroupIamAdditionalPolicies

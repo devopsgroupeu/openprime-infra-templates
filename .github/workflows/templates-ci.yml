@@ -1,0 +1,84 @@
+name: templates-ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  # Pinned deliberately: the gate asserts Injecto's substitution semantics, so an
+  # unpinned Injecto would turn an upstream change into a mysterious red here.
+  # Bump together with a gate run.
+  INJECTO_REF: v0.4.0
+  TERRAFORM_VERSION: 1.11.4
+
+jobs:
+  generation-gate:
+    name: "gate: ${{ matrix.fixture }}"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        fixture: [standard]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check out pinned Injecto
+        uses: actions/checkout@v4
+        with:
+          repository: devopsgroupeu/Injecto
+          ref: ${{ env.INJECTO_REF }}
+          path: .injecto
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Injecto dependencies
+        run: pip install --quiet -r .injecto/requirements.txt
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: Generation gate
+        run: |
+          python tests/gate.py \
+            --injecto .injecto \
+            --fixture tests/fixtures/${{ matrix.fixture }}.json \
+            --out-dir generated
+
+      - name: Terraform syntax
+        # `terraform fmt -check` exits 2 on a parse error and 3 when files are
+        # merely misformatted. Only 2 is gated: substitution does not preserve
+        # HCL alignment, so every generated tree is currently misformatted -
+        # tracked separately, and NOT silently ignored (it is logged below).
+        run: |
+          set +e
+          out=$(terraform fmt -check -recursive generated/terraform 2>&1)
+          code=$?
+          set -e
+          if [ "$code" = "2" ]; then
+            echo "::error::Generated Terraform does not parse"
+            echo "$out"
+            exit 1
+          fi
+          if [ "$code" = "3" ]; then
+            echo "::warning::Generated Terraform parses but is misformatted -"
+            echo "::warning::the generated repo's own 'terraform fmt -check' job will fail."
+            echo "$out"
+          fi
+          exit 0
+
+      - name: Terraform validate
+        run: |
+          for dir in generated/terraform/*/; do
+            echo "--- $dir"
+            terraform -chdir="$dir" init -backend=false -input=false -no-color
+            terraform -chdir="$dir" validate -no-color
+          done

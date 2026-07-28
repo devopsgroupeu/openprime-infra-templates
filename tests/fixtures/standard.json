@@ -1,0 +1,117 @@
+{
+  "name": "ci-standard",
+  "globalPrefix": "ci-gate-",
+  "provider": "aws",
+  "region": "eu-central-1",
+  "backend": true,
+  "terraformBackend": {
+    "enabled": true,
+    "bucketName": "ci-gate-terraform-state",
+    "encrypt": true,
+    "useLockfile": true,
+    "awsStateKey": "ci-standard/aws.tfstate",
+    "kubernetesStateKey": "ci-standard/kubernetes.tfstate"
+  },
+  "gitRepository": {
+    "url": "git@github.com:example-org/ci-gate-infra.git",
+    "branch": "ci-main"
+  },
+  "services": {
+    "ecr": {
+      "enabled": true,
+      "createLifecyclePolicy": false,
+      "enableReplication": true,
+      "enableScanning": false,
+      "encryptionType": "ci-AES256",
+      "imageTagMutability": "ci-IMMUTABLE",
+      "lifecyclePolicyMaxImages": 32,
+      "repositoryType": "ci-private",
+      "scanType": "ci-BASIC",
+      "repositoryNames": [
+        "ci-gate-app",
+        "ci-gate-worker"
+      ],
+      "replicationDestinations": [
+        "eu-west-1"
+      ]
+    },
+    "eks": {
+      "enabled": true,
+      "addonCorednsMostRecent": false,
+      "addonEbsCsiMostRecent": false,
+      "addonEfsCsiMostRecent": false,
+      "addonKubeProxyMostRecent": false,
+      "addonPodIdentityBeforeCompute": false,
+      "addonPodIdentityMostRecent": false,
+      "addonVpcCniBeforeCompute": false,
+      "addonVpcCniMostRecent": false,
+      "authenticationMode": "ci-API",
+      "defaultNodeGroupAmiType": "ci-BOTTLEROCKET_ARM_64",
+      "defaultNodeGroupCapacityType": "ci-ON_DEMAND",
+      "defaultNodeGroupDesiredSize": 9,
+      "defaultNodeGroupMaxSize": 17,
+      "defaultNodeGroupMaxUnavailable": 8,
+      "defaultNodeGroupMinSize": 8,
+      "defaultNodeGroupUseLatestAmi": false,
+      "enableClusterCreatorAdminPermissions": false,
+      "enableIrsa": false,
+      "endpointPublicAccess": false,
+      "karpenterNodepoolArch": "ci-arm64",
+      "karpenterNodepoolCapacityType": "ci-spot",
+      "kubernetesVersion": "ci-1.33",
+      "defaultNodeGroupInstanceTypes": [
+        "t4g.medium"
+      ],
+      "helmCharts": {}
+    },
+    "rds": {
+      "enabled": true,
+      "allocatedStorage": 27,
+      "applyImmediately": true,
+      "autoMinorVersionUpgrade": false,
+      "backupRetention": 14,
+      "backupWindow": "ci-03:00-06:00",
+      "deleteAutomatedBackups": false,
+      "deletionProtection": true,
+      "engine": "ci-postgres",
+      "engineVersion": "ci-15",
+      "family": "ci-postgres15",
+      "iamDatabaseAuthenticationEnabled": false,
+      "instanceClass": "ci-db.t3.micro",
+      "maintenanceWindow": "ci-Mon:00:00-Mon:03:00",
+      "majorEngineVersion": "ci-15",
+      "manageMasterUserPassword": true,
+      "maxAllocatedStorage": 57,
+      "monitoringInterval": 67,
+      "multiAz": false,
+      "performanceInsights": true,
+      "performanceInsightsRetentionPeriod": 14,
+      "publiclyAccessible": true,
+      "skipFinalSnapshot": false
+    },
+    "vpc": {
+      "enabled": true,
+      "azCount": 9,
+      "cidr": "10.42.0.0/16",
+      "createDatabaseSubnetGroup": false,
+      "createDatabaseSubnets": true,
+      "createIntraSubnets": true,
+      "createPrivateSubnets": false,
+      "createPublicSubnets": false,
+      "enableDnsHostnames": false,
+      "enableDnsSupport": false,
+      "enableFlowLogs": true,
+      "enableVpnGateway": true,
+      "natGateway": "ci-SINGLE",
+      "publicSubnetTags": {
+        "ci-gate": "public"
+      },
+      "privateSubnetTags": {
+        "ci-gate": "private"
+      },
+      "databaseSubnetTags": {
+        "ci-gate": "database"
+      }
+    }
+  }
+}
