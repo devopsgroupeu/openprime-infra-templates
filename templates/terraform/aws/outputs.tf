@@ -11,9 +11,11 @@ output "eks_certificate_authority_data" {
   value = module.eks.cluster_certificate_authority_data
 }
 
+# @section services.eks.karpenterEnabled begin
 output "karpenter_interruption_queue_name" {
   value = module.karpenter.queue_name
 }
+# @section services.eks.karpenterEnabled end
 # @section services.eks.enabled end
 
 # @section services.opensearch.enabled begin
