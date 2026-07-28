@@ -170,17 +170,21 @@ def format_expected(value):
 
 def run_injecto(injecto_dir, templates_dir, fixture_path, out_dir):
     """Run the Injecto CLI; return (exit_code, ansi-stripped combined output)."""
-    env = dict(os.environ, PYTHONPATH=str(Path(injecto_dir) / "src"))
+    # Resolved up front: the CLI runs with cwd=<injecto>/src, so a relative
+    # --injecto (".injecto" in CI) would otherwise be re-resolved against that
+    # cwd and double the path.
+    injecto_src = (Path(injecto_dir).resolve() / "src")
+    env = dict(os.environ, PYTHONPATH=str(injecto_src))
     proc = subprocess.run(
         [
             sys.executable,
-            str(Path(injecto_dir) / "src" / "main.py"),
+            str(injecto_src / "main.py"),
             # Injecto runs with cwd=<injecto>/src, so every path must be absolute.
             "--input-dir", str(Path(templates_dir).resolve()),
             "--output-dir", str(Path(out_dir).resolve()),
             "--data-files", str(Path(fixture_path).resolve()),
         ],
-        cwd=str(Path(injecto_dir) / "src"),
+        cwd=str(injecto_src),
         env=env,
         capture_output=True,
         text=True,
