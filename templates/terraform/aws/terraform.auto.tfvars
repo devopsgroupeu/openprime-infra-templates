@@ -75,7 +75,13 @@ default_node_group_desired_size = 2
 default_node_group_max_unavailable = 1
 # @param services.eks.defaultNodeGroupUseLatestAmi
 default_node_group_use_latest_ami = true
-# @param services.eks.defaultNodeGroupIamAdditionalPolicies
+# NOT parameterized (OP-221): Injecto rewrites only the single line following a
+# decorator, so decorating this multi-line map would emit the new value and
+# orphan the body plus its closing brace. Injecto now refuses that outright
+# rather than corrupting the file, which makes a decorator here a promise it
+# cannot keep. Re-add one only alongside multi-line substitution support.
+# (Deliberately avoids writing the decorator keyword: the scanner matches it
+# anywhere in a comment, so naming it here would declare a real decorator.)
 default_node_group_iam_additional_policies = {
   AmazonEBSCSIDriverPolicy = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
 }
