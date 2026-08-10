@@ -168,6 +168,11 @@ def format_expected(value):
     return str(value)
 
 
+def hcl_spacing(text):
+    """Collapse whitespace around HCL structural punctuation, nothing else."""
+    return re.sub(r"\s*([{}:,])\s*", r"\1", text)
+
+
 def run_injecto(injecto_dir, templates_dir, fixture_path, out_dir):
     """Run the Injecto CLI; return (exit_code, ansi-stripped combined output)."""
     # Resolved up front: the CLI runs with cwd=<injecto>/src, so a relative
@@ -256,7 +261,15 @@ def check_substituted(substitutable, data, out_dir, failures):
             if actual.lstrip().startswith("#"):
                 continue  # section-disabled; nothing to substitute
             rendered = format_expected(expected)
-            if rendered not in actual:
+            if isinstance(expected, (list, dict)):
+                # Injecto writes json.dumps() output, then terraform fmt rewrites it
+                # into canonical HCL spacing ({"a": "b"} -> { "a" : "b" }). Compare
+                # with spacing around structural punctuation collapsed. Scalars stay
+                # byte-exact so a wrong string value is still caught.
+                found = hcl_spacing(rendered) in hcl_spacing(actual)
+            else:
+                found = rendered in actual
+            if not found:
                 failures.add(
                     "NOT_SUBSTITUTED",
                     f"{rel}:{value_line_no + 1} {param} -> expected {rendered}, line reads: {actual.strip()}",
