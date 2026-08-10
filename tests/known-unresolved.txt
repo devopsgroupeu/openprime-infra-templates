@@ -17,11 +17,16 @@
 #                        the intended value, not a placeholder. A decorator that
 #                        lies is worse than an honest constant; version moves are
 #                        OP-199's job.
-
-# Supplying this one is worse than leaving it unset: its value line opens a
-# MULTI-LINE HCL map, and Injecto rewrites only the single line following the
-# decorator. Substituting it emits `key = {"a":"b"}` and orphans the remaining
-# map body plus its closing brace, producing terraform that fails to parse
-# ("Argument or block definition is required"). Verified 2026-07-28.
-# Needs an explicit opt-out in the decorator grammar before it can be supplied.
-services.eks.defaultNodeGroupIamAdditionalPolicies
+#
+# Cleared 2026-08-10 (OP-221):
+#   services.eks.defaultNodeGroupIamAdditionalPolicies
+#                      - de-decorated. Its value line opens a MULTI-LINE HCL map,
+#                        and Injecto rewrites only the line following the
+#                        decorator, so substituting it emitted `key = {"a":"b"}`
+#                        and orphaned the map body plus its closing brace. Injecto
+#                        now refuses that outright instead of corrupting the file,
+#                        so the decorator became a promise it cannot keep. Re-add
+#                        it only together with multi-line substitution support.
+#
+# The list is currently EMPTY. Every @param the templates declare is supplied by
+# a producer. Keep it that way: a new entry here is a new bug, not a new baseline.
