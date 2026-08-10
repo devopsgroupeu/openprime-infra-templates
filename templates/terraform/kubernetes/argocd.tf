@@ -28,8 +28,10 @@ resource "helm_release" "argocd" {
       value = "alb"
     },
     {
+      # ArgoCD is an admin plane with cluster-wide write access. It defaults to an
+      # internal ALB; reaching it means VPN, bastion or a deliberate override.
       name  = "server.ingress.annotations.alb\\.ingress\\.kubernetes\\.io/scheme"
-      value = "internet-facing"
+      value = "internal"
     },
     {
       name  = "server.ingress.annotations.alb\\.ingress\\.kubernetes\\.io/target-type"
