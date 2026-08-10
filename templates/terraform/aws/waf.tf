@@ -13,7 +13,7 @@ resource "aws_wafv2_web_acl" "waf" {
     priority = 1
 
     override_action {
-      count {}
+      none {}
     }
 
     statement {
@@ -35,7 +35,7 @@ resource "aws_wafv2_web_acl" "waf" {
     priority = 2
 
     override_action {
-      count {}
+      none {}
     }
 
     statement {
@@ -57,7 +57,7 @@ resource "aws_wafv2_web_acl" "waf" {
     priority = 3
 
     override_action {
-      count {}
+      none {}
     }
 
     statement {
@@ -79,7 +79,7 @@ resource "aws_wafv2_web_acl" "waf" {
     priority = 4
 
     override_action {
-      count {}
+      none {}
     }
 
     statement {
