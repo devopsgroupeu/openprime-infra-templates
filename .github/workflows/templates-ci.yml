@@ -12,7 +12,7 @@ env:
   # Pinned deliberately: the gate asserts Injecto's substitution semantics, so an
   # unpinned Injecto would turn an upstream change into a mysterious red here.
   # Bump together with a gate run.
-  INJECTO_REF: v0.4.0
+  INJECTO_REF: v0.4.1
   TERRAFORM_VERSION: 1.11.4
 
 jobs:
@@ -54,10 +54,12 @@ jobs:
             --out-dir generated
 
       - name: Terraform syntax
-        # `terraform fmt -check` exits 2 on a parse error and 3 when files are
-        # merely misformatted. Only 2 is gated: substitution does not preserve
-        # HCL alignment, so every generated tree is currently misformatted -
-        # tracked separately, and NOT silently ignored (it is logged below).
+        # Gated hard since Injecto v0.4.1, which made the CLI format its output
+        # like the API always has. The generated repo's own pipeline runs
+        # `terraform fmt -check` as its FIRST job, so anything that fails here
+        # is a red first pipeline for the customer.
+        #
+        # exit 2 = does not parse, exit 3 = parses but misformatted. Both fail.
         run: |
           set +e
           out=$(terraform fmt -check -recursive generated/terraform 2>&1)
@@ -69,9 +71,10 @@ jobs:
             exit 1
           fi
           if [ "$code" = "3" ]; then
-            echo "::warning::Generated Terraform parses but is misformatted -"
-            echo "::warning::the generated repo's own 'terraform fmt -check' job will fail."
+            echo "::error::Generated Terraform is misformatted, so the generated"
+            echo "::error::repo's own 'terraform fmt -check' job would fail."
             echo "$out"
+            exit 1
           fi
           exit 0
 
