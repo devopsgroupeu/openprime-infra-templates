@@ -474,13 +474,13 @@ variable "rds_apply_immediately" {
 variable "rds_deletion_protection" {
   type        = bool
   description = "Enable deletion protection"
-  default     = false
+  default     = true
 }
 
 variable "rds_skip_final_snapshot" {
   type        = bool
   description = "Skip final snapshot on deletion"
-  default     = true
+  default     = false
 }
 
 variable "rds_delete_automated_backups" {
@@ -509,8 +509,8 @@ variable "rds_auto_minor_version_upgrade" {
 
 variable "rds_manage_master_user_password" {
   type        = bool
-  description = "Whether RDS manages the master user password"
-  default     = false
+  description = "Let AWS store the master password in Secrets Manager instead of Terraform state"
+  default     = true
 }
 
 variable "rds_allocated_storage" {
@@ -634,13 +634,13 @@ variable "aurora_apply_immediately" {
 variable "aurora_deletion_protection" {
   type        = bool
   description = "Enable deletion protection for Aurora"
-  default     = false
+  default     = true
 }
 
 variable "aurora_skip_final_snapshot" {
   type        = bool
   description = "Skip final snapshot on deletion for Aurora"
-  default     = true
+  default     = false
 }
 
 variable "aurora_delete_automated_backups" {
@@ -1165,4 +1165,14 @@ variable "route53_enable_dnssec" {
   default     = false
 }
 
+variable "aurora_manage_master_user_password" {
+  type        = bool
+  description = "Let AWS store the master password in Secrets Manager instead of Terraform state"
+  default     = true
+}
 
+variable "s3_versioning_enabled" {
+  type        = bool
+  description = "Keep previous object versions so an overwrite or delete is recoverable"
+  default     = true
+}

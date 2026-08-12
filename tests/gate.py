@@ -310,6 +310,35 @@ def main():
         shutil.rmtree(staging, ignore_errors=True)
 
 
+# Settings whose unsafe value reaches the customer's AWS account and is only
+# discovered when something is already lost. Asserted on the GENERATED tree, so
+# a wrong wizard default is caught as well as a wrong template default -- the
+# defaults live in both places, and the wizard's win (OP-225).
+UNSAFE_DEFAULTS = {
+    "rds_deletion_protection": "true",
+    "aurora_deletion_protection": "true",
+    "rds_skip_final_snapshot": "false",
+    "aurora_skip_final_snapshot": "false",
+    "rds_manage_master_user_password": "true",
+    "aurora_manage_master_user_password": "true",
+    "s3_versioning_enabled": "true",
+}
+
+
+def check_secure_defaults(out_dir, failures):
+    """Fail when a generated repo would ship a destructive or leaky default."""
+    for tfvars in out_dir.rglob("*.tfvars"):
+        text = tfvars.read_text(encoding="utf-8", errors="replace")
+        for key, required in UNSAFE_DEFAULTS.items():
+            for match in re.finditer(rf"^{re.escape(key)}\s*=\s*(\S+)", text, re.M):
+                actual = match.group(1).strip()
+                if actual != required:
+                    failures.add(
+                        "UNSAFE_DEFAULT",
+                        f"{tfvars.relative_to(out_dir)}: {key} = {actual}, expected {required}",
+                    )
+
+
 def run_gate(args, templates_dir, tracked):
     substitutable, inert, sections = scan_decorators(templates_dir)
     param_paths = {p for p, _, _ in substitutable}
@@ -354,6 +383,7 @@ def run_gate(args, templates_dir, tracked):
         section_only = check_unresolved(log, data, param_paths, sections, failures)
         check_substituted(substitutable, data, out_dir, failures)
         check_inert_baseline(inert, failures)
+        check_secure_defaults(out_dir, failures)
 
         inputs = sum(1 for p in templates_dir.rglob("*") if p.is_file())
         outputs = sum(1 for p in out_dir.rglob("*") if p.is_file())
