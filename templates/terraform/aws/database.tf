@@ -70,7 +70,7 @@ module "rds" {
   db_name                     = local.rds_db_name
   manage_master_user_password = var.rds_manage_master_user_password
   username                    = local.rds_username
-  password                    = random_password.rds_password.result
+  password                    = var.rds_manage_master_user_password ? null : random_password.rds_password.result
   port                        = local.rds_port
 
   storage_encrypted     = true
