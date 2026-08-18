@@ -43,7 +43,7 @@ resource "random_password" "aurora_password" {
 # @section services.rds.enabled begin
 module "rds" {
   source  = "terraform-aws-modules/rds/aws"
-  version = "~> 6.12"
+  version = "~> 7.2"
 
   identifier = local.rds_identifier
 
@@ -70,7 +70,7 @@ module "rds" {
   db_name                     = local.rds_db_name
   manage_master_user_password = var.rds_manage_master_user_password
   username                    = local.rds_username
-  password                    = random_password.rds_password.result
+  password_wo                 = random_password.rds_password.result
   port                        = local.rds_port
 
   storage_encrypted     = true

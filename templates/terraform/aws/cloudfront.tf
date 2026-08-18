@@ -3,7 +3,7 @@
 ## This is a basic setup - customize origins and behaviors based on your needs
 module "cloudfront_distributions" {
   source  = "terraform-aws-modules/cloudfront/aws"
-  version = "~> 5.0"
+  version = "~> 6.0"
 
   for_each = toset(var.cloudfront_distribution_names)
 
@@ -39,8 +39,10 @@ module "cloudfront_distributions" {
     cloudfront_default_certificate = true
   }
 
-  geo_restriction = {
-    restriction_type = "none"
+  restrictions = {
+    geo_restriction = {
+      restriction_type = "none"
+    }
   }
 
   # @section services.waf.enabled begin
