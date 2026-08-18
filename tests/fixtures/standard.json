@@ -62,7 +62,8 @@
       "defaultNodeGroupInstanceTypes": [
         "t4g.medium"
       ],
-      "helmCharts": {}
+      "helmCharts": {},
+      "networkPolicyEnabled": true
     },
     "rds": {
       "enabled": true,

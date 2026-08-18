@@ -1,0 +1,98 @@
+## Baseline ingress NetworkPolicies for the namespaces this stack creates.
+##
+## Each policy selects every pod in its namespace and lists the only sources
+## allowed to reach it, which in NetworkPolicy semantics denies everything else.
+## Egress is deliberately NOT restricted: these workloads talk to the AWS APIs,
+## ACME endpoints and chart repositories, and a default-deny egress here fails
+## closed in ways that surface as a slow DNS timeout rather than an error.
+##
+## The control-plane CIDRs are the intra subnets, which in this VPC host the EKS
+## control-plane ENIs and nothing else. Admitting them is what keeps the
+## cert-manager and prometheus-operator admission webhooks reachable: those calls
+## come from the API server, which is not a pod and cannot be matched by a
+## podSelector. Pods take their addresses from the private subnets, so this
+## ipBlock does not silently readmit pod traffic.
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: baseline-ingress
+  namespace: cert-manager
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+%{~ for cidr in control_plane_cidrs }
+        - ipBlock:
+            cidr: ${cidr}
+%{~ endfor }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: baseline-ingress
+  namespace: external-dns
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+%{~ for cidr in control_plane_cidrs }
+        - ipBlock:
+            cidr: ${cidr}
+%{~ endfor }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: baseline-ingress
+  namespace: ingress-nginx
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+%{~ for cidr in control_plane_cidrs }
+        - ipBlock:
+            cidr: ${cidr}
+%{~ endfor }
+%{~ for cidr in load_balancer_cidrs }
+        - ipBlock:
+            cidr: ${cidr}
+%{~ endfor }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: baseline-ingress
+  namespace: monitoring
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+%{~ for cidr in control_plane_cidrs }
+        - ipBlock:
+            cidr: ${cidr}
+%{~ endfor }

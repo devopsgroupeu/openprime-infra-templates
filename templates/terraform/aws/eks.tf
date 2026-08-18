@@ -119,6 +119,14 @@ module "eks" {
       service_account_role_arn = module.vpc_cni_irsa_role.arn
       most_recent              = var.eks_addon_vpc_cni_most_recent
       before_compute           = var.eks_addon_vpc_cni_before_compute
+
+      ## Without this the API server accepts NetworkPolicy objects and the CNI
+      ## enforces none of them - a security control that looks present and is not.
+      ## Enforcement on its own changes no traffic: a pod is restricted only once
+      ## some policy selects it, so this is inert until policies are generated.
+      configuration_values = jsonencode({
+        enableNetworkPolicy = "true"
+      })
     }
     aws-ebs-csi-driver = {
       service_account_role_arn = module.ebs_csi_irsa_role.arn
