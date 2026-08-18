@@ -339,6 +339,29 @@ def check_secure_defaults(out_dir, failures):
                     )
 
 
+def check_network_policy_enforcement(out_dir, failures):
+    """Fail when the CNI would accept NetworkPolicy objects and enforce none.
+
+    The VPC CNI ignores NetworkPolicy unless enableNetworkPolicy is set on the
+    addon, so dropping this leaves every generated policy silently inert - the
+    control looks present and is not. Guarded here because nothing else notices:
+    terraform validate passes, the apply succeeds, and the cluster comes up green.
+    """
+    eks = out_dir / "terraform" / "aws" / "eks.tf"
+    if not eks.exists():
+        return
+    text = eks.read_text(encoding="utf-8", errors="replace")
+    if "vpc-cni" not in text:
+        return
+    if not re.search(r'enableNetworkPolicy\s*=\s*"true"', text):
+        failures.add(
+            "NETWORK_POLICY_INERT",
+            "terraform/aws/eks.tf: vpc-cni addon does not set "
+            'enableNetworkPolicy = "true", so NetworkPolicy objects are accepted '
+            "but never enforced",
+        )
+
+
 def run_gate(args, templates_dir, tracked):
     substitutable, inert, sections = scan_decorators(templates_dir)
     param_paths = {p for p, _, _ in substitutable}
@@ -384,6 +407,7 @@ def run_gate(args, templates_dir, tracked):
         check_substituted(substitutable, data, out_dir, failures)
         check_inert_baseline(inert, failures)
         check_secure_defaults(out_dir, failures)
+        check_network_policy_enforcement(out_dir, failures)
 
         inputs = sum(1 for p in templates_dir.rglob("*") if p.is_file())
         outputs = sum(1 for p in out_dir.rglob("*") if p.is_file())

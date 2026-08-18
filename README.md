@@ -24,7 +24,7 @@ templates/                       # the tree Injecto processes (input_dir)
     ├── applications.yaml        # app-of-apps manifest (@section-gated)
     ├── charts/internal/         # app-of-apps Helm chart
     ├── example-apps/            # sample workloads
-    ├── support-resources/       # Karpenter support configs
+    ├── support-resources/       # Karpenter + NetworkPolicy configs
     └── values/                  # Helm values (.yaml and .yaml.tftpl)
 
 tests/                           # generation gate (see tests/README.md)
