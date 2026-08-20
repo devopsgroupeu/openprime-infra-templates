@@ -60,7 +60,7 @@ module "rds" {
   backup_retention_period   = var.rds_backup_retention_period
 
   engine                     = var.rds_engine
-  engine_version             = var.rds_engine_version
+  engine_version             = var.rds_version
   major_engine_version       = var.rds_major_engine_version
   family                     = var.rds_family
   instance_class             = var.rds_instance_class

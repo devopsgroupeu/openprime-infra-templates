@@ -444,7 +444,7 @@ variable "rds_engine" {
   description = "The database engine to use for the RDS instance (e.g., mysql, postgres)"
 }
 
-variable "rds_engine_version" {
+variable "rds_version" {
   type        = string
   description = "The version of the database engine to use for the RDS instance. (e.g. for MySQL - 8.0.40; for PostgreSQL - 15)"
 }

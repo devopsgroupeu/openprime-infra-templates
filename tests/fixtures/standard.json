@@ -37,14 +37,6 @@
     },
     "eks": {
       "enabled": true,
-      "addonCorednsMostRecent": false,
-      "addonEbsCsiMostRecent": false,
-      "addonEfsCsiMostRecent": false,
-      "addonKubeProxyMostRecent": false,
-      "addonPodIdentityBeforeCompute": false,
-      "addonPodIdentityMostRecent": false,
-      "addonVpcCniBeforeCompute": false,
-      "addonVpcCniMostRecent": false,
       "authenticationMode": "ci-API",
       "defaultNodeGroupAmiType": "ci-BOTTLEROCKET_ARM_64",
       "defaultNodeGroupCapacityType": "ci-ON_DEMAND",
@@ -52,7 +44,6 @@
       "defaultNodeGroupMaxSize": 17,
       "defaultNodeGroupMaxUnavailable": 8,
       "defaultNodeGroupMinSize": 8,
-      "defaultNodeGroupUseLatestAmi": false,
       "enableClusterCreatorAdminPermissions": false,
       "enableIrsa": false,
       "endpointPublicAccess": false,
@@ -63,7 +54,8 @@
         "t4g.medium"
       ],
       "helmCharts": {},
-      "networkPolicyEnabled": true
+      "networkPolicyEnabled": true,
+      "karpenterEnabled": true
     },
     "rds": {
       "enabled": true,
@@ -75,7 +67,6 @@
       "deleteAutomatedBackups": false,
       "deletionProtection": true,
       "engine": "ci-postgres",
-      "engineVersion": "ci-15",
       "family": "ci-postgres15",
       "iamDatabaseAuthenticationEnabled": false,
       "instanceClass": "ci-db.t3.micro",
@@ -88,7 +79,8 @@
       "performanceInsights": true,
       "performanceInsightsRetentionPeriod": 14,
       "publiclyAccessible": true,
-      "skipFinalSnapshot": false
+      "skipFinalSnapshot": false,
+      "version": "ci-15.4"
     },
     "vpc": {
       "enabled": true,
