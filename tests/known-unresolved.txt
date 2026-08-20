@@ -28,5 +28,32 @@
 #                        so the decorator became a promise it cannot keep. Re-add
 #                        it only together with multi-line substitution support.
 #
-# The list is currently EMPTY. Every @param the templates declare is supplied by
-# a producer. Keep it that way: a new entry here is a new bug, not a new baseline.
+# Added 2026-08-20 (OP-227), and the first entries that are NOT bugs.
+#
+# The rule above -- "every entry is a bug" -- was written before the runtime
+# catalog (OP-202). It assumed the frontend was the source of truth, so a @param
+# no producer supplied could only be a decorator that lies. The entries below are
+# the other case: the TEMPLATE is the source of truth and the frontend has not
+# been regenerated from it yet. OP-208 hydrates the wizard from the catalog, at
+# which point these become configurable without touching this file, and this
+# block should be deleted rather than migrated.
+#
+# They surfaced only once the fixture stopped being authored from the templates
+# (tests/derive_fixture.py). Before that the fixture supplied them and the gate
+# could not see that no real producer does.
+#
+# Nothing is broken by them today: each is an addon version or ordering flag
+# whose template default is the intended value. What was wrong was the silence.
+#
+# De-decorating them instead -- the terraform.version precedent above -- was the
+# alternative, and was rejected because it would remove them from the catalog and
+# so from the wizard OP-208 generates.
+services.eks.addonCorednsMostRecent
+services.eks.addonEbsCsiMostRecent
+services.eks.addonEfsCsiMostRecent
+services.eks.addonKubeProxyMostRecent
+services.eks.addonPodIdentityBeforeCompute
+services.eks.addonPodIdentityMostRecent
+services.eks.addonVpcCniBeforeCompute
+services.eks.addonVpcCniMostRecent
+services.eks.defaultNodeGroupUseLatestAmi

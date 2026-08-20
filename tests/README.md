@@ -48,6 +48,20 @@ is the opposite — it silently keeps the vendor's value.
 the default, a broken substitution is invisible — the output looks right for the
 wrong reason.
 
+**Fixture keys come from the frontend, not from the templates.** A fixture
+authored from the templates agrees with them by construction and cannot show
+that the wizard sends something else. That is how `services.rds.engineVersion`
+survived while the wizard sent `services.rds.version`: the engine version a user
+picked never arrived, and this gate was green throughout (OP-227).
+
+Regenerate the key set with `tests/derive_fixture.py`; the script documents the
+two-step dump of `openprime-app/src/config/services/aws.js`. Existing values are
+carried over untouched, so the CI markers and the values pinned by
+`check_secure_defaults` survive. `--check` reports drift without writing.
+
+Manual until OP-208 hydrates the wizard from the runtime catalog, after which the
+two cannot disagree.
+
 ## Baselines
 
 Two files record known debt so the gate fails on *new* problems instead of
@@ -56,5 +70,7 @@ staying permanently red. Both should only ever shrink.
 - `inert-params.txt` — decorators that cannot substitute anything (mostly
   `@param` above a `variable "x" {` block opener in `_variables.tf`).
   Regenerate with `--write-baseline`.
-- `known-unresolved.txt` — `@param` paths no producer supplies. Each entry is a
-  bug with its reason recorded inline.
+- `known-unresolved.txt` — `@param` paths no producer supplies, each with its
+  reason recorded inline. Historically every entry was a bug. Since OP-227 the
+  file also carries the opposite case: params the templates declare and the
+  frontend has simply not been regenerated for yet. OP-208 clears those.
