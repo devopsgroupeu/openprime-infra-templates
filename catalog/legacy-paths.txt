@@ -1,0 +1,13 @@
+# @param paths exempt from the catalog naming rules. See README "Decorators".
+# Do not add entries to silence a new decorator: a new path has no saved
+# environments behind it, so it can simply follow a supported convention.
+
+services.vpc.natGateway
+services.rds.backupRetention
+services.rds.performanceInsights
+services.elasticache.transitEncryption
+services.elasticache.atRestEncryption
+services.elasticache.automaticFailover
+services.elasticache.multiAz
+services.aurora.backupRetention
+services.sqs.createDeadLetterQueue

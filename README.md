@@ -52,6 +52,32 @@ module "eks" {
 - `# @section <condition> begin/end` - Conditional section boundaries
 - `# @param <variable>` - Configurable parameter marker
 
+A `@param` may carry an attribute tail, which the substituter ignores and the
+catalog extractor reads:
+
+```
+# @param services.ecr.repositoryNames | type=list
+# @param services.sns.kmsKeyId | type=string | default=
+```
+
+`type` is required only where the literal is ambiguous — `null`, `[]`, or a
+quoted boolean reveal no usable type and are rejected rather than guessed.
+
+The extractor also checks that each path maps to its Terraform variable under
+one of two conventions:
+
+| Convention | Example |
+|------------|---------|
+| leaf | `services.vpc.azCount` -> `az_count` |
+| service-prefixed | `services.rds.engineVersion` -> `rds_engine_version` |
+
+Nine existing paths predate both and are listed in `catalog/legacy-paths.txt`.
+They are pinned by saved environments and by the frontend wire contract, so
+renaming them is a breaking change. New paths must follow a convention instead
+of being added to that file.
+
+Both rules are enforced on every pull request by the `catalog-gate` job.
+
 ## AWS Infrastructure
 
 ### Terraform Modules
