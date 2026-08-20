@@ -240,7 +240,7 @@ opensearch_internal_user_database_enabled = true
 opensearch_create_access_policy = true
 # @param services.opensearch.ipAddressType
 opensearch_ip_address_type = "dualstack"
-# @param services.opensearch.allowExplicitIndex
+# @param services.opensearch.allowExplicitIndex | type=string | default=true
 opensearch_allow_explicit_index = "true"
 
 # -------------------------------------------------------------------
@@ -278,7 +278,7 @@ elasticache_multi_az_enabled = false
 # ECR
 # -------------------------------------------------------------------
 
-# @param services.ecr.repositoryNames
+# @param services.ecr.repositoryNames | type=list
 ecr_repository_names = []
 # @param services.ecr.repositoryType
 ecr_repository_type = "private"
@@ -296,7 +296,7 @@ ecr_create_lifecycle_policy = true
 ecr_lifecycle_policy_max_images = 25
 # @param services.ecr.enableReplication
 ecr_enable_replication = false
-# @param services.ecr.replicationDestinations
+# @param services.ecr.replicationDestinations | type=list
 ecr_replication_destinations = []
 
 # -------------------------------------------------------------------
@@ -320,21 +320,21 @@ waf_sampled_requests_enabled = true
 # S3
 # -------------------------------------------------------------------
 
-# @param services.s3.bucketNames
+# @param services.s3.bucketNames | type=list
 s3_bucket_names = []
 
 # -------------------------------------------------------------------
 # LAMBDA
 # -------------------------------------------------------------------
 
-# @param services.lambda.functionNames
+# @param services.lambda.functionNames | type=list
 lambda_function_names = []
 
 # -------------------------------------------------------------------
 # SQS
 # -------------------------------------------------------------------
 
-# @param services.sqs.queueNames
+# @param services.sqs.queueNames | type=list
 sqs_queue_names = []
 # @param services.sqs.fifoQueues
 sqs_fifo_queues = false
@@ -361,7 +361,7 @@ sqs_enable_encryption = true
 # SNS
 # -------------------------------------------------------------------
 
-# @param services.sns.topicNames
+# @param services.sns.topicNames | type=list
 sns_topic_names = []
 # @param services.sns.fifoTopics
 sns_fifo_topics = false
@@ -369,14 +369,14 @@ sns_fifo_topics = false
 sns_content_based_deduplication = false
 # @param services.sns.enableEncryption
 sns_enable_encryption = false
-# @param services.sns.kmsKeyId
+# @param services.sns.kmsKeyId | type=string | default=
 sns_kms_key_id = null
 
 # -------------------------------------------------------------------
 # CLOUDFRONT
 # -------------------------------------------------------------------
 
-# @param services.cloudfront.distributionNames
+# @param services.cloudfront.distributionNames | type=list
 cloudfront_distribution_names = []
 # @param services.cloudfront.priceClass
 cloudfront_price_class = "PriceClass_100"
@@ -386,14 +386,14 @@ cloudfront_enable_ipv6 = true
 cloudfront_enable_waf = false
 # @param services.cloudfront.enableLogging
 cloudfront_enable_logging = false
-# @param services.cloudfront.loggingBucket
+# @param services.cloudfront.loggingBucket | type=string | default=
 cloudfront_logging_bucket = null
 
 # -------------------------------------------------------------------
 # ROUTE53
 # -------------------------------------------------------------------
 
-# @param services.route53.zoneNames
+# @param services.route53.zoneNames | type=list
 route53_zone_names = []
 # @param services.route53.privateZones
 route53_private_zones = false

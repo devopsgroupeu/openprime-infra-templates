@@ -2,3 +2,6 @@
 .terraform
 .terraform.lock.hcl
 .DS_Store
+
+# Written by the catalog gate
+catalog.json
