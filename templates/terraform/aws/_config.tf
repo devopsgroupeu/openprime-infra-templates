@@ -1,10 +1,10 @@
 terraform {
-  required_version = "~> 1.15"
+  required_version = "~> 1.11"
 
   # @section backend begin
   backend "s3" {
     # @param terraformBackend.bucketName
-    bucket = "my-terraform-state-bucket"
+    bucket = "openprime-infra-templates-tf-backend-dev"
     # @param terraformBackend.awsStateKey
     key = "aws.tfstate"
     # @param region
@@ -19,15 +19,15 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 6.0"
+      version = "~> 6.0"
     }
     local = {
       source  = "hashicorp/local"
-      version = ">= 2.5"
+      version = "~> 2.5"
     }
     random = {
       source  = "hashicorp/random"
-      version = ">= 3.7"
+      version = "~> 3.7"
     }
   }
 }

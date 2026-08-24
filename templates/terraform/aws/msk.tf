@@ -5,7 +5,7 @@ locals {
 
 module "msk" {
   source  = "terraform-aws-modules/msk-kafka-cluster/aws"
-  version = "~> 2.13"
+  version = "~> 3.3"
 
   name                   = local.msk_cluster_name
   kafka_version          = var.msk_kafka_version
@@ -13,7 +13,7 @@ module "msk" {
 
   broker_node_client_subnets  = module.vpc.private_subnets
   broker_node_instance_type   = var.msk_broker_node_instance_type
-  broker_node_security_groups = [module.security_group.security_group_id]
+  broker_node_security_groups = [module.security_group.id]
 
   tags = {
     Name = local.msk_cluster_name
@@ -23,16 +23,40 @@ module "msk" {
 
 module "security_group" {
   source  = "terraform-aws-modules/security-group/aws"
-  version = "~> 5.3"
+  version = "~> 6.0"
 
   name        = "${local.msk_cluster_name}-sg"
   description = "Security group for ${local.msk_cluster_name}"
   vpc_id      = module.vpc.vpc_id
 
-  ingress_cidr_blocks = module.vpc.private_subnets_cidr_blocks
-  ingress_rules = [
-    "kafka-broker-tcp",
-    "kafka-broker-tls-tcp"
-  ]
+  enable_exclusive_rules = false
+
+  ingress_rules = merge(
+    {
+      for index, cidr in module.vpc.private_subnets_cidr_blocks :
+      "kafka-plaintext-${index}" => {
+        from_port   = 9092
+        to_port     = 9092
+        ip_protocol = "tcp"
+        cidr_ipv4   = cidr
+      }
+    },
+    {
+      for index, cidr in module.vpc.private_subnets_cidr_blocks :
+      "kafka-tls-${index}" => {
+        from_port   = 9094
+        to_port     = 9094
+        ip_protocol = "tcp"
+        cidr_ipv4   = cidr
+      }
+    }
+  )
+
+  egress_rules = {
+    all = {
+      ip_protocol = "-1"
+      cidr_ipv4   = "0.0.0.0/0"
+    }
+  }
 }
 # @section services.msk.enabled end

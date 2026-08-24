@@ -10,7 +10,7 @@ variable "loki_buckets" {
 
 module "loki_s3_buckets" {
   source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "~> 5.3"
+  version = "~> 5.15"
 
   for_each = toset(var.loki_buckets)
 

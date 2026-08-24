@@ -3,7 +3,7 @@
 ## This is a basic setup - customize origins and behaviors based on your needs
 module "cloudfront_distributions" {
   source  = "terraform-aws-modules/cloudfront/aws"
-  version = "~> 6.0"
+  version = "~> 6.7"
 
   for_each = toset(var.cloudfront_distribution_names)
 

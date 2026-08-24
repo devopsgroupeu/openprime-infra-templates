@@ -1,7 +1,7 @@
 # @section services.route53.enabled begin
 module "route53_zones" {
   source  = "terraform-aws-modules/route53/aws"
-  version = "~> 6.1"
+  version = "~> 6.5"
 
   for_each = toset(var.route53_zone_names)
 

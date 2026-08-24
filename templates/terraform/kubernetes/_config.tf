@@ -4,7 +4,7 @@ terraform {
   # @section backend begin
   backend "s3" {
     # @param terraformBackend.bucketName
-    bucket = "my-terraform-state-bucket"
+    bucket = "openprime-infra-templates-tf-backend-dev"
     # @param terraformBackend.kubernetesStateKey
     key = "kubernetes.tfstate"
     # @param region
@@ -19,19 +19,19 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 6.0"
+      version = "~> 6.0"
     }
     helm = {
       source  = "hashicorp/helm"
-      version = ">= 3.0"
+      version = "~> 3.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = ">= 2.38"
+      version = "~> 3.2"
     }
     kubectl = {
       source  = "gavinbunney/kubectl"
-      version = ">= 1.19.0"
+      version = "~> 1.19"
     }
   }
 }
