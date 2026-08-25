@@ -704,7 +704,7 @@ variable "opensearch_ebs_volume_size" {
 variable "opensearch_instance_count" {
   type        = number
   description = "Number of instances in the cluster."
-  default     = 3
+  default     = 2
 }
 
 variable "opensearch_instance_type" {
@@ -808,7 +808,7 @@ variable "opensearch_node_to_node_encryption" {
 variable "msk_kafka_version" {
   type        = string
   description = "Kafka version for MSK cluster"
-  default     = "3.5.1"
+  default     = "3.9.x"
 }
 
 variable "msk_number_of_broker_nodes" {

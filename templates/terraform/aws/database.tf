@@ -86,9 +86,8 @@ module "rds" {
   monitoring_interval                   = var.rds_monitoring_interval
   enabled_cloudwatch_logs_exports       = local.cloudwatch_logs_exports
   create_cloudwatch_log_group           = true
-
-  maintenance_window = var.rds_maintenance_window
-  backup_window      = var.rds_backup_window
+  maintenance_window                    = var.rds_maintenance_window
+  backup_window                         = var.rds_backup_window
 }
 
 module "rds_sg" {
@@ -101,7 +100,6 @@ module "rds_sg" {
 
   revoke_rules_on_delete = true
 
-  enable_exclusive_rules = false
 
   ingress_rules = {
     database-from-vpc = {
@@ -162,12 +160,11 @@ module "aurora" {
   cluster_monitoring_interval     = var.aurora_monitoring_interval
   enabled_cloudwatch_logs_exports = local.cloudwatch_logs_exports
   create_cloudwatch_log_group     = true
-
-  apply_immediately        = var.aurora_apply_immediately
-  deletion_protection      = var.aurora_deletion_protection
-  skip_final_snapshot      = var.aurora_skip_final_snapshot
-  delete_automated_backups = var.aurora_delete_automated_backups
-  backup_retention_period  = var.aurora_backup_retention_period
+  apply_immediately               = var.aurora_apply_immediately
+  deletion_protection             = var.aurora_deletion_protection
+  skip_final_snapshot             = var.aurora_skip_final_snapshot
+  delete_automated_backups        = var.aurora_delete_automated_backups
+  backup_retention_period         = var.aurora_backup_retention_period
 }
 
 module "aurora_sg" {

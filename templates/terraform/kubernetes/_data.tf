@@ -6,7 +6,7 @@ data "terraform_remote_state" "aws" {
     # @param terraformBackend.bucketName
     bucket = "my-terraform-state-bucket"
     # @param terraformBackend.awsStateKey
-    key = "aws.tfstate"
+    key = "kubernetes.tfstate"
     # @param region
     region = "eu-west-1"
     # @param terraformBackend.encrypt
