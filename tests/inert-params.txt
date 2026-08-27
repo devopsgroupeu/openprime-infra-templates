@@ -1,44 +1,9 @@
 # @param decorators that sit above a line Injecto cannot rewrite.
 # They parameterize nothing. Baselined so the gate fails only on NEW ones.
 # Regenerate with: python tests/gate.py --write-baseline --injecto <path> --fixture <path>
-terraform/aws/_variables.tf:1004 services.lambda.functionNames -> next line is not a key/value line
-terraform/aws/_variables.tf:1015 services.sqs.queueNames -> next line is not a key/value line
-terraform/aws/_variables.tf:1022 services.sqs.fifoQueues -> next line is not a key/value line
-terraform/aws/_variables.tf:1029 services.sqs.contentBasedDeduplication -> next line is not a key/value line
-terraform/aws/_variables.tf:1036 services.sqs.visibilityTimeout -> next line is not a key/value line
-terraform/aws/_variables.tf:1043 services.sqs.messageRetention -> next line is not a key/value line
-terraform/aws/_variables.tf:1050 services.sqs.maxMessageSize -> next line is not a key/value line
-terraform/aws/_variables.tf:1057 services.sqs.delaySeconds -> next line is not a key/value line
-terraform/aws/_variables.tf:1064 services.sqs.receiveWaitTime -> next line is not a key/value line
-terraform/aws/_variables.tf:1071 services.sqs.createDeadLetterQueue -> next line is not a key/value line
-terraform/aws/_variables.tf:1078 services.sqs.maxReceiveCount -> next line is not a key/value line
-terraform/aws/_variables.tf:1085 services.sqs.enableEncryption -> next line is not a key/value line
-terraform/aws/_variables.tf:1096 services.sns.topicNames -> next line is not a key/value line
-terraform/aws/_variables.tf:1103 services.sns.fifoTopics -> next line is not a key/value line
-terraform/aws/_variables.tf:1110 services.sns.contentBasedDeduplication -> next line is not a key/value line
-terraform/aws/_variables.tf:1117 services.sns.enableEncryption -> next line is not a key/value line
-terraform/aws/_variables.tf:1124 services.sns.kmsKeyId -> next line is not a key/value line
-terraform/aws/_variables.tf:1135 services.cloudfront.distributionNames -> next line is not a key/value line
-terraform/aws/_variables.tf:1142 services.cloudfront.priceClass -> next line is not a key/value line
-terraform/aws/_variables.tf:1149 services.cloudfront.enableIpv6 -> next line is not a key/value line
-terraform/aws/_variables.tf:1156 services.cloudfront.enableWaf -> next line is not a key/value line
-terraform/aws/_variables.tf:1163 services.cloudfront.enableLogging -> next line is not a key/value line
-terraform/aws/_variables.tf:1170 services.cloudfront.loggingBucket -> next line is not a key/value line
-terraform/aws/_variables.tf:1181 services.route53.zoneNames -> next line is not a key/value line
-terraform/aws/_variables.tf:1188 services.route53.privateZones -> next line is not a key/value line
-terraform/aws/_variables.tf:1195 services.route53.forceDestroy -> next line is not a key/value line
-terraform/aws/_variables.tf:1202 services.route53.enableDnssec -> next line is not a key/value line
-terraform/aws/_variables.tf:898 services.s3.bucketNames -> next line is not a key/value line
-terraform/aws/_variables.tf:909 services.elasticache.engine -> next line is not a key/value line
-terraform/aws/_variables.tf:916 services.elasticache.engineVersion -> next line is not a key/value line
-terraform/aws/_variables.tf:923 services.elasticache.nodeType -> next line is not a key/value line
-terraform/aws/_variables.tf:930 services.elasticache.numCacheNodes -> next line is not a key/value line
-terraform/aws/_variables.tf:937 services.elasticache.parameterGroupFamily -> next line is not a key/value line
-terraform/aws/_variables.tf:944 services.elasticache.transitEncryption -> next line is not a key/value line
-terraform/aws/_variables.tf:951 services.elasticache.atRestEncryption -> next line is not a key/value line
-terraform/aws/_variables.tf:958 services.elasticache.authTokenEnabled -> next line is not a key/value line
-terraform/aws/_variables.tf:965 services.elasticache.maintenanceWindow -> next line is not a key/value line
-terraform/aws/_variables.tf:972 services.elasticache.snapshotRetentionLimit -> next line is not a key/value line
-terraform/aws/_variables.tf:979 services.elasticache.snapshotWindow -> next line is not a key/value line
-terraform/aws/_variables.tf:986 services.elasticache.automaticFailover -> next line is not a key/value line
-terraform/aws/_variables.tf:993 services.elasticache.multiAz -> next line is not a key/value line
+#
+# Emptied 2026-08-10 (OP-222). The 41 entries were all in
+# templates/terraform/aws/_variables.tf, where @param sat above a
+# `variable "x" {` block opener. Every one of those paths is also declared -
+# and actually substitutable - in terraform.auto.tfvars, so the decorators
+# were misleading duplication, not a functional gap. One contract, not two.

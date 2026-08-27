@@ -474,13 +474,13 @@ variable "rds_apply_immediately" {
 variable "rds_deletion_protection" {
   type        = bool
   description = "Enable deletion protection"
-  default     = false
+  default     = true
 }
 
 variable "rds_skip_final_snapshot" {
   type        = bool
   description = "Skip final snapshot on deletion"
-  default     = true
+  default     = false
 }
 
 variable "rds_delete_automated_backups" {
@@ -509,8 +509,8 @@ variable "rds_auto_minor_version_upgrade" {
 
 variable "rds_manage_master_user_password" {
   type        = bool
-  description = "Whether RDS manages the master user password"
-  default     = false
+  description = "Let AWS store the master password in Secrets Manager instead of Terraform state"
+  default     = true
 }
 
 variable "rds_allocated_storage" {
@@ -634,13 +634,13 @@ variable "aurora_apply_immediately" {
 variable "aurora_deletion_protection" {
   type        = bool
   description = "Enable deletion protection for Aurora"
-  default     = false
+  default     = true
 }
 
 variable "aurora_skip_final_snapshot" {
   type        = bool
   description = "Skip final snapshot on deletion for Aurora"
-  default     = true
+  default     = false
 }
 
 variable "aurora_delete_automated_backups" {
@@ -895,7 +895,6 @@ variable "waf_sampled_requests_enabled" {
 # S3
 # -------------------------------------------------------------------
 
-# @param services.s3.bucketNames
 variable "s3_bucket_names" {
   description = "List of S3 bucket names to create"
   type        = list(string)
@@ -906,91 +905,78 @@ variable "s3_bucket_names" {
 # ELASTICACHE
 # -------------------------------------------------------------------
 
-# @param services.elasticache.engine
 variable "elasticache_engine" {
   description = "ElastiCache engine (redis, valkey, memcached)"
   type        = string
   default     = "valkey"
 }
 
-# @param services.elasticache.engineVersion
 variable "elasticache_engine_version" {
   description = "ElastiCache engine version"
   type        = string
   default     = "7.2"
 }
 
-# @param services.elasticache.nodeType
 variable "elasticache_node_type" {
   description = "ElastiCache node instance type"
   type        = string
   default     = "cache.t4g.small"
 }
 
-# @param services.elasticache.numCacheNodes
 variable "elasticache_num_cache_nodes" {
   description = "Number of cache nodes (for non-cluster mode)"
   type        = number
   default     = 1
 }
 
-# @param services.elasticache.parameterGroupFamily
 variable "elasticache_parameter_group_family" {
   description = "ElastiCache parameter group family"
   type        = string
   default     = "valkey7"
 }
 
-# @param services.elasticache.transitEncryption
 variable "elasticache_transit_encryption_enabled" {
   description = "Enable encryption in transit"
   type        = bool
   default     = true
 }
 
-# @param services.elasticache.atRestEncryption
 variable "elasticache_at_rest_encryption_enabled" {
   description = "Enable encryption at rest"
   type        = bool
   default     = true
 }
 
-# @param services.elasticache.authTokenEnabled
 variable "elasticache_auth_token_enabled" {
   description = "Enable auth token (password) protection"
   type        = bool
   default     = true
 }
 
-# @param services.elasticache.maintenanceWindow
 variable "elasticache_maintenance_window" {
   description = "Maintenance window for ElastiCache"
   type        = string
   default     = "sun:05:00-sun:09:00"
 }
 
-# @param services.elasticache.snapshotRetentionLimit
 variable "elasticache_snapshot_retention_limit" {
   description = "Number of days to retain snapshots"
   type        = number
   default     = 5
 }
 
-# @param services.elasticache.snapshotWindow
 variable "elasticache_snapshot_window" {
   description = "Daily time range for snapshots"
   type        = string
   default     = "03:00-05:00"
 }
 
-# @param services.elasticache.automaticFailover
 variable "elasticache_automatic_failover_enabled" {
   description = "Enable automatic failover (requires multiple nodes)"
   type        = bool
   default     = false
 }
 
-# @param services.elasticache.multiAz
 variable "elasticache_multi_az_enabled" {
   description = "Enable Multi-AZ with automatic failover"
   type        = bool
@@ -1001,7 +987,6 @@ variable "elasticache_multi_az_enabled" {
 # LAMBDA
 # -------------------------------------------------------------------
 
-# @param services.lambda.functionNames
 variable "lambda_function_names" {
   description = "List of Lambda function names to create"
   type        = list(string)
@@ -1012,77 +997,66 @@ variable "lambda_function_names" {
 # SQS
 # -------------------------------------------------------------------
 
-# @param services.sqs.queueNames
 variable "sqs_queue_names" {
   description = "List of SQS queue names to create"
   type        = list(string)
   default     = []
 }
 
-# @param services.sqs.fifoQueues
 variable "sqs_fifo_queues" {
   description = "Enable FIFO queues"
   type        = bool
   default     = false
 }
 
-# @param services.sqs.contentBasedDeduplication
 variable "sqs_content_based_deduplication" {
   description = "Enable content-based deduplication for FIFO queues"
   type        = bool
   default     = false
 }
 
-# @param services.sqs.visibilityTimeout
 variable "sqs_visibility_timeout" {
   type        = number
   description = "Visibility timeout for SQS queues (seconds)"
   default     = 30
 }
 
-# @param services.sqs.messageRetention
 variable "sqs_message_retention" {
   type        = number
   description = "Message retention period for SQS queues (seconds, 60-1209600)"
   default     = 345600
 }
 
-# @param services.sqs.maxMessageSize
 variable "sqs_max_message_size" {
   type        = number
   description = "Maximum message size in bytes (1024-262144)"
   default     = 262144
 }
 
-# @param services.sqs.delaySeconds
 variable "sqs_delay_seconds" {
   type        = number
   description = "Delay delivery of messages (0-900 seconds)"
   default     = 0
 }
 
-# @param services.sqs.receiveWaitTime
 variable "sqs_receive_wait_time" {
   type        = number
   description = "Long polling wait time (0-20 seconds)"
   default     = 0
 }
 
-# @param services.sqs.createDeadLetterQueue
 variable "sqs_create_dlq" {
   description = "Create dead letter queue for each queue"
   type        = bool
   default     = false
 }
 
-# @param services.sqs.maxReceiveCount
 variable "sqs_max_receive_count" {
   type        = number
   description = "Max receive count before sending to DLQ"
   default     = 3
 }
 
-# @param services.sqs.enableEncryption
 variable "sqs_enable_encryption" {
   description = "Enable server-side encryption"
   type        = bool
@@ -1093,35 +1067,30 @@ variable "sqs_enable_encryption" {
 # SNS
 # -------------------------------------------------------------------
 
-# @param services.sns.topicNames
 variable "sns_topic_names" {
   description = "List of SNS topic names to create"
   type        = list(string)
   default     = []
 }
 
-# @param services.sns.fifoTopics
 variable "sns_fifo_topics" {
   description = "Enable FIFO topics"
   type        = bool
   default     = false
 }
 
-# @param services.sns.contentBasedDeduplication
 variable "sns_content_based_deduplication" {
   description = "Enable content-based deduplication for FIFO topics"
   type        = bool
   default     = false
 }
 
-# @param services.sns.enableEncryption
 variable "sns_enable_encryption" {
   description = "Enable encryption for SNS topics"
   type        = bool
   default     = false
 }
 
-# @param services.sns.kmsKeyId
 variable "sns_kms_key_id" {
   type        = string
   description = "KMS key ID for SNS topic encryption"
@@ -1132,42 +1101,36 @@ variable "sns_kms_key_id" {
 # CLOUDFRONT
 # -------------------------------------------------------------------
 
-# @param services.cloudfront.distributionNames
 variable "cloudfront_distribution_names" {
   description = "List of CloudFront distribution names/aliases to create"
   type        = list(string)
   default     = []
 }
 
-# @param services.cloudfront.priceClass
 variable "cloudfront_price_class" {
   type        = string
   description = "Price class for CloudFront distributions"
   default     = "PriceClass_100"
 }
 
-# @param services.cloudfront.enableIpv6
 variable "cloudfront_enable_ipv6" {
   type        = bool
   description = "Enable IPv6 for CloudFront distributions"
   default     = true
 }
 
-# @param services.cloudfront.enableWaf
 variable "cloudfront_enable_waf" {
   type        = bool
   description = "Enable WAF for CloudFront distributions"
   default     = false
 }
 
-# @param services.cloudfront.enableLogging
 variable "cloudfront_enable_logging" {
   type        = bool
   description = "Enable access logging for CloudFront distributions"
   default     = false
 }
 
-# @param services.cloudfront.loggingBucket
 variable "cloudfront_logging_bucket" {
   type        = string
   description = "S3 bucket for CloudFront access logs"
@@ -1178,32 +1141,38 @@ variable "cloudfront_logging_bucket" {
 # ROUTE53
 # -------------------------------------------------------------------
 
-# @param services.route53.zoneNames
 variable "route53_zone_names" {
   description = "List of Route53 hosted zone domain names to create"
   type        = list(string)
   default     = []
 }
 
-# @param services.route53.privateZones
 variable "route53_private_zones" {
   description = "Create private hosted zones (VPC-associated)"
   type        = bool
   default     = false
 }
 
-# @param services.route53.forceDestroy
 variable "route53_force_destroy" {
   description = "Allow deletion of zones with records"
   type        = bool
   default     = false
 }
 
-# @param services.route53.enableDnssec
 variable "route53_enable_dnssec" {
   description = "Enable DNSSEC for hosted zones"
   type        = bool
   default     = false
 }
 
+variable "aurora_manage_master_user_password" {
+  type        = bool
+  description = "Let AWS store the master password in Secrets Manager instead of Terraform state"
+  default     = true
+}
 
+variable "s3_versioning_enabled" {
+  type        = bool
+  description = "Keep previous object versions so an overwrite or delete is recoverable"
+  default     = true
+}

@@ -168,23 +168,29 @@ def format_expected(value):
     return str(value)
 
 
+def hcl_spacing(text):
+    """Collapse whitespace around HCL structural punctuation, nothing else."""
+    return re.sub(r"\s*([{}:,])\s*", r"\1", text)
+
+
 def run_injecto(injecto_dir, templates_dir, fixture_path, out_dir):
     """Run the Injecto CLI; return (exit_code, ansi-stripped combined output)."""
-    # Resolved up front: the CLI runs with cwd=<injecto>/src, so a relative
-    # --injecto (".injecto" in CI) would otherwise be re-resolved against that
-    # cwd and double the path.
-    injecto_src = (Path(injecto_dir).resolve() / "src")
-    env = dict(os.environ, PYTHONPATH=str(injecto_src))
+    # Injecto is a package as of v0.5.1: run it as `python -m injecto.main` from
+    # the repository ROOT, not as a script inside src/. Both the cwd and
+    # PYTHONPATH are resolved up front, because a relative --injecto (".injecto"
+    # in CI) would otherwise be re-resolved against the child's cwd.
+    injecto_root = Path(injecto_dir).resolve()
+    env = dict(os.environ, PYTHONPATH=str(injecto_root))
     proc = subprocess.run(
         [
             sys.executable,
-            str(injecto_src / "main.py"),
-            # Injecto runs with cwd=<injecto>/src, so every path must be absolute.
+            "-m", "injecto.main",
+            # Injecto runs with cwd=<injecto>, so every path must be absolute.
             "--input-dir", str(Path(templates_dir).resolve()),
             "--output-dir", str(Path(out_dir).resolve()),
             "--data-files", str(Path(fixture_path).resolve()),
         ],
-        cwd=str(injecto_src),
+        cwd=str(injecto_root),
         env=env,
         capture_output=True,
         text=True,
@@ -256,7 +262,15 @@ def check_substituted(substitutable, data, out_dir, failures):
             if actual.lstrip().startswith("#"):
                 continue  # section-disabled; nothing to substitute
             rendered = format_expected(expected)
-            if rendered not in actual:
+            if isinstance(expected, (list, dict)):
+                # Injecto writes json.dumps() output, then terraform fmt rewrites it
+                # into canonical HCL spacing ({"a": "b"} -> { "a" : "b" }). Compare
+                # with spacing around structural punctuation collapsed. Scalars stay
+                # byte-exact so a wrong string value is still caught.
+                found = hcl_spacing(rendered) in hcl_spacing(actual)
+            else:
+                found = rendered in actual
+            if not found:
                 failures.add(
                     "NOT_SUBSTITUTED",
                     f"{rel}:{value_line_no + 1} {param} -> expected {rendered}, line reads: {actual.strip()}",
@@ -294,6 +308,58 @@ def main():
         return run_gate(args, staging, tracked)
     finally:
         shutil.rmtree(staging, ignore_errors=True)
+
+
+# Settings whose unsafe value reaches the customer's AWS account and is only
+# discovered when something is already lost. Asserted on the GENERATED tree, so
+# a wrong wizard default is caught as well as a wrong template default -- the
+# defaults live in both places, and the wizard's win (OP-225).
+UNSAFE_DEFAULTS = {
+    "rds_deletion_protection": "true",
+    "aurora_deletion_protection": "true",
+    "rds_skip_final_snapshot": "false",
+    "aurora_skip_final_snapshot": "false",
+    "rds_manage_master_user_password": "true",
+    "aurora_manage_master_user_password": "true",
+    "s3_versioning_enabled": "true",
+}
+
+
+def check_secure_defaults(out_dir, failures):
+    """Fail when a generated repo would ship a destructive or leaky default."""
+    for tfvars in out_dir.rglob("*.tfvars"):
+        text = tfvars.read_text(encoding="utf-8", errors="replace")
+        for key, required in UNSAFE_DEFAULTS.items():
+            for match in re.finditer(rf"^{re.escape(key)}\s*=\s*(\S+)", text, re.M):
+                actual = match.group(1).strip()
+                if actual != required:
+                    failures.add(
+                        "UNSAFE_DEFAULT",
+                        f"{tfvars.relative_to(out_dir)}: {key} = {actual}, expected {required}",
+                    )
+
+
+def check_network_policy_enforcement(out_dir, failures):
+    """Fail when the CNI would accept NetworkPolicy objects and enforce none.
+
+    The VPC CNI ignores NetworkPolicy unless enableNetworkPolicy is set on the
+    addon, so dropping this leaves every generated policy silently inert - the
+    control looks present and is not. Guarded here because nothing else notices:
+    terraform validate passes, the apply succeeds, and the cluster comes up green.
+    """
+    eks = out_dir / "terraform" / "aws" / "eks.tf"
+    if not eks.exists():
+        return
+    text = eks.read_text(encoding="utf-8", errors="replace")
+    if "vpc-cni" not in text:
+        return
+    if not re.search(r'enableNetworkPolicy\s*=\s*"true"', text):
+        failures.add(
+            "NETWORK_POLICY_INERT",
+            "terraform/aws/eks.tf: vpc-cni addon does not set "
+            'enableNetworkPolicy = "true", so NetworkPolicy objects are accepted '
+            "but never enforced",
+        )
 
 
 def run_gate(args, templates_dir, tracked):
@@ -340,6 +406,8 @@ def run_gate(args, templates_dir, tracked):
         section_only = check_unresolved(log, data, param_paths, sections, failures)
         check_substituted(substitutable, data, out_dir, failures)
         check_inert_baseline(inert, failures)
+        check_secure_defaults(out_dir, failures)
+        check_network_policy_enforcement(out_dir, failures)
 
         inputs = sum(1 for p in templates_dir.rglob("*") if p.is_file())
         outputs = sum(1 for p in out_dir.rglob("*") if p.is_file())

@@ -11,21 +11,27 @@ This repository contains production-ready templates for:
 
 ## Directory Structure
 
-```
-templates/
-├── terraform/
-│   ├── aws/           # AWS infrastructure modules
-│   └── kubernetes/    # Kubernetes Terraform (ArgoCD bootstrap)
-├── argocd/
-│   ├── applications.yaml    # App-of-apps manifest
-│   ├── infra-apps/          # Infrastructure ArgoCD apps
-│   └── charts/external/     # Vendored Helm charts
-└── helm/                    # Helm values templates
+Everything below is tracked in git; a fresh clone contains exactly this.
 
-local/
-├── data/              # YAML configuration layers
-└── terraforge.sh      # Template processor script
 ```
+templates/                       # the tree Injecto processes (input_dir)
+├── .github/workflows/           # terraform-deploy.yml, shipped to the customer's repo
+├── .gitlab-ci.yml               # GitLab equivalent, also shipped
+├── terraform/
+│   ├── aws/                     # VPC, EKS, RDS, ECR, Karpenter, helm_values
+│   └── kubernetes/              # ArgoCD bootstrap
+└── argocd/
+    ├── applications.yaml        # app-of-apps manifest (@section-gated)
+    ├── charts/internal/         # app-of-apps Helm chart
+    ├── example-apps/            # sample workloads
+    ├── support-resources/       # Karpenter + NetworkPolicy configs
+    └── values/                  # Helm values (.yaml and .yaml.tftpl)
+
+tests/                           # generation gate (see tests/README.md)
+```
+
+> [!note]
+> `local/` is **gitignored** and is not part of a clone. Older revisions of this file documented `local/data/*.yaml` tiers and a `terraforge.sh` processor as if they shipped; they do not. The tiers also use a retired namespace (`vpc:` / `eks:` / `backend:`) that the templates no longer read, so they cannot be used to drive generation. The canonical data shape is the one the backend sends — see `tests/fixtures/standard.json`.
 
 ## Template System
 
@@ -66,11 +72,9 @@ module "eks" {
 
 ## ArgoCD App-of-Apps
 
-Bundled Helm charts in `templates/argocd/charts/external/`:
-- ArgoCD 8.2.5, Argo Workflows 0.45.19
-- kube-prometheus-stack 75.9.0, Loki 6.30.1
-- ingress-nginx 4.13.0, cert-manager 1.18.2
-- And more...
+`templates/argocd/applications.yaml` declares the app-of-apps, with each entry gated by a `@section helmCharts.<name>.enabled` decorator. The chart itself lives in `templates/argocd/charts/internal/app-of-apps/`, and per-chart values in `templates/argocd/values/` (plain `.yaml`, or `.yaml.tftpl` when a value has to be rendered from a Terraform output).
+
+Charts are pulled from their upstream repositories at sync time — **nothing is vendored in this repo**. Earlier revisions listed pinned chart versions under `templates/argocd/charts/external/`; that directory has no tracked files and the list matched nothing.
 
 ## Usage
 
@@ -96,19 +100,25 @@ python3 injecto/src/main.py \
   --data-files config.yaml
 ```
 
-## Configuration Layers
+## Configuration Data
 
-The hierarchical YAML system merges configs from multiple files:
+Injecto resolves every `@param` path against one merged data document. In production that document is built by the backend (`prepareInjectoData`, `openprime-app-backend/src/services/environmentService.js`) and posted to Injecto's `/process-git-download`.
 
-```
-local/data/
-├── 00_base.yaml       # Foundation (backend, global prefix)
-├── 01_startup.yaml    # Basic stack (VPC, EKS, RDS)
-├── 02_standard.yaml   # Extended services
-├── 03_premium.yaml    # Enterprise features
-├── 04_addons.yaml     # Optional add-ons
-└── 10_override.yaml   # Environment overrides
-```
+The top-level keys the templates actually read:
+
+| Key | Used for |
+|-----|----------|
+| `services.*` | per-service enablement and settings (`vpc`, `eks`, `rds`, `ecr`, …) |
+| `terraformBackend.*` | state bucket, per-environment state keys, encryption, locking |
+| `global.*` | resource naming prefix |
+| `argocd.*` | git repo URL and target revision for the app-of-apps |
+| `helmCharts.*` | which charts the app-of-apps includes |
+
+`tests/fixtures/standard.json` is a worked example in exactly this shape and is what the CI gate generates from.
+
+## Testing
+
+`tests/gate.py` runs Injecto over the tracked templates with a fixture and fails on the things Injecto only warns about: dropped files, an `@param` that did not resolve under an enabled service, a resolved param whose output still holds the template default, and newly inert decorators. See `tests/README.md`.
 
 ## Related Repositories
 

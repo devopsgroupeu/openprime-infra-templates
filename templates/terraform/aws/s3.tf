@@ -13,7 +13,7 @@ module "s3_buckets" {
   restrict_public_buckets = true
 
   versioning = {
-    enabled = false
+    enabled = var.s3_versioning_enabled
   }
 
   server_side_encryption_configuration = {

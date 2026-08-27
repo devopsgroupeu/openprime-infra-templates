@@ -75,7 +75,13 @@ default_node_group_desired_size = 2
 default_node_group_max_unavailable = 1
 # @param services.eks.defaultNodeGroupUseLatestAmi
 default_node_group_use_latest_ami = true
-# @param services.eks.defaultNodeGroupIamAdditionalPolicies
+# NOT parameterized (OP-221): Injecto rewrites only the single line following a
+# decorator, so decorating this multi-line map would emit the new value and
+# orphan the body plus its closing brace. Injecto now refuses that outright
+# rather than corrupting the file, which makes a decorator here a promise it
+# cannot keep. Re-add one only alongside multi-line substitution support.
+# (Deliberately avoids writing the decorator keyword: the scanner matches it
+# anywhere in a comment, so naming it here would declare a real decorator.)
 default_node_group_iam_additional_policies = {
   AmazonEBSCSIDriverPolicy = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
 }
@@ -139,9 +145,9 @@ rds_backup_window = "03:00-06:00"
 # @param services.rds.maintenanceWindow
 rds_maintenance_window = "Mon:00:00-Mon:03:00"
 # @param services.rds.deletionProtection
-rds_deletion_protection = false
+rds_deletion_protection = true
 # @param services.rds.skipFinalSnapshot
-rds_skip_final_snapshot = true
+rds_skip_final_snapshot = false
 # @param services.rds.applyImmediately
 rds_apply_immediately = false
 # @param services.rds.autoMinorVersionUpgrade
@@ -151,7 +157,7 @@ rds_publicly_accessible = false
 # @param services.rds.iamDatabaseAuthenticationEnabled
 rds_iam_database_authentication_enabled = true
 # @param services.rds.manageMasterUserPassword
-rds_manage_master_user_password = false
+rds_manage_master_user_password = true
 # @param services.rds.performanceInsights
 rds_performance_insights_enabled = false
 # @param services.rds.performanceInsightsRetentionPeriod
@@ -176,7 +182,7 @@ aurora_serverlessv2_seconds_until_auto_pause = 3600
 # @param services.aurora.backupRetention
 aurora_backup_retention_period = 7
 # @param services.aurora.deletionProtection
-aurora_deletion_protection = false
+aurora_deletion_protection = true
 # @param services.aurora.enableHttpEndpoint
 aurora_enable_http_endpoint = true
 # @param services.aurora.iamDatabaseAuthenticationEnabled
@@ -186,7 +192,9 @@ aurora_monitoring_interval = 60
 # @param services.aurora.applyImmediately
 aurora_apply_immediately = true
 # @param services.aurora.skipFinalSnapshot
-aurora_skip_final_snapshot = true
+aurora_skip_final_snapshot = false
+# @param services.aurora.manageMasterUserPassword
+aurora_manage_master_user_password = true
 # @param services.aurora.deleteAutomatedBackups
 aurora_delete_automated_backups = true
 

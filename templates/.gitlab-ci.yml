@@ -6,12 +6,11 @@
 #   Destroy: destroy:k8s → destroy:aws
 
 variables:
-  # @param terraform.version
   TF_VERSION: "1.11"
   TF_ROOT: ${CI_PROJECT_DIR}/terraform
   TF_IN_AUTOMATION: "true"
   # Backend configuration
-  # @param backend.s3.bucket
+  # @param terraformBackend.bucketName
   TF_STATE_BUCKET: ${TF_STATE_BUCKET}
 
 # Cache Terraform plugins between jobs for faster execution
