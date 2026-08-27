@@ -68,7 +68,7 @@ module "rds" {
   db_name                     = local.rds_db_name
   manage_master_user_password = var.rds_manage_master_user_password
   username                    = local.rds_username
-  password_wo                 = random_password.rds_password.result
+  password_wo                 = var.rds_manage_master_user_password ? null : random_password.rds_password.result
   password_wo_version         = 1
   port                        = local.rds_port
 
