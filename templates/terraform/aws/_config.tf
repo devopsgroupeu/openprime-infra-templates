@@ -4,7 +4,7 @@ terraform {
   # @section backend begin
   backend "s3" {
     # @param terraformBackend.bucketName
-    bucket = "openprime-infra-templates-tf-backend-dev"
+    bucket = "my-terraform-state-bucket"
     # @param terraformBackend.awsStateKey
     key = "aws.tfstate"
     # @param region
