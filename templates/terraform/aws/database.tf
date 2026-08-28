@@ -99,7 +99,7 @@ module "rds_sg" {
   vpc_id      = module.vpc.vpc_id
 
   revoke_rules_on_delete = true
-
+  enable_exclusive_rules = false
 
   ingress_rules = {
     database-from-vpc = {
