@@ -421,5 +421,5 @@ route53_enable_dnssec = false
 # HELM CHARTS
 # -------------------------------------------------------------------
 
-# @param services.eks.helmCharts
+# @param services.eks.helmCharts | exclude=true
 helm_charts = {}

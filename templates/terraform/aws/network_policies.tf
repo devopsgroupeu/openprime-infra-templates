@@ -1,4 +1,4 @@
-# @section services.eks.networkPolicyEnabled begin
+# @section services.eks.networkPolicyEnabled begin | displayName=Enable baseline NetworkPolicies | default=false
 ## Renders the baseline NetworkPolicies into argocd/support-resources/, where the
 ## support-resources ArgoCD Application picks them up. Rendered from Terraform
 ## rather than shipped as static YAML because admitting the EKS control plane
