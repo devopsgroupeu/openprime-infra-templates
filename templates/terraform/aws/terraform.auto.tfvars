@@ -135,13 +135,13 @@ rds_major_engine_version = "15"
 # @param services.rds.family | displayName=Parameter Group Family | description=DB parameter group family | type=text
 rds_family = "postgres15"
 # @param services.rds.instanceClass | displayName=Instance Class | description=Database compute capacity | type=dropdown | options=[{"value":"db.t3.micro","label":"t3.micro - 1 vCPU, 1GB (Dev)"},{"value":"db.t3.small","label":"t3.small - 2 vCPU, 2GB"},{"value":"db.t3.medium","label":"t3.medium - 2 vCPU, 4GB"},{"value":"db.t3.large","label":"t3.large - 2 vCPU, 8GB"},{"value":"db.r5.large","label":"r5.large - 2 vCPU, 16GB (Memory-optimized)"},{"value":"db.r5.xlarge","label":"r5.xlarge - 4 vCPU, 32GB"}]
-rds_instance_class = "db.t3.micro"
+rds_instance_class = "db.t3.small"
 # @param services.rds.allocatedStorage | displayName=Storage (GB) | description=Initial storage allocation | type=number | min=20 | max=1000
 rds_allocated_storage = 20
 # @param services.rds.maxAllocatedStorage | displayName=Max Storage (GB) | description=Maximum storage for auto-scaling | type=number | min=20 | max=10000
-rds_max_allocated_storage = 50
+rds_max_allocated_storage = 100
 # @param services.rds.multiAz | displayName=Multi-AZ Deployment | description=Deploy standby in another AZ | type=toggle
-rds_multi_az = true
+rds_multi_az = false
 # @param services.rds.backupRetention | displayName=Backup Retention (days) | description=Automated backup retention | type=number | min=0 | max=35
 rds_backup_retention_period = 7
 # @param services.rds.backupWindow | displayName=Backup Window | description=Daily backup time window (UTC) | type=text
