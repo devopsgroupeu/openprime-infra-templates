@@ -75,7 +75,7 @@ default_node_group_max_size = 10
 default_node_group_desired_size = 2
 # @param services.eks.defaultNodeGroupMaxUnavailable | displayName=Max Unavailable | description=Max unavailable nodes during updates | type=number | min=1 | max=10
 default_node_group_max_unavailable = 1
-# @param services.eks.defaultNodeGroupUseLatestAmi
+# @param services.eks.defaultNodeGroupUseLatestAmi | displayName=Use Latest Node AMI | description=Launch node groups on the newest AMI Amazon publishes for the cluster version | type=toggle
 default_node_group_use_latest_ami = true
 # NOT parameterized (OP-221): Injecto rewrites only the single line following a
 # decorator, so decorating this multi-line map would emit the new value and
@@ -88,21 +88,21 @@ default_node_group_iam_additional_policies = {
   AmazonEBSCSIDriverPolicy = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
 }
 
-# @param services.eks.addonCorednsMostRecent
+# @param services.eks.addonCorednsMostRecent | displayName=CoreDNS: Latest Version | description=Install the most recent CoreDNS addon rather than the cluster default | type=toggle
 eks_addon_coredns_most_recent = true
-# @param services.eks.addonPodIdentityMostRecent
+# @param services.eks.addonPodIdentityMostRecent | displayName=Pod Identity: Latest Version | description=Install the most recent Pod Identity Agent addon | type=toggle
 eks_addon_pod_identity_most_recent = true
-# @param services.eks.addonPodIdentityBeforeCompute
+# @param services.eks.addonPodIdentityBeforeCompute | displayName=Pod Identity Before Compute | description=Install the Pod Identity Agent before nodes join, so workloads can assume roles from the first boot | type=toggle
 eks_addon_pod_identity_before_compute = true
-# @param services.eks.addonKubeProxyMostRecent
+# @param services.eks.addonKubeProxyMostRecent | displayName=kube-proxy: Latest Version | description=Install the most recent kube-proxy addon | type=toggle
 eks_addon_kube_proxy_most_recent = true
-# @param services.eks.addonVpcCniMostRecent
+# @param services.eks.addonVpcCniMostRecent | displayName=VPC CNI: Latest Version | description=Install the most recent VPC CNI addon | type=toggle
 eks_addon_vpc_cni_most_recent = true
-# @param services.eks.addonVpcCniBeforeCompute
+# @param services.eks.addonVpcCniBeforeCompute | displayName=VPC CNI Before Compute | description=Install the VPC CNI before nodes join; without it the first nodes can come up without pod networking | type=toggle
 eks_addon_vpc_cni_before_compute = true
-# @param services.eks.addonEbsCsiMostRecent
+# @param services.eks.addonEbsCsiMostRecent | displayName=EBS CSI: Latest Version | description=Install the most recent EBS CSI driver addon | type=toggle
 eks_addon_ebs_csi_most_recent = true
-# @param services.eks.addonEfsCsiMostRecent
+# @param services.eks.addonEfsCsiMostRecent | displayName=EFS CSI: Latest Version | description=Install the most recent EFS CSI driver addon | type=toggle
 eks_addon_efs_csi_most_recent = true
 # @param services.eks.karpenterNodepoolArch | displayName=Karpenter Architecture | description=Default Karpenter nodepool architecture | type=dropdown | options=[{"value":"amd64","label":"AMD64 (x86_64)"},{"value":"arm64","label":"ARM64"}]
 karpenter_nodepool_arch = "arm64"
