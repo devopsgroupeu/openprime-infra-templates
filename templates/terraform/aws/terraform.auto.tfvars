@@ -176,7 +176,7 @@ rds_delete_automated_backups = true
 aurora_engine = "aurora-postgresql"
 # @param services.aurora.engineVersion | displayName=Engine Version | description=Aurora engine version | type=text
 aurora_engine_version = "15.10"
-# @param services.aurora.instances | displayName=Aurora Instances | description=Map of Aurora instances configuration | type=object
+# @param services.aurora.instances | displayName=Aurora Instances | description=Map of Aurora instances configuration | type=object | valueType=object | default={"one": {}}
 aurora_instances = { one = {} }
 # @param services.aurora.serverlessv2MinCapacity | displayName=Min Capacity (ACU) | description=Minimum Aurora Capacity Units | type=number | min=0 | max=128
 aurora_serverlessv2_min_capacity = 0
