@@ -1,4 +1,4 @@
-# @section services.eks.karpenterEnabled begin
+# @section services.eks.karpenterEnabled begin | displayName=Enable Karpenter | default=true
 module "karpenter" {
   source  = "terraform-aws-modules/eks/aws//modules/karpenter"
   version = "~> 21.0"
