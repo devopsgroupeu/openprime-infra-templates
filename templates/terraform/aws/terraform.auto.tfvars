@@ -124,8 +124,8 @@ msk_broker_node_instance_type = "kafka.t3.small"
 
 # @param services.rds.engine
 rds_engine = "postgres"
-# @param services.rds.engineVersion
-rds_engine_version = "15"
+# @param services.rds.version
+rds_version = "15"
 # @param services.rds.majorEngineVersion
 rds_major_engine_version = "15"
 # @param services.rds.family
