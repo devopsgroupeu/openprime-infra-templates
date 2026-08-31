@@ -1,4 +1,4 @@
-# @section services.eks.karpenterEnabled begin
+# @section services.eks.karpenterEnabled begin | displayName=Enable Karpenter | default=true
 resource "helm_release" "karpenter" {
   namespace  = "kube-system"
   name       = "karpenter"

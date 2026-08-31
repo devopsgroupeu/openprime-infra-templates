@@ -75,7 +75,7 @@ default_node_group_max_size = 10
 default_node_group_desired_size = 2
 # @param services.eks.defaultNodeGroupMaxUnavailable | displayName=Max Unavailable | description=Max unavailable nodes during updates | type=number | min=1 | max=10
 default_node_group_max_unavailable = 1
-# @param services.eks.defaultNodeGroupUseLatestAmi
+# @param services.eks.defaultNodeGroupUseLatestAmi | displayName=Use Latest Node AMI | description=Launch node groups on the newest AMI Amazon publishes for the cluster version | type=toggle
 default_node_group_use_latest_ami = true
 # NOT parameterized (OP-221): Injecto rewrites only the single line following a
 # decorator, so decorating this multi-line map would emit the new value and
@@ -88,21 +88,21 @@ default_node_group_iam_additional_policies = {
   AmazonEBSCSIDriverPolicy = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
 }
 
-# @param services.eks.addonCorednsMostRecent
+# @param services.eks.addonCorednsMostRecent | displayName=CoreDNS: Latest Version | description=Install the most recent CoreDNS addon rather than the cluster default | type=toggle
 eks_addon_coredns_most_recent = true
-# @param services.eks.addonPodIdentityMostRecent
+# @param services.eks.addonPodIdentityMostRecent | displayName=Pod Identity: Latest Version | description=Install the most recent Pod Identity Agent addon | type=toggle
 eks_addon_pod_identity_most_recent = true
-# @param services.eks.addonPodIdentityBeforeCompute
+# @param services.eks.addonPodIdentityBeforeCompute | displayName=Pod Identity Before Compute | description=Install the Pod Identity Agent before nodes join, so workloads can assume roles from the first boot | type=toggle
 eks_addon_pod_identity_before_compute = true
-# @param services.eks.addonKubeProxyMostRecent
+# @param services.eks.addonKubeProxyMostRecent | displayName=kube-proxy: Latest Version | description=Install the most recent kube-proxy addon | type=toggle
 eks_addon_kube_proxy_most_recent = true
-# @param services.eks.addonVpcCniMostRecent
+# @param services.eks.addonVpcCniMostRecent | displayName=VPC CNI: Latest Version | description=Install the most recent VPC CNI addon | type=toggle
 eks_addon_vpc_cni_most_recent = true
-# @param services.eks.addonVpcCniBeforeCompute
+# @param services.eks.addonVpcCniBeforeCompute | displayName=VPC CNI Before Compute | description=Install the VPC CNI before nodes join; without it the first nodes can come up without pod networking | type=toggle
 eks_addon_vpc_cni_before_compute = true
-# @param services.eks.addonEbsCsiMostRecent
+# @param services.eks.addonEbsCsiMostRecent | displayName=EBS CSI: Latest Version | description=Install the most recent EBS CSI driver addon | type=toggle
 eks_addon_ebs_csi_most_recent = true
-# @param services.eks.addonEfsCsiMostRecent
+# @param services.eks.addonEfsCsiMostRecent | displayName=EFS CSI: Latest Version | description=Install the most recent EFS CSI driver addon | type=toggle
 eks_addon_efs_csi_most_recent = true
 # @param services.eks.karpenterNodepoolArch | displayName=Karpenter Architecture | description=Default Karpenter nodepool architecture | type=dropdown | options=[{"value":"amd64","label":"AMD64 (x86_64)"},{"value":"arm64","label":"ARM64"}]
 karpenter_nodepool_arch = "arm64"
@@ -135,13 +135,13 @@ rds_major_engine_version = "15"
 # @param services.rds.family | displayName=Parameter Group Family | description=DB parameter group family | type=text
 rds_family = "postgres15"
 # @param services.rds.instanceClass | displayName=Instance Class | description=Database compute capacity | type=dropdown | options=[{"value":"db.t3.micro","label":"t3.micro - 1 vCPU, 1GB (Dev)"},{"value":"db.t3.small","label":"t3.small - 2 vCPU, 2GB"},{"value":"db.t3.medium","label":"t3.medium - 2 vCPU, 4GB"},{"value":"db.t3.large","label":"t3.large - 2 vCPU, 8GB"},{"value":"db.r5.large","label":"r5.large - 2 vCPU, 16GB (Memory-optimized)"},{"value":"db.r5.xlarge","label":"r5.xlarge - 4 vCPU, 32GB"}]
-rds_instance_class = "db.t3.micro"
+rds_instance_class = "db.t3.small"
 # @param services.rds.allocatedStorage | displayName=Storage (GB) | description=Initial storage allocation | type=number | min=20 | max=1000
 rds_allocated_storage = 20
 # @param services.rds.maxAllocatedStorage | displayName=Max Storage (GB) | description=Maximum storage for auto-scaling | type=number | min=20 | max=10000
-rds_max_allocated_storage = 50
+rds_max_allocated_storage = 100
 # @param services.rds.multiAz | displayName=Multi-AZ Deployment | description=Deploy standby in another AZ | type=toggle
-rds_multi_az = true
+rds_multi_az = false
 # @param services.rds.backupRetention | displayName=Backup Retention (days) | description=Automated backup retention | type=number | min=0 | max=35
 rds_backup_retention_period = 7
 # @param services.rds.backupWindow | displayName=Backup Window | description=Daily backup time window (UTC) | type=text
@@ -337,7 +337,11 @@ s3_bucket_names = []
 # LAMBDA
 # -------------------------------------------------------------------
 
-# @module services.lambda | displayName=AWS Lambda | category=Compute | description=Serverless compute - run code without managing servers
+# Hidden from the wizard: lambda.tf generates fine but expects deployment
+# packages (lambda-packages/*.zip) the wizard cannot supply, so a plain
+# apply fails. Drop available=false once package upload is supported.
+# OpenPrime-151
+# @module services.lambda | displayName=AWS Lambda | category=Compute | description=Serverless compute - run code without managing servers | available=false
 # @param services.lambda.functionNames | valueType=list | displayName=Function Names | description=List of Lambda function names to create (one per line) | type=array
 lambda_function_names = []
 
@@ -421,5 +425,5 @@ route53_enable_dnssec = false
 # HELM CHARTS
 # -------------------------------------------------------------------
 
-# @param services.eks.helmCharts
+# @param services.eks.helmCharts | exclude=true
 helm_charts = {}

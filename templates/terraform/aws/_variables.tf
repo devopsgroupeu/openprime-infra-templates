@@ -461,7 +461,7 @@ variable "rds_family" {
 
 variable "rds_instance_class" {
   type        = string
-  default     = "db.t3.micro"
+  default     = "db.t3.small"
   description = "The instance class for the RDS instance (e.g., db.t3.micro)"
 }
 
