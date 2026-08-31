@@ -24,7 +24,7 @@ create_private_subnets = true
 # @param services.vpc.createIntraSubnets
 create_intra_subnets = false
 # @param services.vpc.createDatabaseSubnets
-create_database_subnets = false
+create_database_subnets = true
 # @param services.vpc.natGateway
 nat_gateway_strategy = "SINGLE"
 # @param services.vpc.publicSubnetTags
@@ -112,7 +112,7 @@ karpenter_nodepool_capacity_type = "spot"
 # -------------------------------------------------------------------
 
 # @param services.msk.kafkaVersion
-msk_kafka_version = "3.5.1"
+msk_kafka_version = "3.9.x"
 # @param services.msk.numberOfBrokerNodes
 msk_number_of_broker_nodes = 2
 # @param services.msk.brokerNodeInstanceType
@@ -170,7 +170,7 @@ rds_delete_automated_backups = true
 # @param services.aurora.engine
 aurora_engine = "aurora-postgresql"
 # @param services.aurora.engineVersion
-aurora_engine_version = "15.8"
+aurora_engine_version = "15.10"
 # @param services.aurora.instances
 aurora_instances = { one = {} }
 # @param services.aurora.serverlessv2MinCapacity
@@ -207,7 +207,7 @@ opensearch_domain_name = "opensearch"
 # @param services.opensearch.version
 opensearch_version = "OpenSearch_2.19"
 # @param services.opensearch.instanceCount
-opensearch_instance_count = 3
+opensearch_instance_count = 2
 # @param services.opensearch.instanceType
 opensearch_instance_type = "m7g.medium.search"
 # @param services.opensearch.ebsEnabled

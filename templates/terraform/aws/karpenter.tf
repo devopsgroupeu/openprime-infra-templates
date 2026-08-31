@@ -3,8 +3,8 @@ module "karpenter" {
   source  = "terraform-aws-modules/eks/aws//modules/karpenter"
   version = "~> 21.0"
 
-  cluster_name = module.eks.cluster_name
-
+  cluster_name                    = module.eks.cluster_name
+  enable_inline_policy            = true
   node_iam_role_use_name_prefix   = var.karpenter_node_iam_role_use_name_prefix
   node_iam_role_name              = "${data.aws_caller_identity.current.account_id}-${lower(local.cluster_name)}-karpenter"
   create_pod_identity_association = var.karpenter_create_pod_identity_association
