@@ -94,7 +94,7 @@ module "external_dns_irsa_role" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 21.0"
+  version = "~> 21.25"
 
   name               = local.cluster_name
   kubernetes_version = var.kubernetes_version

@@ -1,7 +1,7 @@
 # @section services.elasticache.enabled begin
 module "elasticache" {
   source  = "terraform-aws-modules/elasticache/aws"
-  version = "~> 1.10"
+  version = "~> 1.11"
 
   replication_group_id = "${var.global_prefix}-elasticache"
 

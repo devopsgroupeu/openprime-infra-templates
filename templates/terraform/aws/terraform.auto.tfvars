@@ -25,7 +25,7 @@ create_private_subnets = true
 # @param services.vpc.createIntraSubnets | label=Intra Subnets | description=Create isolated subnets with no internet access | control=toggle
 create_intra_subnets = false
 # @param services.vpc.createDatabaseSubnets | label=Database Subnets | description=Create dedicated subnets for databases | control=toggle
-create_database_subnets = false
+create_database_subnets = true
 # @param services.vpc.natGateway | label=NAT Gateway Strategy | description=How to provision NAT gateways for private subnet internet access | control=dropdown | options=[{"value":"NO_NAT","label":"None - No internet for private subnets"},{"value":"SINGLE","label":"Single - Cost-effective (not HA)"},{"value":"ONE_PER_AZ","label":"One per AZ - High availability (recommended)"},{"value":"ONE_PER_SUBNET","label":"One per subnet - Maximum redundancy"}]
 nat_gateway_strategy = "SINGLE"
 # @param services.vpc.publicSubnetTags | label=Public Subnet Tags | description=Additional AWS tags for public subnets (JSON) | control=object
@@ -114,8 +114,8 @@ karpenter_nodepool_capacity_type = "spot"
 # -------------------------------------------------------------------
 
 # @module services.msk | label=Managed Streaming for Apache Kafka (MSK) | category=Integration | description=Fully managed Apache Kafka service for real-time streaming
-# @param services.msk.kafkaVersion | label=Kafka Version | description=Apache Kafka version | control=dropdown | options=[{"value":"3.5.1","label":"3.5.1 (Latest stable)"},{"value":"3.4.0","label":"3.4.0"},{"value":"3.3.2","label":"3.3.2"},{"value":"2.8.1","label":"2.8.1 (Legacy)"}]
-msk_kafka_version = "3.5.1"
+# @param services.msk.kafkaVersion | label=Kafka Version | description=Apache Kafka version | control=dropdown | options=[{"value":"3.9.x","label":"3.9.x (Recommended)"},{"value":"3.8.x","label":"3.8.x"},{"value":"3.7.x","label":"3.7.x"},{"value":"3.6.0","label":"3.6.0"}]
+msk_kafka_version = "3.9.x"
 # @param services.msk.numberOfBrokerNodes | label=Number of Broker Nodes | description=Number of broker nodes across availability zones | control=number | min=2 | max=30
 msk_number_of_broker_nodes = 2
 # @param services.msk.brokerNodeInstanceType | label=Broker Instance Type | description=EC2 instance type for each broker | control=dropdown | options=[{"value":"kafka.t3.small","label":"kafka.t3.small - 2 vCPU, 2GB (Dev/Test)"},{"value":"kafka.m5.large","label":"kafka.m5.large - 2 vCPU, 8GB"},{"value":"kafka.m5.xlarge","label":"kafka.m5.xlarge - 4 vCPU, 16GB"},{"value":"kafka.m5.2xlarge","label":"kafka.m5.2xlarge - 8 vCPU, 32GB (Production)"}]
@@ -175,7 +175,7 @@ rds_delete_automated_backups = true
 # @param services.aurora.engine | label=Database Engine | description=Aurora database engine | control=dropdown | options=[{"value":"aurora-postgresql","label":"Aurora PostgreSQL"},{"value":"aurora-mysql","label":"Aurora MySQL"}]
 aurora_engine = "aurora-postgresql"
 # @param services.aurora.engineVersion | label=Engine Version | description=Aurora engine version | control=text
-aurora_engine_version = "15.8"
+aurora_engine_version = "15.10"
 # @param services.aurora.instances | label=Aurora Instances | description=Map of Aurora instances configuration | control=object
 aurora_instances = { one = {} }
 # @param services.aurora.serverlessv2MinCapacity | label=Min Capacity (ACU) | description=Minimum Aurora Capacity Units | control=number | min=0 | max=128
@@ -213,7 +213,7 @@ opensearch_domain_name = "opensearch"
 # @param services.opensearch.version | label=OpenSearch Version | description=OpenSearch version | control=dropdown | options=[{"value":"OpenSearch_2.19","label":"OpenSearch 2.19"},{"value":"OpenSearch_2.11","label":"OpenSearch 2.11"},{"value":"OpenSearch_2.9","label":"OpenSearch 2.9"},{"value":"OpenSearch_1.3","label":"OpenSearch 1.3"}]
 opensearch_version = "OpenSearch_2.19"
 # @param services.opensearch.instanceCount | label=Instance Count | description=Number of data instances | control=number | min=1 | max=20
-opensearch_instance_count = 3
+opensearch_instance_count = 2
 # @param services.opensearch.instanceType | label=Instance Type | description=OpenSearch instance type | control=dropdown | options=[{"value":"t3.small.search","label":"t3.small.search"},{"value":"t3.medium.search","label":"t3.medium.search"},{"value":"m5.large.search","label":"m5.large.search"},{"value":"m7g.medium.search","label":"m7g.medium.search"},{"value":"m7g.large.search","label":"m7g.large.search"}]
 opensearch_instance_type = "m7g.medium.search"
 # @param services.opensearch.ebsEnabled | label=EBS Storage | description=Enable EBS storage volumes | control=toggle

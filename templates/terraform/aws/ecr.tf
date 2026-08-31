@@ -24,7 +24,7 @@ data "aws_iam_policy_document" "ecr_registry_replication" {
 
 module "ecr" {
   source  = "terraform-aws-modules/ecr/aws"
-  version = "~> 3.1"
+  version = "~> 3.2"
 
   for_each = toset(var.ecr_repository_names)
 
@@ -61,7 +61,7 @@ module "ecr" {
 
 module "ecr_registry" {
   source  = "terraform-aws-modules/ecr/aws"
-  version = "~> 3.1"
+  version = "~> 3.2"
 
   create_repository = false
 
