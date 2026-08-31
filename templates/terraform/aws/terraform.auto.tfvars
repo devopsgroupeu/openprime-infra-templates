@@ -337,7 +337,11 @@ s3_bucket_names = []
 # LAMBDA
 # -------------------------------------------------------------------
 
-# @module services.lambda | displayName=AWS Lambda | category=Compute | description=Serverless compute - run code without managing servers
+# Hidden from the wizard: lambda.tf generates fine but expects deployment
+# packages (lambda-packages/*.zip) the wizard cannot supply, so a plain
+# apply fails. Drop available=false once package upload is supported.
+# OpenPrime-151
+# @module services.lambda | displayName=AWS Lambda | category=Compute | description=Serverless compute - run code without managing servers | available=false
 # @param services.lambda.functionNames | valueType=list | displayName=Function Names | description=List of Lambda function names to create (one per line) | type=array
 lambda_function_names = []
 
