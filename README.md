@@ -146,6 +146,46 @@ The top-level keys the templates actually read:
 
 `tests/gate.py` runs Injecto over the tracked templates with a fixture and fails on the things Injecto only warns about: dropped files, an `@param` that did not resolve under an enabled service, a resolved param whose output still holds the template default, and newly inert decorators. See `tests/README.md`.
 
+## Destroy/Delete AWS module
+
+Before destroying AWS infrastructure, remove Kubernetes-created AWS resources and disable database deletion protection.
+
+### 1. Remove Kubernetes load balancers
+
+While EKS and the AWS Load Balancer Controller are still running:
+
+1. Disable ArgoCD auto-sync to prevent resource recreation.
+2. Delete all Kubernetes Ingress resources.
+3. Delete all Services of type LoadBalancer.
+4. Wait until their NLBs/ALBs, target groups, and controller-created security groups are removed from AWS.
+5. Run the Kubernetes destroy pipeline job.
+
+Do not remove EKS or the AWS Load Balancer Controller before load-balancer cleanup finishes.
+
+### 2. Disable database deletion protection
+
+Relevant variables:
+
+  Variable                      Destroy value    Purpose
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  rds_deletion_protection               false    Allows RDS deletion
+────────────────────────────  ───────────────  ───────────────────────────────────────────────────
+  aurora_deletion_protection            false    Allows Aurora deletion
+────────────────────────────  ───────────────  ───────────────────────────────────────────────────
+  rds_apply_immediately                  true    Applies the RDS change before destroy
+────────────────────────────  ───────────────  ───────────────────────────────────────────────────
+  aurora_apply_immediately               true    Already defaults to true, but must remain enabled
+
+Review the Terraform plan because this apply can include other pending AWS changes.
+
+### 3. Decide final-snapshot behavior
+
+- rds_skip_final_snapshot=false creates a final RDS snapshot.
+- rds_skip_final_snapshot=true deletes RDS without a final snapshot.
+- aurora_skip_final_snapshot=false requires a valid final snapshot identifier.
+- aurora_skip_final_snapshot=true deletes Aurora without a final snapshot.
+
+
 ## Related Repositories
 
 - [Injecto](https://github.com/devopsgroupeu/Injecto) - Template processor
