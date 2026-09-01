@@ -12,7 +12,7 @@ env:
   # Pinned deliberately: the gate asserts Injecto's substitution semantics, so an
   # unpinned Injecto would turn an upstream change into a mysterious red here.
   # Bump together with a gate run.
-  INJECTO_REF: v0.10.0
+  INJECTO_REF: v0.11.0
   TERRAFORM_VERSION: 1.11.4
 
 jobs:
