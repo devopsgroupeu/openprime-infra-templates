@@ -14,7 +14,7 @@ environment = "development"
 # -------------------------------------------------------------------
 
 # @module services.vpc | displayName=Virtual Private Cloud (VPC) | category=Networking | description=AWS Virtual Private Cloud for network isolation
-# @param services.vpc.cidr | displayName=CIDR Block | description=The IPv4 CIDR block for the VPC | type=text
+# @param services.vpc.cidr | displayName=CIDR Block | description=The IPv4 CIDR block for the VPC | type=text | pattern=^(\d{1,3}\.){3}\d{1,3}/\d{1,2}$
 vpc_cidr = "10.0.0.0/16"
 # @param services.vpc.azCount | displayName=Availability Zones | description=Number of availability zones to use for high availability | type=dropdown | options=[{"value":1,"label":"1 AZ (Development only)"},{"value":2,"label":"2 AZs (Recommended)"},{"value":3,"label":"3 AZs (High availability)"}]
 az_count = 2
@@ -50,8 +50,8 @@ enable_flow_logs = false
 # -------------------------------------------------------------------
 
 # @module services.eks | displayName=Elastic Kubernetes Service (EKS) | category=Compute | description=Managed Kubernetes service from AWS
-# @param services.eks.kubernetesVersion | displayName=Kubernetes Version | description=Kubernetes version | type=dropdown | options=[{"value":"1.30","label":"1.30"},{"value":"1.31","label":"1.31"},{"value":"1.32","label":"1.32"},{"value":"1.33","label":"1.33"},{"value":"1.34","label":"1.34"},{"value":"1.35","label":"1.35"}]
-kubernetes_version = "1.33"
+# @param services.eks.kubernetesVersion | displayName=Kubernetes Version | description=Kubernetes version | type=dropdown | options=[{"value":"1.34","label":"1.34"},{"value":"1.35","label":"1.35"},{"value":"1.36","label":"1.36"}]
+kubernetes_version = "1.36"
 # @param services.eks.enableClusterCreatorAdminPermissions | displayName=Cluster Creator Admin | description=Enable cluster creator admin permissions | type=toggle
 enable_cluster_creator_admin_permissions = true
 # @param services.eks.endpointPublicAccess | displayName=Public Endpoint | description=Enable public access to cluster endpoint | type=toggle
