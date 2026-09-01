@@ -138,7 +138,7 @@ variable "enable_flow_logs" {
 variable "kubernetes_version" {
   type        = string
   description = "Kubernetes version for EKS cluster"
-  default     = "1.33"
+  default     = "1.36"
 }
 
 variable "enable_cluster_creator_admin_permissions" {
