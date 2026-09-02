@@ -14,7 +14,10 @@
   },
   "gitRepository": {
     "url": "git@github.com:example-org/ci-gate-infra.git",
-    "branch": "ci-main"
+    "branch": "ci-main",
+    "branches": [
+      "ci-main"
+    ]
   },
   "services": {
     "ecr": {
