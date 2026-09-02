@@ -11,11 +11,15 @@ name: Terraform Deployment
 
 on:
   push:
-    branches:
-      - main
+    # The branch the environment is configured to deliver to. A customer who
+    # targets anything other than the repository default used to get a pipeline
+    # that never fired, because the push landed on their branch and this filter
+    # still said main (OP-235).
+    # @param gitRepository.branches
+    branches: ["main"]
   pull_request:
-    branches:
-      - main
+    # @param gitRepository.branches
+    branches: ["main"]
   workflow_dispatch:
     inputs:
       terraform_action:
