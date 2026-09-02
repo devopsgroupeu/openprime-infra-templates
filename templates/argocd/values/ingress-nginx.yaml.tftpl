@@ -1,4 +1,13 @@
 controller:
+  # The service annotation below turns on PROXY protocol v2 on the NLB target
+  # groups, so every connection arrives with a PROXY header in front of the
+  # request. nginx must be told to expect it; without this the header is parsed
+  # as the HTTP request line and every request from the internet is answered
+  # with 400, while ArgoCD reports the app Synced + Healthy and the NLB has a
+  # public address (OP-242).
+  config:
+    use-proxy-protocol: "true"
+
   admissionWebhooks:
     service:
       annotations:
