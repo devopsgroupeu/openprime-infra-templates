@@ -3,7 +3,10 @@ module "elasticache" {
   source  = "terraform-aws-modules/elasticache/aws"
   version = "~> 1.11"
 
-  replication_group_id = "${var.global_prefix}-elasticache"
+  # No separator dash here: global_prefix already ends in one (see
+  # _variables.tf). An explicit dash would make this "prefix--elasticache",
+  # and AWS rejects two consecutive hyphens in a replication group id.
+  replication_group_id = "${var.global_prefix}elasticache"
 
   engine                     = var.elasticache_engine
   engine_version             = var.elasticache_engine_version
@@ -26,12 +29,12 @@ module "elasticache" {
     }
   }
 
-  subnet_group_name        = "${var.global_prefix}-elasticache"
+  subnet_group_name        = "${var.global_prefix}elasticache"
   subnet_group_description = "ElastiCache subnet group"
   subnet_ids               = module.vpc.private_subnets
 
   create_parameter_group      = true
-  parameter_group_name        = "${var.global_prefix}-elasticache"
+  parameter_group_name        = "${var.global_prefix}elasticache"
   parameter_group_family      = var.elasticache_parameter_group_family
   parameter_group_description = "ElastiCache parameter group"
   parameters = [

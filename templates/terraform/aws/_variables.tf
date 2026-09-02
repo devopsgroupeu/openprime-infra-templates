@@ -10,8 +10,13 @@ variable "region" {
 
 variable "global_prefix" {
   type        = string
-  description = "Global prefix to be used in almost every resource name created by this code"
+  description = "Global prefix to be used in almost every resource name created by this code. Must start with a lowercase letter, contain only lowercase letters, digits and hyphens, and never contain two consecutive hyphens."
   default     = ""
+
+  validation {
+    condition     = var.global_prefix == "" || can(regex("^[a-z](-?[a-z0-9]+)*-?$", var.global_prefix))
+    error_message = "global_prefix must start with a lowercase letter, contain only lowercase letters, digits and hyphens, and must not contain consecutive hyphens."
+  }
 }
 
 variable "environment" {
