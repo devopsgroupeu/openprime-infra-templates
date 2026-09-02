@@ -4,8 +4,11 @@ serviceAccount:
   annotations:
     eks.amazonaws.com/role-arn: ${external_dns_role_arn}
 
-domainFilters:
-  - openprime.io
+# Only manage the customer's own zone. This used to say openprime.io, i.e. it told
+# external-dns to look for OUR zone inside THEIR account (OP-244). An empty filter
+# is emitted when no domain is configured, which leaves external-dns inert rather
+# than pointing it somewhere wrong.
+domainFilters: ${domain_filters}
 
 provider: aws
 

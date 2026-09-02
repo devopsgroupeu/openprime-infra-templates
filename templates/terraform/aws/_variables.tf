@@ -1176,3 +1176,13 @@ variable "s3_versioning_enabled" {
   description = "Keep previous object versions so an overwrite or delete is recoverable"
   default     = true
 }
+
+# -------------------------------------------------------------------
+# INGRESS DOMAIN
+# -------------------------------------------------------------------
+
+variable "ingress_domain" {
+  type        = string
+  description = "Domain the cluster publishes ingresses on, e.g. example.com. Empty means no host-based ingress is created, rather than defaulting to a domain the customer does not own (OP-244)."
+  default     = ""
+}

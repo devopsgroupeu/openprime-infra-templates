@@ -58,7 +58,8 @@
       ],
       "helmCharts": {},
       "networkPolicyEnabled": true,
-      "karpenterEnabled": true
+      "karpenterEnabled": true,
+      "ingressDomain": "ci.example.com"
     },
     "rds": {
       "enabled": true,

@@ -52,6 +52,8 @@ enable_flow_logs = false
 # @module services.eks | displayName=Elastic Kubernetes Service (EKS) | category=Compute | description=Managed Kubernetes service from AWS
 # @param services.eks.kubernetesVersion | displayName=Kubernetes Version | description=Kubernetes version | type=dropdown | options=[{"value":"1.34","label":"1.34"},{"value":"1.35","label":"1.35"},{"value":"1.36","label":"1.36"}]
 kubernetes_version = "1.36"
+# @param services.eks.ingressDomain | displayName=Ingress Domain | description=Domain the cluster publishes ingresses on, e.g. example.com. Leave empty to ship no host-based ingresses. | type=text
+ingress_domain = ""
 # @param services.eks.enableClusterCreatorAdminPermissions | displayName=Cluster Creator Admin | description=Enable cluster creator admin permissions | type=toggle
 enable_cluster_creator_admin_permissions = true
 # @param services.eks.endpointPublicAccess | displayName=Public Endpoint | description=Enable public access to cluster endpoint | type=toggle
