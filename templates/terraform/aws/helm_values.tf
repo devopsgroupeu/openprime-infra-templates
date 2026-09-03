@@ -10,7 +10,13 @@ locals {
     name => local.ingress_domain_set ? jsonencode(["${name}.${var.ingress_domain}"]) : "[]"
   }
 
-  external_dns_domain_filters = local.ingress_domain_set ? jsonencode([var.ingress_domain]) : "[]"
+  # NOT "[]". Measured on the chart rather than assumed: an empty domainFilters
+  # drops --domain-filter from the container args entirely, and external-dns with
+  # no domain filter considers EVERY hosted zone in the account. That is the
+  # opposite of inert, and OP-243 means it now authenticates successfully. The
+  # reserved .invalid TLD (RFC 2606) can never be a real public zone, so it is a
+  # filter that matches nothing rather than a filter that matches everything.
+  external_dns_domain_filters = local.ingress_domain_set ? jsonencode([var.ingress_domain]) : jsonencode(["none.invalid"])
 
   # Get helm chart selections from services.eks.helmCharts
   # Expected structure: { prometheusStack: { enabled: true, customValues: false }, ... }

@@ -5,9 +5,10 @@ serviceAccount:
     eks.amazonaws.com/role-arn: ${external_dns_role_arn}
 
 # Only manage the customer's own zone. This used to say openprime.io, i.e. it told
-# external-dns to look for OUR zone inside THEIR account (OP-244). An empty filter
-# is emitted when no domain is configured, which leaves external-dns inert rather
-# than pointing it somewhere wrong.
+# external-dns to look for OUR zone inside THEIR account (OP-244). With no domain
+# configured a filter on the reserved .invalid TLD is emitted instead of an empty
+# list: an empty domainFilters removes --domain-filter altogether, which lets
+# external-dns act on every zone in the account.
 domainFilters: ${domain_filters}
 
 provider: aws
