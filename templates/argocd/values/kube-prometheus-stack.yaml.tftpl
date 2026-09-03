@@ -29,15 +29,15 @@ crds:
 # ────────────────────────────────────────────────────────────
 alertmanager:
   ingress:
-    enabled: true
+    enabled: ${ingress_enabled}
     ingressClassName: nginx
-    hosts: [alertmanager.openprime.io]
+    hosts: ${alertmanager_hosts}
 
 grafana:
   ingress:
-    enabled: true
+    enabled: ${ingress_enabled}
     ingressClassName: nginx
-    hosts: [grafana.openprime.io]
+    hosts: ${grafana_hosts}
 
 # ────────────────────────────────────────────────────────────
 # 3. Datasources – Prometheus, Loki & Tempo
@@ -111,9 +111,9 @@ grafana:
 # ────────────────────────────────────────────────────────────
 prometheus:
   ingress:
-    enabled: true
+    enabled: ${ingress_enabled}
     ingressClassName: nginx
-    hosts: [prometheus.openprime.io]
+    hosts: ${prometheus_hosts}
 
   thanosService:
     enabled: true

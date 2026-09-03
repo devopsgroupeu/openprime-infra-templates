@@ -1,4 +1,23 @@
 locals {
+  # Host-based ingresses are only emitted when the customer told us their domain.
+  # Empty means no ingress at all, rather than publishing openprime.io - a domain
+  # they do not own, whose ingresses resolve for nobody and whose ALB never finds
+  # a certificate (OP-244).
+  ingress_domain_set = var.ingress_domain != ""
+
+  monitoring_ingress_hosts = {
+    for name in ["alertmanager", "grafana", "prometheus"] :
+    name => local.ingress_domain_set ? jsonencode(["${name}.${var.ingress_domain}"]) : "[]"
+  }
+
+  # NOT "[]". Measured on the chart rather than assumed: an empty domainFilters
+  # drops --domain-filter from the container args entirely, and external-dns with
+  # no domain filter considers EVERY hosted zone in the account. That is the
+  # opposite of inert, and OP-243 means it now authenticates successfully. The
+  # reserved .invalid TLD (RFC 2606) can never be a real public zone, so it is a
+  # filter that matches nothing rather than a filter that matches everything.
+  external_dns_domain_filters = local.ingress_domain_set ? jsonencode([var.ingress_domain]) : jsonencode(["none.invalid"])
+
   # Get helm chart selections from services.eks.helmCharts
   # Expected structure: { prometheusStack: { enabled: true, customValues: false }, ... }
   helm_chart_selections = try(var.helm_charts, {})
@@ -7,6 +26,19 @@ locals {
   # Values files are located in argocd/values/ directory
   # Note: Karpenter is managed in karpenter.tf directly
   all_helm_charts = {
+    # @section services.eks.helmCharts.prometheusStack.enabled begin
+    prometheus_stack = {
+      enabled              = try(local.helm_chart_selections["prometheusStack"]["enabled"], false)
+      template_values_file = "${path.module}/../../argocd/values/kube-prometheus-stack.yaml.tftpl"
+      values = {
+        ingress_enabled    = local.ingress_domain_set
+        alertmanager_hosts = local.monitoring_ingress_hosts["alertmanager"]
+        grafana_hosts      = local.monitoring_ingress_hosts["grafana"]
+        prometheus_hosts   = local.monitoring_ingress_hosts["prometheus"]
+      }
+    }
+    # @section services.eks.helmCharts.prometheusStack.enabled end
+
     # @section services.eks.helmCharts.promtail.enabled begin
     promtail = {
       enabled              = try(local.helm_chart_selections["promtail"]["enabled"], false)
@@ -93,6 +125,7 @@ locals {
         service_account_name  = "external-dns-sa"
         external_dns_role_arn = module.external_dns_irsa_role.arn
         region                = var.region
+        domain_filters        = local.external_dns_domain_filters
       }
     }
     # @section services.eks.helmCharts.externalDns.enabled end

@@ -6,14 +6,19 @@ resource "helm_release" "argocd" {
   version          = "9.1.4"
   create_namespace = true
 
-  set = [
-    {
-      name  = "global.domain"
-      value = "argocd.openprime.io"
-    },
+  # The ingress block is only emitted when the customer gave a domain. Publishing
+  # argocd.openprime.io into a customer account meant the ALB controller looked for
+  # an ACM certificate for a domain they do not own, found none, and never created
+  # the load balancer - so the ArgoCD UI had no address at all (OP-244).
+  set = concat([
     {
       name  = "configs.params.server\\.insecure"
       value = true
+    },
+    ], var.ingress_domain == "" ? [] : [
+    {
+      name  = "global.domain"
+      value = "argocd.${var.ingress_domain}"
     },
     {
       name  = "server.ingress.enabled"
@@ -63,8 +68,9 @@ resource "helm_release" "argocd" {
     },
     {
       name  = "configs.cm.url"
-      value = "https://argocd.openprime.io"
+      value = "https://argocd.${var.ingress_domain}"
     },
+    ], [
     # ACM Certificate
     # {
     #   name  = "server.ingress.annotations.alb\\.ingress\\.kubernetes\\.io/certificate-arn"
@@ -91,7 +97,7 @@ resource "helm_release" "argocd" {
     #   name  = "applicationSet.replicas"
     #   value = 2
     # },
-  ]
+  ])
 }
 
 # Git repository credentials — Applications depend on this so that
