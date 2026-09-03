@@ -3,6 +3,7 @@
   "globalPrefix": "ci-gate-",
   "provider": "aws",
   "region": "eu-central-1",
+  "domain": "ci.example.com",
   "backend": true,
   "terraformBackend": {
     "enabled": true,
@@ -58,8 +59,7 @@
       ],
       "helmCharts": {},
       "networkPolicyEnabled": true,
-      "karpenterEnabled": true,
-      "ingressDomain": "ci.example.com"
+      "karpenterEnabled": true
     },
     "rds": {
       "enabled": true,
