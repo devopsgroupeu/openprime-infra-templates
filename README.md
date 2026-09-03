@@ -49,16 +49,30 @@ module "eks" {
 
 ### Decorators
 
-- `# @section <condition> begin/end` - Conditional section boundaries
-- `# @param <variable>` - Configurable parameter marker
+Injecto recognises exactly three. The grammar is defined once, in Injecto's
+`injecto/decorators.py`, and imported by both the substituter and the catalog
+extractor so the two cannot disagree.
 
-A `@param` may carry an attribute tail, which the substituter ignores and the
-catalog extractor reads:
+- `# @param <dot.path>` - replaces the value on the **following value line**
+- `# @module <dot.path>` - declares a service to the wizard catalog; no effect on substitution
+- `# @section <dot.path> begin/end` - comments the block out when the path is falsy
+
+`@param` and `@module` may carry an attribute tail, which the substituter ignores
+and the catalog extractor reads:
 
 ```
 # @param services.ecr.repositoryNames | type=list
 # @param services.sns.kmsKeyId | type=string | default=
+# @module services.eks | displayName=Elastic Kubernetes Service (EKS) | category=Compute
 ```
+
+`@module` is what puts a service on the wizard's grid and gives it its label.
+`available=false` keeps a service out of the wizard while leaving its Terraform in
+place — `lambda` uses this, because it generates fine but expects deployment
+packages the wizard cannot supply.
+
+> A `|` inside an attribute value splits the decorator, so regex alternation in
+> `pattern` is not supported. The gate fails rather than shipping a mangled value.
 
 `type` is required only where the literal is ambiguous — `null`, `[]`, or a
 quoted boolean reveal no usable type and are rejected rather than guessed.
