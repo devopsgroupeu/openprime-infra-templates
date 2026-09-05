@@ -5,6 +5,7 @@ resource "helm_release" "argocd" {
   chart            = "argo-cd"
   version          = "9.1.4"
   create_namespace = true
+  timeout          = 900
 
   # The ingress block is only emitted when the customer gave a domain. Publishing
   # argocd.openprime.io into a customer account meant the ALB controller looked for
@@ -22,7 +23,7 @@ resource "helm_release" "argocd" {
     },
     {
       name  = "server.ingress.enabled"
-      value = true
+      value = false
     },
     {
       name  = "server.ingress.controller"
@@ -177,7 +178,7 @@ resource "kubectl_manifest" "example_apps" {
 
   wait = true
 
-  depends_on = [kubectl_manifest.repo_secret]
+  depends_on = [kubectl_manifest.app_of_apps]
 }
 
 resource "kubectl_manifest" "support_resources" {
@@ -222,7 +223,12 @@ resource "kubectl_manifest" "support_resources" {
 
   wait = true
 
-  depends_on = [kubectl_manifest.repo_secret]
+  depends_on = [
+    kubectl_manifest.repo_secret,
+    # @section services.eks.karpenterEnabled begin
+    helm_release.karpenter,
+    # @section services.eks.karpenterEnabled end
+  ]
 }
 
 resource "kubectl_manifest" "app_of_apps" {
@@ -258,7 +264,9 @@ resource "kubectl_manifest" "app_of_apps" {
           selfHeal = true
         }
         syncOptions = [
-          "CreateNamespace=true"
+          "CreateNamespace=true",
+          "PruneLast=true",
+          "PrunePropagationPolicy=foreground",
         ]
       }
     }
@@ -266,5 +274,8 @@ resource "kubectl_manifest" "app_of_apps" {
 
   wait = true
 
-  depends_on = [kubectl_manifest.repo_secret]
+  depends_on = [
+    kubectl_manifest.repo_secret,
+    kubectl_manifest.support_resources,
+  ]
 }

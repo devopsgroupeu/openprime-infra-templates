@@ -8,6 +8,8 @@ region = "eu-west-1"
 global_prefix = "my-project"
 # @param name
 environment = "development"
+# @param terraformBackend.awsStateKey
+aws_state_key = "aws.tfstate"
 
 # -------------------------------------------------------------------
 # VPC

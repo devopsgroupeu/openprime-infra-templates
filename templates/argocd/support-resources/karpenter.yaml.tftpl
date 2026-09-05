@@ -16,6 +16,7 @@ spec:
         karpenter.sh/discovery: ${cluster_name}
   tags:
     karpenter.sh/discovery: ${cluster_name}
+    openprime.io/controller-cleanup: "${aws_state_key}"
 ---
 apiVersion: karpenter.sh/v1
 kind: NodePool

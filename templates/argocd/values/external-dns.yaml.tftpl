@@ -16,3 +16,7 @@ provider: aws
 env:
   - name: AWS_DEFAULT_REGION
     value: ${region}
+
+policy: sync
+registry: txt
+txtOwnerId: "${cluster_name}"
