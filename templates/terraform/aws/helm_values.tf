@@ -29,6 +29,7 @@ locals {
         vpc_id               = module.vpc.vpc_id
         replica_count        = var.aws_lb_replica_count
         pdb_max_unavailable  = var.aws_lb_pdb_max_unavailable
+        aws_state_key        = var.aws_state_key
       }
     }
     # @section services.eks.helmCharts.awsLoadBalancerController.enabled end
@@ -90,6 +91,7 @@ locals {
       enabled              = try(local.helm_chart_selections["externalDns"]["enabled"], false)
       template_values_file = "${path.module}/../../argocd/values/external-dns.yaml.tftpl"
       values = {
+        cluster_name          = module.eks.cluster_name
         service_account_name  = "external-dns-sa"
         external_dns_role_arn = module.external_dns_irsa_role.name
         region                = var.region

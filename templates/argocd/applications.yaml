@@ -14,6 +14,7 @@ appProjects:
         chart: aws-load-balancer-controller
         targetRevision: 1.16.0
         autoSync: true
+        syncWave: -1000
   # @section services.eks.helmCharts.awsLoadBalancerController.enabled end
 
   # @section services.eks.helmCharts.certManager.enabled begin
@@ -25,6 +26,7 @@ appProjects:
         chart: cert-manager
         targetRevision: 1.18.2
         autoSync: true
+        syncWave: -800
   # @section services.eks.helmCharts.certManager.enabled end
 
   # @section services.eks.helmCharts.externalDns.enabled begin
@@ -36,6 +38,7 @@ appProjects:
         chart: external-dns
         targetRevision: 1.20.0
         autoSync: true
+        syncWave: -1100
   # @section services.eks.helmCharts.externalDns.enabled end
 
   # @section services.eks.helmCharts.ingressNginx.enabled begin
@@ -47,6 +50,7 @@ appProjects:
         chart: ingress-nginx
         targetRevision: 4.13.0
         autoSync: true
+        syncWave: -900
   # @section services.eks.helmCharts.ingressNginx.enabled end
 
   ## Observability Stack
