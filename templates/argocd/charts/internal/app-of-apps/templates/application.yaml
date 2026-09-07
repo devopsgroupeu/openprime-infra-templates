@@ -9,8 +9,10 @@ kind: Application
 metadata:
   name: {{ $application.name }}
   namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
   annotations:
-    argocd.argoproj.io/sync-wave: {{ add $projectBase $aIdx | printf "%v" | quote }}
+    argocd.argoproj.io/sync-wave: {{ dig "syncWave" (add $projectBase $aIdx) $application | printf "%v" | quote }}
 spec:
   project: default # TODO: handle multiple projects correctly
   sources:
