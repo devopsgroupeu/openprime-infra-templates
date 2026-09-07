@@ -26,26 +26,6 @@ variable "global_tags" {
   default     = {}
 }
 
-variable "aws_state_key" {
-  type        = string
-  description = "Stable rendered AWS state key used to scope controller cleanup"
-
-  # The decorator cannot live in terraform.auto.tfvars: that file is the catalog
-  # source, where every @param becomes a wizard field, so paths there must be a bare
-  # global or services.<key>.<leaf>. terraformBackend.* is legal everywhere else and
-  # is already used this way in _config.tf and kubernetes/_data.tf.
-  # @param terraformBackend.awsStateKey
-  default = "aws.tfstate"
-
-  validation {
-    condition = (
-      trimspace(var.aws_state_key) != "" &&
-      length(var.aws_state_key) <= 256
-    )
-    error_message = "aws_state_key must be non-empty and at most 256 characters."
-  }
-}
-
 # -------------------------------------------------------------------
 # VPC
 # -------------------------------------------------------------------
