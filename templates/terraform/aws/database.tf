@@ -163,6 +163,7 @@ module "aurora" {
   apply_immediately               = var.aurora_apply_immediately
   deletion_protection             = var.aurora_deletion_protection
   skip_final_snapshot             = var.aurora_skip_final_snapshot
+  final_snapshot_identifier       = var.aurora_final_snapshot_identifier != "" ? var.aurora_final_snapshot_identifier : null
   delete_automated_backups        = var.aurora_delete_automated_backups
   backup_retention_period         = var.aurora_backup_retention_period
 }

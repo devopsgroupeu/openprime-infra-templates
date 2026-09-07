@@ -637,6 +637,15 @@ variable "aurora_deletion_protection" {
   default     = true
 }
 
+variable "aurora_final_snapshot_identifier" {
+  type = string
+  # Kept here rather than beside the module argument: that argument sits inside a
+  # @section block, and Injecto un-comments every line of an enabled section, so a
+  # # comment there is emitted as broken HCL.
+  description = "Name for the Aurora final snapshot. The aurora module passes this straight to aws_rds_cluster, whose own default is null, and the provider rejects a destroy with skip_final_snapshot = false and no identifier. The rds module computes its own name, so only Aurora needs this."
+  default     = ""
+}
+
 variable "aurora_skip_final_snapshot" {
   type        = bool
   description = "Skip final snapshot on deletion for Aurora"
