@@ -17,8 +17,15 @@ resource "helm_release" "argocd" {
       value = true
     },
     {
+      # Deliberately left ON. Disabling it was the right call on this branch, where
+      # global.domain is still hardcoded to argocd.openprime.io and the ALB controller
+      # therefore hunts for an ACM cert the customer does not own. OP-244 fixed that
+      # cause on main instead - the whole block is now emitted only when the customer
+      # supplied a domain - so on merge a `false` here silently reinstates the exact
+      # outcome OP-244 shipped to remove: a customer gives a domain and still gets no
+      # ArgoCD ingress. git merges the line without a conflict; only the meaning moved.
       name  = "server.ingress.enabled"
-      value = false
+      value = true
     },
     {
       name  = "server.ingress.controller"
