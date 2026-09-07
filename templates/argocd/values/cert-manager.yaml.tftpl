@@ -1,3 +1,4 @@
+installCRDs: ${install_custom_resource_definitions}
 replicaCount: ${replica_count}
 nodeSelector:
   ${node_selector}
@@ -11,6 +12,3 @@ cainjector:
   replicaCount: ${cainjector_replica_count}
   nodeSelector:
     ${cainjector_node_selector}
-crds:
-  enabled: ${install_custom_resource_definitions}
-  keep: true
