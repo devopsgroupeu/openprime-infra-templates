@@ -18,7 +18,12 @@
     "branch": "ci-main",
     "branches": [
       "ci-main"
-    ]
+    ],
+    "manualApproval": {
+      "enabled": true,
+      "approversCsv": "ci-reviewer-one,ci-reviewer-two",
+      "minimumApprovals": 2
+    }
   },
   "services": {
     "ecr": {
