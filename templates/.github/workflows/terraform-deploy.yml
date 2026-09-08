@@ -221,7 +221,7 @@ jobs:
 
     steps:
       - name: Require manual approval
-        uses: step-security/manual-approval@v1
+        uses: trstringer/manual-approval@v1
         timeout-minutes: 60
         with:
           secret: ${{ github.token }}
