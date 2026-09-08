@@ -200,23 +200,28 @@ jobs:
   # Does not depend on GitHub Environment protection rules.
   # ========================================================================
 
-  # @section gitRepository.manualApproval.enabled begin
   approve-job:
     name: "approve:${{ github.event.inputs.terraform_action }}:aws"
     runs-on: ubuntu-latest
+    # @section gitRepository.manualApproval.enabled begin
     if: >-
       github.event_name == 'workflow_dispatch' &&
       (
         github.event.inputs.terraform_action == 'apply' ||
         github.event.inputs.terraform_action == 'destroy'
       )
+    # @section gitRepository.manualApproval.enabled end
+
+    # @section gitRepository.manualApproval.disabled begin
+    if: false
+    # @section gitRepository.manualApproval.disabled end
 
     permissions:
       issues: write
 
     steps:
       - name: Require manual approval
-        uses: step-security/manual-approval@<FULL_40_CHARACTER_SHA>
+        uses: step-security/manual-approval@v1
         timeout-minutes: 60
         with:
           secret: ${{ github.token }}
@@ -234,7 +239,6 @@ jobs:
             Requested by: @${{ github.actor }}
             Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           exclude-workflow-initiator-as-approver: true
-  # @section gitRepository.manualApproval.enabled end
 
   # ========================================================================
   # APPLY JOB - Protected by manual approval via GitHub issue
@@ -250,10 +254,15 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - plan-aws
-      # @section gitRepository.manualApproval.enabled begin
       - approve-job
-      # @section gitRepository.manualApproval.enabled end
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.terraform_action == 'apply'
+
+    if: github.event_name == 'workflow_dispatch' && 
+        github.event.inputs.terraform_action == 'apply' &&
+        needs.plan-aws.result == 'success' &&
+        (
+          needs.approve-job.result == 'success' ||
+          needs.approve-job.result == 'skipped'
+        )
     # Required-reviewer gate. Configure reviewers on the 'production'
     # environment in repo Settings -> Environments, otherwise this applies
     # without approval.
@@ -333,17 +342,17 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - destroy-k8s
-      # @section gitRepository.manualApproval.enabled begin
       - approve-job
-      # @section gitRepository.manualApproval.enabled end
+
     if: >-
       always() &&
       github.event_name == 'workflow_dispatch' &&
       github.event.inputs.terraform_action == 'destroy' &&
-      needs.destroy-k8s.result == 'success'
-      # @section gitRepository.manualApproval.enabled begin
-      && needs.approve-job.result == 'success'
-      # @section gitRepository.manualApproval.enabled end
+      needs.destroy-k8s.result == 'success' &&
+      (
+        needs.approve-job.result == 'success' ||
+        needs.approve-job.result == 'skipped'
+      )
 
     defaults:
       run:
