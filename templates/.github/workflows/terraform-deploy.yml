@@ -202,7 +202,7 @@ jobs:
 
   approve-job:
     name: "approve_action:aws"
-    needs: ["plan:aws"]
+    needs: [plan:aws]
     runs-on: ubuntu-latest
     # @section gitRepository.manualApproval.enabled begin
     if: >-
