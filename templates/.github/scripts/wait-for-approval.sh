@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Requires gh, issues:write, and access to repository permission metadata.
+# Only human users with current write/maintain/admin access may decide.
+# Run after the plan job, with an outer step timeout longer than 55 minutes.
+for name in GH_TOKEN GH_REPO TF_ACTION GITHUB_SERVER_URL GITHUB_RUN_ID \
+  GITHUB_RUN_ATTEMPT GITHUB_REF_NAME GITHUB_SHA GITHUB_ACTOR; do
+  if [[ -z "${!name:-}" ]]; then
+    printf 'Missing required environment variable: %s\n' "$name" >&2
+    exit 1
+  fi
+done
+
+case "$TF_ACTION" in
+  apply|destroy) ;;
+  *) printf 'TF_ACTION must be apply or destroy.\n' >&2; exit 1 ;;
+esac
+
+command -v gh >/dev/null
+
+run_url="${GITHUB_SERVER_URL}/${GH_REPO}/actions/runs/${GITHUB_RUN_ID}/attempts/${GITHUB_RUN_ATTEMPT}"
+body="Review the Terraform plan in the linked workflow before approving.
+
+Operation: ${TF_ACTION}
+Repository: ${GH_REPO}
+Branch: ${GITHUB_REF_NAME}
+Commit: ${GITHUB_SHA}
+Requested by: @${GITHUB_ACTOR}
+Workflow: ${run_url}
+
+Comment approve, approved, lgtm, or yes to continue.
+Comment reject, rejected, deny, denied, or no to cancel.
+Only users with Write, Maintain, or Admin repository access can decide.
+The requester may also approve. Closing this issue cancels the request.
+This request expires after 55 minutes."
+
+# Always create a fresh issue so previous runs cannot supply an approval.
+issue_url=$(gh issue create --repo "$GH_REPO" \
+  --title "Approve Terraform ${TF_ACTION} — run ${GITHUB_RUN_ID}, attempt ${GITHUB_RUN_ATTEMPT}" \
+  --body "$body")
+
+printf 'Approval issue: %s\n' "$issue_url"
+if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+  printf 'Review the Terraform plan, then comment on the [approval issue](%s).\n' \
+    "$issue_url" >> "$GITHUB_STEP_SUMMARY"
+fi
+
+deadline=$((SECONDS + 3300))
+issue_number=${issue_url##*/}
+while (( SECONDS < deadline )); do
+  # API failures stop the job rather than bypassing approval.
+  state=$(gh issue view "$issue_url" --repo "$GH_REPO" --json state --jq '.state')
+  if [[ "$state" != "OPEN" ]]; then
+    printf 'Approval issue is not open: %s\n' "$issue_url" >&2
+    exit 1
+  fi
+
+  # Paginate all comments. Only exact decision words (ignoring case, outer
+  # whitespace and trailing punctuation) count; quoted prose is ignored.
+  comments=$(gh api --paginate "repos/${GH_REPO}/issues/${issue_number}/comments?per_page=100" \
+    --jq '.[] | select(.user.type == "User") |
+      (.body | ascii_downcase | gsub("^\\s+|\\s+$"; "") | sub("[.!]+$"; "")) as $word |
+      select($word | test("^(approve|approved|lgtm|yes|reject|rejected|deny|denied|no)$")) |
+      [.user.login, $word] | @tsv')
+
+  decision=pending
+  approver=""
+  while IFS=$'\t' read -r login word; do
+    [[ -n "$login" ]] || continue
+    permission=$(gh api "repos/${GH_REPO}/collaborators/${login}/permission" --jq '.permission')
+    case "$permission" in
+      write|maintain|admin) ;;
+      *) continue ;;
+    esac
+    case "$word" in
+      reject|rejected|deny|denied|no)
+        decision=rejected
+        approver=$login
+        break
+        ;;
+      *) decision=approved; approver=$login ;;
+    esac
+  done <<< "$comments"
+
+  case "$decision" in
+    approved)
+      gh issue close "$issue_url" --repo "$GH_REPO" \
+        --comment "Approved by @${approver}. Continuing ${run_url}."
+      exit 0
+      ;;
+    rejected)
+      gh issue close "$issue_url" --repo "$GH_REPO" \
+        --comment "Rejected by @${approver}. Run: ${run_url}"
+      printf 'Approval rejected: %s\n' "$issue_url" >&2
+      exit 1
+      ;;
+    pending) sleep 15 ;;
+    *) printf 'Unexpected approval state: %s\n' "$decision" >&2; exit 1 ;;
+  esac
+done
+
+gh issue close "$issue_url" --repo "$GH_REPO" \
+  --comment "Approval timed out after 55 minutes. Run: ${run_url}"
+exit 1

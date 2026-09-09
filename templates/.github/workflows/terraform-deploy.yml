@@ -211,25 +211,19 @@ jobs:
       )
 
     permissions:
+      contents: read
       issues: write
 
     steps:
-      - name: Require manual approval
-        uses: trstringer/manual-approval@v1
-        timeout-minutes: 60
-        with:
-          secret: ${{ github.token }}
-          minimum-approvals: 1
-          issue-title: "Approve Terraform ${{ github.event.inputs.terraform_action }} for ${{ github.repository }}"
-          issue-body: |
-            A Terraform AWS operation requires approval.
+      - uses: actions/checkout@v4
 
-            Operation: `${{ github.event.inputs.terraform_action }}`
-            Repository: `${{ github.repository }}`
-            Branch: `${{ github.ref_name }}`
-            Requested by: @${{ github.actor }}
-            Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          exclude-workflow-initiator-as-approver: false
+      - name: Wait for plan approval
+        timeout-minutes: 60
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TF_ACTION: ${{ github.event.inputs.terraform_action }}
+        run: bash .github/scripts/wait-for-approval.sh
 
   # ========================================================================
   # APPLY JOB - Protected by manual approval via GitHub issue
