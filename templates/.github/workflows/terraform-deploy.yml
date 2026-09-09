@@ -203,18 +203,12 @@ jobs:
   approve-job:
     name: "approve_action:aws"
     runs-on: ubuntu-latest
-    # @section gitRepository.manualApproval.enabled begin
     if: >-
       github.event_name == 'workflow_dispatch' &&
       (
         github.event.inputs.terraform_action == 'apply' ||
         github.event.inputs.terraform_action == 'destroy'
       )
-    # @section gitRepository.manualApproval.enabled end
-
-    # @section gitRepository.manualApproval.disabled begin
-    if: false
-    # @section gitRepository.manualApproval.disabled end
 
     permissions:
       issues: write
@@ -225,9 +219,6 @@ jobs:
         timeout-minutes: 60
         with:
           secret: ${{ github.token }}
-          # @param gitRepository.manualApproval.approversCsv
-          approvers: "github-user"
-          # @param gitRepository.manualApproval.minimumApprovals
           minimum-approvals: 1
           issue-title: "Approve Terraform ${{ github.event.inputs.terraform_action }} for ${{ github.repository }}"
           issue-body: |
@@ -238,7 +229,7 @@ jobs:
             Branch: `${{ github.ref_name }}`
             Requested by: @${{ github.actor }}
             Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          exclude-workflow-initiator-as-approver: true
+          exclude-workflow-initiator-as-approver: false
 
   # ========================================================================
   # APPLY JOB - Protected by manual approval via GitHub issue
@@ -259,10 +250,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && 
         github.event.inputs.terraform_action == 'apply' &&
         needs.plan-aws.result == 'success' &&
-        (
-          needs.approve-job.result == 'success' ||
-          needs.approve-job.result == 'skipped'
-        )
+        needs.approve-job.result == 'success' 
     # Required-reviewer gate. Configure reviewers on the 'production'
     # environment in repo Settings -> Environments, otherwise this applies
     # without approval.
@@ -342,18 +330,12 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - destroy-k8s
-      - approve-job
 
     if: >-
       always() &&
       github.event_name == 'workflow_dispatch' &&
       github.event.inputs.terraform_action == 'destroy' &&
-      needs.destroy-k8s.result == 'success' &&
-      (
-        needs.approve-job.result == 'success' ||
-        needs.approve-job.result == 'skipped'
-      )
-
+      needs.destroy-k8s.result == 'success'
     defaults:
       run:
         working-directory: ./terraform/aws
@@ -579,8 +561,14 @@ jobs:
   destroy-k8s:
     name: "destroy:k8s"
     runs-on: ubuntu-latest
-    needs: [apply-k8s]
-    if: always() && github.event_name == 'workflow_dispatch' && github.event.inputs.terraform_action == 'destroy'
+    needs: 
+    - apply-k8s
+    - approve-job
+
+    if: always() && 
+        github.event_name == 'workflow_dispatch' && 
+        github.event.inputs.terraform_action == 'destroy' &&
+        needs.approve-job.result == 'success' 
 
     defaults:
       run:
