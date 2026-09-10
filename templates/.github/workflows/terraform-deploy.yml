@@ -314,6 +314,29 @@ jobs:
           fi
         working-directory: ${{ github.workspace }}
 
+
+  approve-destroy-aws:
+    name: "approve:destroy:aws"
+    runs-on: ubuntu-latest
+    needs: [destroy-k8s, validate-aws]
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.terraform_action == 'destroy'
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Authorize AWS destruction
+        timeout-minutes: 60
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TF_ACTION: destroy
+          TF_STACK: aws
+          SKIP_FINAL_SNAPSHOT: ${{ inputs.skip_final_snapshot }}
+        run: bash .github/scripts/wait-for-approval.sh
+
   # ========================================================================
   # DESTROY AWS JOB - Manual workflow_dispatch only
   # Runs after destroy-k8s completes (with if: always() to handle skipped K8s).
@@ -323,14 +346,14 @@ jobs:
   destroy-aws:
     name: "destroy:aws"
     runs-on: ubuntu-latest
-    needs:
-      - destroy-k8s
+    needs: [destroy-k8s, approve-destroy-aws]
 
     if: >-
-      always() &&
       github.event_name == 'workflow_dispatch' &&
       github.event.inputs.terraform_action == 'destroy' &&
-      needs.destroy-k8s.result == 'success'
+      needs.destroy-k8s.result == 'success' &&
+      needs.approve-destroy-aws.result == 'success'
+
     defaults:
       run:
         working-directory: ./terraform/aws
@@ -578,6 +601,27 @@ jobs:
           path: ./terraform/kubernetes/tf-outputs-k8s.json
           retention-days: 30
           archive: false
+
+  approve-destroy-k8s:
+    name: "approve:destroy:k8s"
+    runs-on: ubuntu-latest
+    needs: [validate-k8s]
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.terraform_action == 'destroy'
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Authorize Kubernetes destruction
+        timeout-minutes: 60
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TF_ACTION: destroy
+          TF_STACK: kubernetes
+        run: bash .github/scripts/wait-for-approval.sh
 
   # ========================================================================
   # DESTROY KUBERNETES JOB - Manual workflow_dispatch only

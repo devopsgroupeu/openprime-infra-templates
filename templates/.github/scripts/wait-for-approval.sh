@@ -3,7 +3,9 @@ set -euo pipefail
 
 # Requires gh, jq, actions:read, issues:write, and repository metadata access.
 # Only human users with current write/maintain/admin access may decide.
-# Run after the selected plan job succeeds, with an outer timeout over 55 minutes.
+# Apply: run after the selected plan job succeeds. Destroy: authorize execution
+# without claiming to review a saved plan (matching GitLab manual destroy jobs).
+# Use an outer timeout over 55 minutes. AWS destroy needs SKIP_FINAL_SNAPSHOT.
 # TF_STACK is aws (default) or kubernetes; PLAN_JOB_NAME must match that stack.
 # The workflow must apply the same saved plan. This script never reads plan data.
 for name in GH_TOKEN GH_REPO TF_ACTION GITHUB_SERVER_URL GITHUB_RUN_ID \
@@ -15,11 +17,7 @@ for name in GH_TOKEN GH_REPO TF_ACTION GITHUB_SERVER_URL GITHUB_RUN_ID \
 done
 
 case "$TF_ACTION" in
-  apply) ;;
-  destroy)
-    printf 'Destroy approval requires separate staged destruction plans; a normal apply plan cannot authorize it.\n' >&2
-    exit 1
-    ;;
+  apply|destroy) ;;
   *) printf 'TF_ACTION must be apply or destroy.\n' >&2; exit 1 ;;
 esac
 
@@ -33,40 +31,71 @@ case "$stack" in
   kubernetes) stack_label=Kubernetes; expected_plan_job="plan:k8s" ;;
   *) printf 'TF_STACK must be aws or kubernetes.\n' >&2; exit 1 ;;
 esac
-plan_job_name=${PLAN_JOB_NAME:-$expected_plan_job}
-if [[ "$plan_job_name" != "$expected_plan_job" ]]; then
-  printf 'PLAN_JOB_NAME does not match TF_STACK.\n' >&2
-  exit 1
+if [[ "$TF_ACTION" == apply ]]; then
+  plan_job_name=${PLAN_JOB_NAME:-$expected_plan_job}
+  if [[ "$plan_job_name" != "$expected_plan_job" ]]; then
+    printf 'PLAN_JOB_NAME does not match TF_STACK.\n' >&2
+    exit 1
+  fi
+
+  # Restrict discovery to this run attempt. Never fall back to another attempt or
+  # branch's latest run: a rerun that reuses older jobs needs a fresh full run.
+  if ! jobs=$(gh api --paginate \
+    "repos/${GH_REPO}/actions/runs/${GITHUB_RUN_ID}/attempts/${GITHUB_RUN_ATTEMPT}/jobs?per_page=100"); then
+    printf 'Cannot read plan job metadata. Grant the approval job actions: read. No approval issue was created.\n' >&2
+    exit 1
+  fi
+
+  if ! plan_url=$(jq -ers \
+    --arg name "$plan_job_name" --arg sha "$GITHUB_SHA" \
+    --arg run "$GITHUB_RUN_ID" --arg attempt "$GITHUB_RUN_ATTEMPT" \
+    --arg prefix "${GITHUB_SERVER_URL}/${GH_REPO}/actions/runs/${GITHUB_RUN_ID}/job/" '
+      [.[].jobs[] | select(.name == $name)] |
+      if length != 1 then error("Expected exactly one matching plan job")
+      else .[0] |
+        if .status != "completed" or .conclusion != "success" or
+           .head_sha != $sha or (.run_id | tostring) != $run or
+           (.run_attempt | tostring) != $attempt
+        then error("Plan must succeed for this commit and run attempt")
+        elif (.html_url | type) != "string" then error("Missing plan job URL")
+        elif (.html_url | startswith($prefix) | not) then error("Unexpected plan job URL")
+        else .html_url end
+      end' <<< "$jobs"); then
+    printf 'No matching successful plan to approve. Make the approval job depend on its plan job, check PLAN_JOB_NAME, and rerun all jobs if necessary.\n' >&2
+    exit 1
+  fi
+
+  review_url=$plan_url
+  review_label="${stack_label} plan"
+  review_intro="Review the Terraform Plan step in the linked successful ${stack_label} plan job before approving."
+  approval_scope="Approval covers applying the saved ${stack_label} plan from this run attempt.
+It does not authorize another stack or destruction.
+Plan contents are intentionally not copied into this issue."
+else
+  if [[ -n "${PLAN_JOB_NAME:-}" ]]; then
+    printf 'Do not set PLAN_JOB_NAME for destroy authorization; no saved destroy plan is reviewed.\n' >&2
+    exit 1
+  fi
+  review_url=$run_url
+  review_label="${stack_label} destroy request"
+  review_intro="Review the stack, commit, and destruction scope below before authorizing this job."
+  approval_scope="Approval authorizes executing Terraform destroy for the ${stack_label} stack.
+Terraform will calculate the deletion actions when the job runs; this is NOT approval of a reviewed saved plan.
+This approval does not authorize deletion of the other stack."
+  if [[ "$stack" == aws ]]; then
+    case "${SKIP_FINAL_SNAPSHOT:-}" in
+      true) snapshot_policy="Skip final database snapshots; deleted data may be unrecoverable." ;;
+      false) snapshot_policy="Request final database snapshots before deletion." ;;
+      *) printf 'AWS destroy requires SKIP_FINAL_SNAPSHOT=true or false.\n' >&2; exit 1 ;;
+    esac
+    approval_scope="${approval_scope}
+This job first applies database teardown settings, including disabling deletion protection, then destroys AWS resources.
+Snapshot policy: ${snapshot_policy}
+Kubernetes destruction must have completed successfully before this request."
+  fi
 fi
 
-# Restrict discovery to this run attempt. Never fall back to another attempt or
-# branch's latest run: a rerun that reuses older jobs needs a fresh full run.
-if ! jobs=$(gh api --paginate \
-  "repos/${GH_REPO}/actions/runs/${GITHUB_RUN_ID}/attempts/${GITHUB_RUN_ATTEMPT}/jobs?per_page=100"); then
-  printf 'Cannot read plan job metadata. Grant the approval job actions: read. No approval issue was created.\n' >&2
-  exit 1
-fi
-
-if ! plan_url=$(jq -ers \
-  --arg name "$plan_job_name" --arg sha "$GITHUB_SHA" \
-  --arg run "$GITHUB_RUN_ID" --arg attempt "$GITHUB_RUN_ATTEMPT" \
-  --arg prefix "${GITHUB_SERVER_URL}/${GH_REPO}/actions/runs/${GITHUB_RUN_ID}/job/" '
-    [.[].jobs[] | select(.name == $name)] |
-    if length != 1 then error("Expected exactly one matching plan job")
-    else .[0] |
-      if .status != "completed" or .conclusion != "success" or
-         .head_sha != $sha or (.run_id | tostring) != $run or
-         (.run_attempt | tostring) != $attempt
-      then error("Plan must succeed for this commit and run attempt")
-      elif (.html_url | type) != "string" then error("Missing plan job URL")
-      elif (.html_url | startswith($prefix) | not) then error("Unexpected plan job URL")
-      else .html_url end
-    end' <<< "$jobs"); then
-  printf 'No matching successful plan to approve. Make the approval job depend on its plan job, check PLAN_JOB_NAME, and rerun all jobs if necessary.\n' >&2
-  exit 1
-fi
-
-body="Review the Terraform Plan step in the linked successful ${stack_label} plan job before approving.
+body="${review_intro}
 
 Operation: ${TF_ACTION}
 Stack: ${stack_label}
@@ -75,11 +104,9 @@ Branch: ${GITHUB_REF_NAME}
 Commit: ${GITHUB_SHA}
 Requested by: @${GITHUB_ACTOR}
 Workflow: ${run_url}
-Plan job: ${plan_url}
+Review link: ${review_url}
 
-Approval covers applying the saved ${stack_label} plan from this run attempt.
-It does not authorize another stack or destruction.
-Plan contents are intentionally not copied into this issue.
+${approval_scope}
 
 Comment approve, approved, lgtm, or yes to continue.
 Comment reject, rejected, deny, denied, or no to cancel.
@@ -94,8 +121,8 @@ issue_url=$(gh issue create --repo "$GH_REPO" \
 
 printf 'Approval issue: %s\n' "$issue_url"
 if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
-  printf 'Review the [%s plan](%s), then comment on the [approval issue](%s).\n' \
-    "$stack_label" "$plan_url" "$issue_url" >> "$GITHUB_STEP_SUMMARY"
+  printf 'Review the [%s](%s), then comment on the [approval issue](%s).\n' \
+    "$review_label" "$review_url" "$issue_url" >> "$GITHUB_STEP_SUMMARY"
 fi
 
 deadline=$((SECONDS + 3300))
@@ -138,7 +165,7 @@ while (( SECONDS < deadline )); do
   case "$decision" in
     approved)
       gh issue close "$issue_url" --repo "$GH_REPO" \
-        --comment "Approved by @${approver} for commit ${GITHUB_SHA}. Reviewed plan: ${plan_url}. Continuing ${run_url}."
+        --comment "Approved ${TF_ACTION} for ${stack_label} by @${approver}, commit ${GITHUB_SHA}. Review reference: ${review_url}. Scope: ${approval_scope}"
       exit 0
       ;;
     rejected)
