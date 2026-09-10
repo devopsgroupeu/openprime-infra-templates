@@ -483,6 +483,33 @@ jobs:
           path: ./terraform/kubernetes/tfplan
           retention-days: 7
 
+  approve-k8s:
+    name: "approve_action:k8s"
+    runs-on: ubuntu-latest
+    needs: [plan-k8s]
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.terraform_action == 'apply' &&
+      needs.plan-k8s.result == 'success'
+
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for Kubernetes plan approval
+        timeout-minutes: 60
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TF_ACTION: ${{ github.event.inputs.terraform_action }}
+          TF_STACK: kubernetes
+          PLAN_JOB_NAME: 'plan:k8s'
+        run: bash .github/scripts/wait-for-approval.sh
+
   # ========================================================================
   # APPLY KUBERNETES JOB - Protected by manual approval via GitHub issue
   # Runs after AWS apply completes. Waits for manual approval.
@@ -492,8 +519,13 @@ jobs:
   apply-k8s:
     name: "apply:k8s"
     runs-on: ubuntu-latest
-    needs: [plan-k8s, apply-aws]
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.terraform_action == 'apply'
+    needs: [plan-k8s, apply-aws, approve-k8s]
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.terraform_action == 'apply' &&
+      needs.plan-k8s.result == 'success' &&
+      needs.apply-aws.result == 'success' &&
+      needs.approve-k8s.result == 'success'
     # Required-reviewer gate. Configure reviewers on the 'production'
     # environment in repo Settings -> Environments, otherwise this applies
     # without approval.
