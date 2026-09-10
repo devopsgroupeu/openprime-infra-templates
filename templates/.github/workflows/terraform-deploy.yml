@@ -587,7 +587,6 @@ jobs:
           name: tfplan-k8s
           path: ./terraform/kubernetes
 
-
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
 
