@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Requires gh, issues:write, and access to repository permission metadata.
+# Requires gh, jq, actions:read, issues:write, and repository metadata access.
 # Only human users with current write/maintain/admin access may decide.
-# Run after the plan job, with an outer step timeout longer than 55 minutes.
+# Run after plan-aws succeeds, with an outer step timeout longer than 55 minutes.
+# PLAN_JOB_NAME optionally overrides the plan job display name (not its YAML ID).
+# The workflow must apply the same saved plan. This script never reads plan data.
 for name in GH_TOKEN GH_REPO TF_ACTION GITHUB_SERVER_URL GITHUB_RUN_ID \
   GITHUB_RUN_ATTEMPT GITHUB_REF_NAME GITHUB_SHA GITHUB_ACTOR; do
   if [[ -z "${!name:-}" ]]; then
@@ -13,14 +15,48 @@ for name in GH_TOKEN GH_REPO TF_ACTION GITHUB_SERVER_URL GITHUB_RUN_ID \
 done
 
 case "$TF_ACTION" in
-  apply|destroy) ;;
+  apply) ;;
+  destroy)
+    printf 'Destroy approval requires separate staged destruction plans; the normal AWS apply plan cannot authorize it.\n' >&2
+    exit 1
+    ;;
   *) printf 'TF_ACTION must be apply or destroy.\n' >&2; exit 1 ;;
 esac
 
 command -v gh >/dev/null
+command -v jq >/dev/null
 
 run_url="${GITHUB_SERVER_URL}/${GH_REPO}/actions/runs/${GITHUB_RUN_ID}/attempts/${GITHUB_RUN_ATTEMPT}"
-body="Review the Terraform plan in the linked workflow before approving.
+plan_job_name=${PLAN_JOB_NAME:-plan:aws}
+
+# Restrict discovery to this run attempt. Never fall back to another attempt or
+# branch's latest run: a rerun that reuses older jobs needs a fresh full run.
+if ! jobs=$(gh api --paginate \
+  "repos/${GH_REPO}/actions/runs/${GITHUB_RUN_ID}/attempts/${GITHUB_RUN_ATTEMPT}/jobs?per_page=100"); then
+  printf 'Cannot read plan job metadata. Grant approve-job actions: read. No approval issue was created.\n' >&2
+  exit 1
+fi
+
+if ! plan_url=$(jq -ers \
+  --arg name "$plan_job_name" --arg sha "$GITHUB_SHA" \
+  --arg run "$GITHUB_RUN_ID" --arg attempt "$GITHUB_RUN_ATTEMPT" \
+  --arg prefix "${GITHUB_SERVER_URL}/${GH_REPO}/actions/runs/${GITHUB_RUN_ID}/job/" '
+    [.[].jobs[] | select(.name == $name)] |
+    if length != 1 then error("Expected exactly one matching plan job")
+    else .[0] |
+      if .status != "completed" or .conclusion != "success" or
+         .head_sha != $sha or (.run_id | tostring) != $run or
+         (.run_attempt | tostring) != $attempt
+      then error("Plan must succeed for this commit and run attempt")
+      elif (.html_url | type) != "string" then error("Missing plan job URL")
+      elif (.html_url | startswith($prefix) | not) then error("Unexpected plan job URL")
+      else .html_url end
+    end' <<< "$jobs"); then
+  printf 'No matching successful plan to approve. Set needs: [plan-aws], check PLAN_JOB_NAME, and rerun all jobs if necessary.\n' >&2
+  exit 1
+fi
+
+body="Review the Terraform Plan step in the linked successful AWS plan job before approving.
 
 Operation: ${TF_ACTION}
 Repository: ${GH_REPO}
@@ -28,6 +64,11 @@ Branch: ${GITHUB_REF_NAME}
 Commit: ${GITHUB_SHA}
 Requested by: @${GITHUB_ACTOR}
 Workflow: ${run_url}
+Plan job: ${plan_url}
+
+Approval covers applying the saved AWS plan from this run attempt.
+It does not review later Kubernetes plans or authorize destruction.
+Plan contents are intentionally not copied into this issue.
 
 Comment approve, approved, lgtm, or yes to continue.
 Comment reject, rejected, deny, denied, or no to cancel.
@@ -42,8 +83,8 @@ issue_url=$(gh issue create --repo "$GH_REPO" \
 
 printf 'Approval issue: %s\n' "$issue_url"
 if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
-  printf 'Review the Terraform plan, then comment on the [approval issue](%s).\n' \
-    "$issue_url" >> "$GITHUB_STEP_SUMMARY"
+  printf 'Review the [AWS plan](%s), then comment on the [approval issue](%s).\n' \
+    "$plan_url" "$issue_url" >> "$GITHUB_STEP_SUMMARY"
 fi
 
 deadline=$((SECONDS + 3300))
@@ -86,7 +127,7 @@ while (( SECONDS < deadline )); do
   case "$decision" in
     approved)
       gh issue close "$issue_url" --repo "$GH_REPO" \
-        --comment "Approved by @${approver}. Continuing ${run_url}."
+        --comment "Approved by @${approver} for commit ${GITHUB_SHA}. Reviewed plan: ${plan_url}. Continuing ${run_url}."
       exit 0
       ;;
     rejected)

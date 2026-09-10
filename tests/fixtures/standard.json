@@ -20,9 +20,7 @@
       "ci-main"
     ],
     "manualApproval": {
-      "enabled": true,
-      "approversCsv": "ci-reviewer-one,ci-reviewer-two",
-      "minimumApprovals": 2
+      "minimumApprovals": 1
     }
   },
   "services": {

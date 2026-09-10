@@ -193,26 +193,26 @@ jobs:
           retention-days: 7
 
   # ========================================================================
-  # MANUAL APPROVAL JOB - Optional gate for AWS apply and destroy
-  # Included only when manual approval is enabled for the Git repository.
-  # Opens a GitHub issue and waits for the configured number of approvals.
-  # AWS apply and destroy jobs require this job to succeed when enabled.
-  # Does not depend on GitHub Environment protection rules.
+  # AWS APPLY APPROVAL - Runs after a successful AWS plan.
+  # Links to the plan job; never copies plan contents into the issue.
+  # Requires one approval comment from a user with repository write access.
+  # Destroy stays blocked until separate staged destruction plans/gates exist.
+  # Existing production environment protection rules still apply.
   # ========================================================================
 
   approve-job:
     name: "approve_action:aws"
     runs-on: ubuntu-latest
+    needs: [plan-aws]
     if: >-
       github.event_name == 'workflow_dispatch' &&
-      (
-        github.event.inputs.terraform_action == 'apply' ||
-        github.event.inputs.terraform_action == 'destroy'
-      )
+      github.event.inputs.terraform_action == 'apply' &&
+      needs.plan-aws.result == 'success'
 
     permissions:
       contents: read
       issues: write
+      actions: read
 
     steps:
       - uses: actions/checkout@v4
@@ -223,14 +223,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           TF_ACTION: ${{ github.event.inputs.terraform_action }}
+          PLAN_JOB_NAME: 'plan:aws'
         run: bash .github/scripts/wait-for-approval.sh
 
   # ========================================================================
-  # APPLY JOB - Protected by manual approval via GitHub issue
-  # Requires approval from one of: andrej-rabek, avirostek, Sbekes.
-  # On push to main: runs after plan, waits for manual approval.
-  # On workflow_dispatch with "apply": runs after plan, waits for approval.
-  # Skipped on pull_request events.
+  # APPLY JOB - Applies the saved AWS plan after issue approval.
+  # Runs only on workflow_dispatch with "apply".
+  # Requires successful plan-aws and approve-job.
+  # Approval requires current Write, Maintain, or Admin repository access.
+  # Rerun all jobs to generate a fresh plan and approval for a new attempt.
   # Commits generated ArgoCD config files back to repo after apply.
   # ========================================================================
 
