@@ -5,7 +5,7 @@
 # @param region
 region = "eu-west-1"
 # @param globalPrefix
-global_prefix = "my-project"
+global_prefix = "my-project-"
 # @param name
 environment = "development"
 

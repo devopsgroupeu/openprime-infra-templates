@@ -82,6 +82,29 @@
       "skipFinalSnapshot": false,
       "version": "ci-15.4"
     },
+    "elasticache": {
+      "enabled": true,
+      "engine": "ci-redis",
+      "engineVersion": "ci-7.2",
+      "nodeType": "ci-cache.t4g.small",
+      "numCacheNodes": 3,
+      "parameterGroupFamily": "ci-redis7",
+      "transitEncryption": false,
+      "atRestEncryption": false,
+      "authTokenEnabled": false,
+      "maintenanceWindow": "ci-mon:01:00-mon:02:00",
+      "snapshotRetentionLimit": 14,
+      "snapshotWindow": "ci-01:00-02:00",
+      "automaticFailover": true,
+      "multiAz": true
+    },
+    "s3": {
+      "enabled": true,
+      "bucketNames": [
+        "ci-gate-assets",
+        "ci-gate-uploads"
+      ]
+    },
     "vpc": {
       "enabled": true,
       "azCount": 9,

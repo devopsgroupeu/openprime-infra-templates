@@ -5,7 +5,10 @@ module "s3_buckets" {
 
   for_each = toset(var.s3_bucket_names)
 
-  bucket = "${var.global_prefix}-${each.value}-${var.environment}"
+  # No separator dash here: global_prefix already ends in one (mandatory
+  # per _variables.tf's validation, OP-231) - the same no-double-hyphen
+  # convention database.tf and elasticache.tf follow.
+  bucket = "${var.global_prefix}${each.value}-${var.environment}"
 
   block_public_acls       = true
   block_public_policy     = true
