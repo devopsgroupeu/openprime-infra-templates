@@ -1,3 +1,10 @@
+# No separator dash below: global_prefix already ends in one (mandatory per
+# _variables.tf's validation, OP-231) - the same no-double-hyphen convention
+# database.tf and elasticache.tf follow. This comment has to live outside the
+# @section block, not next to the line it explains - Injecto's section
+# toggling strips one leading "#" from every line in an enabled section
+# (src/processing.py, Pass 1), so a comment placed inside becomes bare
+# invalid text once the section is enabled.
 # @section services.s3.enabled begin
 module "s3_buckets" {
   source  = "terraform-aws-modules/s3-bucket/aws"
@@ -5,9 +12,6 @@ module "s3_buckets" {
 
   for_each = toset(var.s3_bucket_names)
 
-  # No separator dash here: global_prefix already ends in one (mandatory
-  # per _variables.tf's validation, OP-231) - the same no-double-hyphen
-  # convention database.tf and elasticache.tf follow.
   bucket = "${var.global_prefix}${each.value}-${var.environment}"
 
   block_public_acls       = true

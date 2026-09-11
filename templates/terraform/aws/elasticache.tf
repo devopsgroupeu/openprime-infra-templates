@@ -1,11 +1,21 @@
+# No separator dash before "elasticache" below: global_prefix already ends
+# in one (see _variables.tf's validation). An explicit dash would double it
+# into "prefix--elasticache", and AWS rejects two consecutive hyphens in a
+# replication group id, subnet group name or parameter group name.
+#
+# This comment has to live outside the @section block below, not next to
+# the lines it explains: Injecto's section toggling strips exactly one
+# leading "#" from every line inside an enabled section to "activate" it
+# (src/processing.py, Pass 1) - it can't tell a genuine comment from a
+# disabled placeholder line, so a "#" comment inside the section becomes
+# bare invalid text the moment the section is enabled and terraform fmt
+# fails to parse it. Confirmed by actually enabling elasticache in
+# tests/fixtures/standard.json and running Injecto against it.
 # @section services.elasticache.enabled begin
 module "elasticache" {
   source  = "terraform-aws-modules/elasticache/aws"
   version = "~> 1.11"
 
-  # No separator dash here: global_prefix already ends in one (see
-  # _variables.tf). An explicit dash would make this "prefix--elasticache",
-  # and AWS rejects two consecutive hyphens in a replication group id.
   replication_group_id = "${var.global_prefix}elasticache"
 
   engine                     = var.elasticache_engine
