@@ -12,7 +12,11 @@ metadata:
 spec:
   ingressClassName: alb
   rules:
-  - host: dummy.openprime.io
+  # Deliberately unroutable. This rule exists only to keep the 'default' ALB group
+  # alive; it must never match a real request. `.invalid` is reserved by RFC 2606
+  # and can never resolve, which is the property we want - unlike the previous
+  # dummy.openprime.io, which put our domain into the customer's cluster (OP-244).
+  - host: dummy.invalid
     http:
       paths:
       - path: /dummy-503

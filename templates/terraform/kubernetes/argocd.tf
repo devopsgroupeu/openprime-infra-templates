@@ -5,17 +5,30 @@ resource "helm_release" "argocd" {
   chart            = "argo-cd"
   version          = "9.1.4"
   create_namespace = true
+  timeout          = 900
 
-  set = [
-    {
-      name  = "global.domain"
-      value = "argocd.openprime.io"
-    },
+  # The ingress block is only emitted when the customer gave a domain. Publishing
+  # argocd.openprime.io into a customer account meant the ALB controller looked for
+  # an ACM certificate for a domain they do not own, found none, and never created
+  # the load balancer - so the ArgoCD UI had no address at all (OP-244).
+  set = concat([
     {
       name  = "configs.params.server\\.insecure"
       value = true
     },
+    ], var.ingress_domain == "" ? [] : [
     {
+      name  = "global.domain"
+      value = "argocd.${var.ingress_domain}"
+    },
+    {
+      # Deliberately left ON. Disabling it was the right call on this branch, where
+      # global.domain is still hardcoded to argocd.openprime.io and the ALB controller
+      # therefore hunts for an ACM cert the customer does not own. OP-244 fixed that
+      # cause on main instead - the whole block is now emitted only when the customer
+      # supplied a domain - so on merge a `false` here silently reinstates the exact
+      # outcome OP-244 shipped to remove: a customer gives a domain and still gets no
+      # ArgoCD ingress. git merges the line without a conflict; only the meaning moved.
       name  = "server.ingress.enabled"
       value = true
     },
@@ -63,8 +76,9 @@ resource "helm_release" "argocd" {
     },
     {
       name  = "configs.cm.url"
-      value = "https://argocd.openprime.io"
+      value = "https://argocd.${var.ingress_domain}"
     },
+    ], [
     # ACM Certificate
     # {
     #   name  = "server.ingress.annotations.alb\\.ingress\\.kubernetes\\.io/certificate-arn"
@@ -91,7 +105,7 @@ resource "helm_release" "argocd" {
     #   name  = "applicationSet.replicas"
     #   value = 2
     # },
-  ]
+  ])
 }
 
 # Git repository credentials — Applications depend on this so that
@@ -171,7 +185,7 @@ resource "kubectl_manifest" "example_apps" {
 
   wait = true
 
-  depends_on = [kubectl_manifest.repo_secret]
+  depends_on = [kubectl_manifest.app_of_apps]
 }
 
 resource "kubectl_manifest" "support_resources" {
@@ -216,7 +230,12 @@ resource "kubectl_manifest" "support_resources" {
 
   wait = true
 
-  depends_on = [kubectl_manifest.repo_secret]
+  depends_on = [
+    kubectl_manifest.repo_secret,
+    # @section services.eks.karpenterEnabled begin
+    helm_release.karpenter,
+    # @section services.eks.karpenterEnabled end
+  ]
 }
 
 resource "kubectl_manifest" "app_of_apps" {
@@ -252,7 +271,9 @@ resource "kubectl_manifest" "app_of_apps" {
           selfHeal = true
         }
         syncOptions = [
-          "CreateNamespace=true"
+          "CreateNamespace=true",
+          "PruneLast=true",
+          "PrunePropagationPolicy=foreground",
         ]
       }
     }
@@ -260,5 +281,8 @@ resource "kubectl_manifest" "app_of_apps" {
 
   wait = true
 
-  depends_on = [kubectl_manifest.repo_secret]
+  depends_on = [
+    kubectl_manifest.repo_secret,
+    kubectl_manifest.support_resources,
+  ]
 }

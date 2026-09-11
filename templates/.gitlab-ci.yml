@@ -269,11 +269,26 @@ destroy:aws:
   environment:
     name: production
   script:
+    # destroy plans deletions only and never updates an attribute first, so
+    # deletion_protection has to be cleared by an apply or DeleteDBInstance is
+    # refused. Set SKIP_FINAL_SNAPSHOT=true to tear down without a snapshot.
+    - |
+      SNAP_ID=""
+      if [ "${SKIP_FINAL_SNAPSHOT:-false}" != "true" ]; then
+        SNAP_ID="aurora-final-${CI_PIPELINE_ID}"
+      fi
+      terraform apply -auto-approve \
+        -var rds_deletion_protection=false \
+        -var rds_apply_immediately=true \
+        -var rds_skip_final_snapshot=${SKIP_FINAL_SNAPSHOT:-false} \
+        -var aurora_deletion_protection=false \
+        -var aurora_apply_immediately=true \
+        -var aurora_skip_final_snapshot=${SKIP_FINAL_SNAPSHOT:-false} \
+        -var aurora_final_snapshot_identifier="${SNAP_ID}"
     - terraform destroy -auto-approve
   dependencies: []
   needs:
     - job: destroy:k8s
-      optional: true
       artifacts: false
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'

@@ -45,3 +45,9 @@ variable "git_repo_ssh_key" {
   description = "Private SSH Key of the Git repository to be used by ArgoCD"
   sensitive   = true
 }
+
+variable "ingress_domain" {
+  type        = string
+  description = "Domain the cluster publishes ingresses on. Empty means no host-based ingress is created (OP-244)."
+  default     = ""
+}
