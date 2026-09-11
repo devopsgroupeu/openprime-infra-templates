@@ -391,6 +391,42 @@ def check_elasticache_prefix_invariant(data, failures):
             "elasticache.tf's replication_group_id/subnet_group_name/parameter_group_name "
             'would render as "..."elasticache with no separator',
         )
+def check_iam_policy_names(out_dir, failures):
+    """Fail when a generated IRSA policy would take an account-global name.
+
+    iam-role-for-service-accounts derives the POLICY name from the same
+    use_name_prefix flag as the ROLE name. Left at false with no policy_name it
+    falls back to a constant - "EBS_CSI", "VPC_CNI_IPv4", "External_DNS" and so
+    on. IAM is account-scoped, so the second environment created in one AWS
+    account fails with EntityAlreadyExists. Nothing upstream notices: the gate
+    passes, terraform validate passes, and the apply spends ~40 minutes building
+    a cluster whose nodes then never join, because the CNI role has no policy.
+    """
+    for tf in sorted(out_dir.rglob("*.tf")):
+        for block in re.finditer(r'^module\s+"([^"]+)"\s*\{\n(.*?)^\}', tf.read_text(encoding="utf-8", errors="replace"), re.M | re.S):
+            name, body = block.group(1), block.group(2)
+            if "iam-role-for-service-accounts" not in body:
+                continue
+            if not re.search(r"^\s*use_name_prefix\s*=\s*false\s*$", body, re.M):
+                continue  # name_prefix mode: AWS appends a suffix, cannot collide
+            if not re.search(r"^\s*attach_\w+_policy\s*=\s*true\s*$", body, re.M):
+                continue  # creates no policy of its own
+            declared = re.search(r'^\s*policy_name\s*=\s*(.+)$', body, re.M)
+            if not declared:
+                failures.add(
+                    "IAM_POLICY_NAME_GLOBAL",
+                    f"{tf.relative_to(out_dir)}: module {name!r} sets use_name_prefix = false "
+                    "and attaches a managed policy without policy_name, so the policy takes "
+                    "an account-global constant and a second environment collides",
+                )
+                continue
+            value = declared.group(1).strip()
+            if "local.cluster_name" not in value and "var.global_prefix" not in value:
+                failures.add(
+                    "IAM_POLICY_NAME_CONSTANT",
+                    f"{tf.relative_to(out_dir)}: module {name!r} sets policy_name = {value}, "
+                    "which does not vary per environment",
+                )
 
 
 def run_gate(args, templates_dir, tracked):
@@ -440,6 +476,7 @@ def run_gate(args, templates_dir, tracked):
         check_secure_defaults(out_dir, failures)
         check_network_policy_enforcement(out_dir, failures)
         check_elasticache_prefix_invariant(data, failures)
+        check_iam_policy_names(out_dir, failures)
 
         inputs = sum(1 for p in templates_dir.rglob("*") if p.is_file())
         outputs = sum(1 for p in out_dir.rglob("*") if p.is_file())

@@ -3,6 +3,7 @@
   "globalPrefix": "ci-gate-",
   "provider": "aws",
   "region": "eu-central-1",
+  "domain": "ci.example.com",
   "backend": true,
   "terraformBackend": {
     "enabled": true,
@@ -14,7 +15,10 @@
   },
   "gitRepository": {
     "url": "git@github.com:example-org/ci-gate-infra.git",
-    "branch": "ci-main"
+    "branch": "ci-main",
+    "branches": [
+      "ci-main"
+    ]
   },
   "services": {
     "ecr": {

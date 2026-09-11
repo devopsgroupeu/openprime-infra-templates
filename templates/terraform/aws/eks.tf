@@ -8,12 +8,17 @@ locals {
   aws_lb_service_account_name  = "aws-lb-controller-sa"
 }
 
+## use_name_prefix governs the policy name as well as the role name. Left at false
+## with no policy_name the module falls back to a constant ("EBS_CSI", "VPC_CNI_IPv4",
+## ...), which is account-global: a second environment in the same AWS account then
+## fails with EntityAlreadyExists and its nodes never join the cluster.
 module "ebs_csi_irsa_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
   version = "~> 6.2"
 
   name                  = "${local.cluster_name}-ebs-csi"
   use_name_prefix       = false
+  policy_name           = "${local.cluster_name}-ebs-csi"
   attach_ebs_csi_policy = true
 
   oidc_providers = {
@@ -30,6 +35,7 @@ module "efs_csi_irsa_role" {
 
   name                  = "${local.cluster_name}-efs-csi"
   use_name_prefix       = false
+  policy_name           = "${local.cluster_name}-efs-csi"
   attach_efs_csi_policy = true
 
   oidc_providers = {
@@ -46,6 +52,7 @@ module "vpc_cni_irsa_role" {
 
   name                  = "${local.cluster_name}-vpc-cni"
   use_name_prefix       = false
+  policy_name           = "${local.cluster_name}-vpc-cni"
   attach_vpc_cni_policy = true
   vpc_cni_enable_ipv4   = true
 
@@ -63,6 +70,7 @@ module "alb_controller_irsa_role" {
 
   name                                   = "${local.cluster_name}-aws-lb-controller"
   use_name_prefix                        = false
+  policy_name                            = "${local.cluster_name}-aws-lb-controller"
   attach_load_balancer_controller_policy = true
 
   oidc_providers = {
@@ -79,6 +87,7 @@ module "external_dns_irsa_role" {
 
   name                       = "${local.cluster_name}-external-dns"
   use_name_prefix            = false
+  policy_name                = "${local.cluster_name}-external-dns"
   attach_external_dns_policy = true
 
   external_dns_hosted_zone_arns = ["arn:aws:route53:::hostedzone/*"]
