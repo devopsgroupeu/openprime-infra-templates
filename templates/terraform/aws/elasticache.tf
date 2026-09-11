@@ -1,9 +1,22 @@
+# No separator dash before "elasticache" below: global_prefix already ends
+# in one (see _variables.tf's validation). An explicit dash would double it
+# into "prefix--elasticache", and AWS rejects two consecutive hyphens in a
+# replication group id, subnet group name or parameter group name.
+#
+# This comment has to live outside the @section block below, not next to
+# the lines it explains: Injecto's section toggling strips exactly one
+# leading "#" from every line inside an enabled section to "activate" it
+# (src/processing.py, Pass 1) - it can't tell a genuine comment from a
+# disabled placeholder line, so a "#" comment inside the section becomes
+# bare invalid text the moment the section is enabled and terraform fmt
+# fails to parse it. Confirmed by actually enabling elasticache in
+# tests/fixtures/standard.json and running Injecto against it.
 # @section services.elasticache.enabled begin
 module "elasticache" {
   source  = "terraform-aws-modules/elasticache/aws"
   version = "~> 1.11"
 
-  replication_group_id = "${var.global_prefix}-elasticache"
+  replication_group_id = "${var.global_prefix}elasticache"
 
   engine                     = var.elasticache_engine
   engine_version             = var.elasticache_engine_version
@@ -26,12 +39,12 @@ module "elasticache" {
     }
   }
 
-  subnet_group_name        = "${var.global_prefix}-elasticache"
+  subnet_group_name        = "${var.global_prefix}elasticache"
   subnet_group_description = "ElastiCache subnet group"
   subnet_ids               = module.vpc.private_subnets
 
   create_parameter_group      = true
-  parameter_group_name        = "${var.global_prefix}-elasticache"
+  parameter_group_name        = "${var.global_prefix}elasticache"
   parameter_group_family      = var.elasticache_parameter_group_family
   parameter_group_description = "ElastiCache parameter group"
   parameters = [

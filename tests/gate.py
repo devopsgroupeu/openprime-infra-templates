@@ -362,6 +362,35 @@ def check_network_policy_enforcement(out_dir, failures):
         )
 
 
+def check_elasticache_prefix_invariant(data, failures):
+    """global_prefix must end in "-" whenever elasticache is enabled.
+
+    elasticache.tf builds replication_group_id, subnet_group_name and
+    parameter_group_name as "${var.global_prefix}elasticache" - no separator
+    of its own, because global_prefix is expected to already supply the
+    trailing hyphen (every other section follows the same convention; see
+    database.tf's rds_identifier/aurora_name). Without it, AWS gets a
+    mashed-together name like "my-projectelasticache" instead of
+    "my-project-elasticache".
+
+    _variables.tf's own `validation` block is the real enforcement point
+    (OP-231), but this gate never runs `terraform validate` and so can never
+    see that block fire - it only ever sees Injecto's parameter
+    substitution, not Terraform's interpolation of the substituted values.
+    Checked again here, statically against the fixture, so a fixture that
+    silently regresses this shape is still caught by something.
+    """
+    elasticache = (data.get("services") or {}).get("elasticache")
+    if not isinstance(elasticache, dict) or not elasticache.get("enabled"):
+        return
+    prefix = data.get("globalPrefix") or ""
+    if not prefix.endswith("-"):
+        failures.add(
+            "PREFIX_INVARIANT",
+            f"elasticache is enabled but globalPrefix {prefix!r} does not end in '-' - "
+            "elasticache.tf's replication_group_id/subnet_group_name/parameter_group_name "
+            'would render as "..."elasticache with no separator',
+        )
 def check_iam_policy_names(out_dir, failures):
     """Fail when a generated IRSA policy would take an account-global name.
 
@@ -446,6 +475,7 @@ def run_gate(args, templates_dir, tracked):
         check_inert_baseline(inert, failures)
         check_secure_defaults(out_dir, failures)
         check_network_policy_enforcement(out_dir, failures)
+        check_elasticache_prefix_invariant(data, failures)
         check_iam_policy_names(out_dir, failures)
 
         inputs = sum(1 for p in templates_dir.rglob("*") if p.is_file())
