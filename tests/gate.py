@@ -35,6 +35,14 @@ NOT_FOUND_RE = re.compile(r"Path '([\w.-]+)' not found in the data values")
 FILE_ERROR_RE = re.compile(r"An unexpected error occurred processing (\S+)")
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
 
+# Mirrors the `validation` block on global_prefix in
+# templates/terraform/aws/_variables.tf, which is the real enforcement point.
+# Kept byte-for-byte equivalent to that regex (and to GLOBAL_PREFIX_RE in
+# openprime-app-backend's environmentValidator.js and openprime-app's
+# BasicConfigStep.jsx) - all four are one agreed charset, so a value accepted
+# by any of them must be accepted by all.
+GLOBAL_PREFIX_RE = re.compile(r"^[a-z][a-z0-9]*(-[a-z0-9]+)*-$")
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = REPO_ROOT / "templates"
 INERT_BASELINE = REPO_ROOT / "tests" / "inert-params.txt"
@@ -362,35 +370,39 @@ def check_network_policy_enforcement(out_dir, failures):
         )
 
 
-def check_elasticache_prefix_invariant(data, failures):
-    """global_prefix must end in "-" whenever elasticache is enabled.
+def check_global_prefix_invariant(data, failures):
+    """globalPrefix must be empty or match the agreed charset.
 
-    elasticache.tf builds replication_group_id, subnet_group_name and
-    parameter_group_name as "${var.global_prefix}elasticache" - no separator
-    of its own, because global_prefix is expected to already supply the
-    trailing hyphen (every other section follows the same convention; see
-    database.tf's rds_identifier/aurora_name). Without it, AWS gets a
-    mashed-together name like "my-projectelasticache" instead of
-    "my-project-elasticache".
+    Mirrors the `validation` block on global_prefix in _variables.tf, which is
+    the real enforcement point (OP-231). This gate never runs
+    `terraform validate` and so can never see that block fire - it only ever
+    sees Injecto's parameter substitution, not Terraform's interpolation of
+    the substituted values. Checked again here, statically against the
+    fixture, so a fixture that silently regresses the shape is still caught by
+    something.
 
-    _variables.tf's own `validation` block is the real enforcement point
-    (OP-231), but this gate never runs `terraform validate` and so can never
-    see that block fire - it only ever sees Injecto's parameter
-    substitution, not Terraform's interpolation of the substituted values.
-    Checked again here, statically against the fixture, so a fixture that
-    silently regresses this shape is still caught by something.
+    The trailing "-" is the part with teeth: elasticache.tf builds
+    replication_group_id, subnet_group_name and parameter_group_name as
+    "${var.global_prefix}elasticache", and s3.tf builds its bucket name the
+    same way - neither adds a separator of its own, because global_prefix is
+    expected to supply it (database.tf's rds_identifier/aurora_name follow the
+    same convention). Without it AWS gets "my-projectelasticache".
+
+    Checked for every fixture, not just ones with elasticache enabled: s3.tf
+    carries the same dependency, and _variables.tf validates global_prefix
+    unconditionally. An empty prefix is legal - _variables.tf exempts it
+    explicitly, and the wizard derives one for an all-digit environment name.
     """
-    elasticache = (data.get("services") or {}).get("elasticache")
-    if not isinstance(elasticache, dict) or not elasticache.get("enabled"):
-        return
     prefix = data.get("globalPrefix") or ""
-    if not prefix.endswith("-"):
+    if prefix and not GLOBAL_PREFIX_RE.match(prefix):
         failures.add(
             "PREFIX_INVARIANT",
-            f"elasticache is enabled but globalPrefix {prefix!r} does not end in '-' - "
-            "elasticache.tf's replication_group_id/subnet_group_name/parameter_group_name "
-            'would render as "..."elasticache with no separator',
+            f"globalPrefix {prefix!r} is not empty and does not match "
+            f"{GLOBAL_PREFIX_RE.pattern} - _variables.tf's validation block "
+            "would reject it at `terraform validate`",
         )
+
+
 def check_iam_policy_names(out_dir, failures):
     """Fail when a generated IRSA policy would take an account-global name.
 
@@ -475,7 +487,7 @@ def run_gate(args, templates_dir, tracked):
         check_inert_baseline(inert, failures)
         check_secure_defaults(out_dir, failures)
         check_network_policy_enforcement(out_dir, failures)
-        check_elasticache_prefix_invariant(data, failures)
+        check_global_prefix_invariant(data, failures)
         check_iam_policy_names(out_dir, failures)
 
         inputs = sum(1 for p in templates_dir.rglob("*") if p.is_file())
