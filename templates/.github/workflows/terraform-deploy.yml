@@ -196,7 +196,7 @@ jobs:
   # AWS APPLY APPROVAL - Runs after a successful AWS plan.
   # Links to the plan job; never copies plan contents into the issue.
   # Requires one approval comment from a user with repository write access.
-  # Destroy stays blocked until separate staged destruction plans/gates exist.
+  # Destruction uses separate issue approval jobs for Kubernetes and AWS.
   # Existing production environment protection rules still apply.
   # ========================================================================
 
@@ -339,7 +339,7 @@ jobs:
 
   # ========================================================================
   # DESTROY AWS JOB - Manual workflow_dispatch only
-  # Runs after destroy-k8s completes (with if: always() to handle skipped K8s).
+  # Runs only after successful destroy-k8s and approve-destroy-aws (with if: always() to handle skipped K8s).
   # Destroys AWS infrastructure after Kubernetes resources are removed.
   # ========================================================================
 
@@ -536,7 +536,7 @@ jobs:
   # ========================================================================
   # APPLY KUBERNETES JOB - Protected by manual approval via GitHub issue
   # Runs after AWS apply completes. Waits for manual approval.
-  # Requires approval from one of: andrej-rabek, avirostek, Sbekes.
+  # Requires one issue approval from a human with Write, Maintain, or Admin access.
   # ========================================================================
 
   apply-k8s:
@@ -624,7 +624,7 @@ jobs:
 
   # ========================================================================
   # DESTROY KUBERNETES JOB - Manual workflow_dispatch only
-  # Depends on apply-k8s (runs with if: always() to handle skipped applies).
+  # Requires successful approve-destroy-k8 (runs with if: always() to handle skipped applies).
   # Destroys Kubernetes infrastructure first, then AWS infrastructure.
   # ========================================================================
 
@@ -636,7 +636,7 @@ jobs:
     if: always() && 
         github.event_name == 'workflow_dispatch' && 
         github.event.inputs.terraform_action == 'destroy' &&
-        needs.approve-job.result == 'success' 
+        needs.approve-destroy-k8s.result == 'success'
 
     defaults:
       run:

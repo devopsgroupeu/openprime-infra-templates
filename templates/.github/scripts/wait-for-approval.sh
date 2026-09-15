@@ -68,9 +68,9 @@ if [[ "$TF_ACTION" == apply ]]; then
   review_url=$plan_url
   review_label="${stack_label} plan"
   review_intro="Review the Terraform Plan step in the linked successful ${stack_label} plan job before approving."
-  approval_scope="Approval covers applying the saved ${stack_label} plan from this run attempt.
-It does not authorize another stack or destruction.
-Plan contents are intentionally not copied into this issue."
+  approval_scope="- Applies the **saved ${stack_label} plan** from this run attempt.
+- Does not authorize another stack or destruction.
+- Review plan contents in the linked job; they are not copied into this issue."
 else
   if [[ -n "${PLAN_JOB_NAME:-}" ]]; then
     printf 'Do not set PLAN_JOB_NAME for destroy authorization; no saved destroy plan is reviewed.\n' >&2
@@ -79,9 +79,9 @@ else
   review_url=$run_url
   review_label="${stack_label} destroy request"
   review_intro="Review the stack, commit, and destruction scope below before authorizing this job."
-  approval_scope="Approval authorizes executing Terraform destroy for the ${stack_label} stack.
-Terraform will calculate the deletion actions when the job runs; this is NOT approval of a reviewed saved plan.
-This approval does not authorize deletion of the other stack."
+  approval_scope="- Authorizes **Terraform destroy for ${stack_label}**.
+- Terraform calculates deletions when the job runs; **this is not approval of a reviewed saved plan**.
+- Does not authorize deletion of the other stack."
   if [[ "$stack" == aws ]]; then
     case "${SKIP_FINAL_SNAPSHOT:-}" in
       true) snapshot_policy="Skip final database snapshots; deleted data may be unrecoverable." ;;
@@ -89,30 +89,48 @@ This approval does not authorize deletion of the other stack."
       *) printf 'AWS destroy requires SKIP_FINAL_SNAPSHOT=true or false.\n' >&2; exit 1 ;;
     esac
     approval_scope="${approval_scope}
-This job first applies database teardown settings, including disabling deletion protection, then destroys AWS resources.
-Snapshot policy: ${snapshot_policy}
-Kubernetes destruction must have completed successfully before this request."
+- First applies database teardown settings, including disabling deletion protection, then destroys AWS resources.
+- **Snapshot policy:** ${snapshot_policy}
+- Kubernetes destruction must have completed successfully before this request."
   fi
 fi
 
-body="${review_intro}
+body="## Terraform ${TF_ACTION} — ${stack_label}
 
-Operation: ${TF_ACTION}
-Stack: ${stack_label}
-Repository: ${GH_REPO}
-Branch: ${GITHUB_REF_NAME}
-Commit: ${GITHUB_SHA}
-Requested by: @${GITHUB_ACTOR}
-Workflow: ${run_url}
-Review link: ${review_url}
+${review_intro}
+
+**[Review ${review_label}](${review_url})** · [View workflow run](${run_url})
+
+### Request details
+
+| Field | Value |
+| --- | --- |
+| Operation | **${TF_ACTION}** |
+| Stack | ${stack_label} |
+| Repository | ${GH_REPO} |
+| Branch | ${GITHUB_REF_NAME} |
+| Commit | [${GITHUB_SHA}](${GITHUB_SERVER_URL}/${GH_REPO}/commit/${GITHUB_SHA}) |
+| Requested by | @${GITHUB_ACTOR} |
+| Run / attempt | ${GITHUB_RUN_ID} / ${GITHUB_RUN_ATTEMPT} |
+
+### What you are approving
 
 ${approval_scope}
 
-Comment approve, approved, lgtm, or yes to continue.
-Comment reject, rejected, deny, denied, or no to cancel.
-Only users with Write, Maintain, or Admin repository access can decide.
-The requester may also approve. Closing this issue cancels the request.
-This request expires after 55 minutes."
+### Submit your decision
+
+Post a comment containing **one** of these words:
+
+| Decision | Accepted comments |
+| --- | --- |
+| Approve | \`approve\`, \`approved\`, \`lgtm\`, \`yes\` |
+| Reject | \`reject\`, \`rejected\`, \`deny\`, \`denied\`, \`no\` |
+
+- **One human approval** with current **Write, Maintain, or Admin** repository access is required.
+- The requester **may also approve**.
+- Closing this issue cancels the request.
+
+> **Time limit:** this request expires after 55 minutes. Rejection or expiry blocks the requested operation."
 
 # Always create a fresh issue so previous runs cannot supply an approval.
 issue_url=$(gh issue create --repo "$GH_REPO" \
