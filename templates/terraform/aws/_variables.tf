@@ -9,9 +9,20 @@ variable "region" {
 }
 
 variable "global_prefix" {
-  type        = string
-  description = "Global prefix to be used in almost every resource name created by this code"
+  type = string
+  # A non-empty value must end in "-": elasticache.tf's replication_group_id,
+  # subnet_group_name and parameter_group_name rely on it as their separator
+  # and add none of their own (no "${var.global_prefix}-elasticache" - that
+  # would double the hyphen once global_prefix supplies its own). Without
+  # this requirement, a value like "my-project" - this file's own former
+  # default - passes validation but renders "my-projectelasticache".
+  description = "Global prefix to be used in almost every resource name created by this code. Must start with a lowercase letter, contain only lowercase letters, digits and hyphens, never contain two consecutive hyphens, and end in a hyphen if non-empty."
   default     = ""
+
+  validation {
+    condition     = var.global_prefix == "" || can(regex("^[a-z]([a-z0-9]|-[a-z0-9])*-$", var.global_prefix))
+    error_message = "global_prefix must start with a lowercase letter, contain only lowercase letters, digits and hyphens, must not contain consecutive hyphens, and must end in a hyphen."
+  }
 }
 
 variable "environment" {

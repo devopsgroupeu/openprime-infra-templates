@@ -34,6 +34,8 @@ checkouts flood it with phantom failures.
 | `STALE_BASELINE` | a baselined entry no longer exists; remove it |
 | `UNKNOWN_PATH` | a path was looked up that is neither an `@param` nor an `@section` |
 | `MISSING_OUTPUT` / `FILE_COUNT_MISMATCH` | the output tree does not match the input |
+| `IAM_POLICY_NAME_GLOBAL` | an IRSA module creates a managed policy without `policy_name`, so it takes an account-global constant and a second environment in the same AWS account collides |
+| `IAM_POLICY_NAME_CONSTANT` | `policy_name` is set but does not vary per environment |
 
 `@section` conditions are deliberately **not** failures when unset: an unresolved
 section switches its block off, which is a safe default. An unresolved `@param`

@@ -314,12 +314,12 @@ jobs:
   destroy-aws:
     name: "destroy:aws"
     runs-on: ubuntu-latest
-    needs: [destroy-k8s, validate-aws]
-
+    needs: [destroy-k8s]
     if: >-
-      github.event_name == 'workflow_dispatch' &&
-      github.event.inputs.terraform_action == 'destroy' &&
-      needs.destroy-k8s.result == 'success'
+      always() &&
+       github.event_name == 'workflow_dispatch' && 
+       github.event.inputs.terraform_action == 'destroy' &&
+       needs.destroy-k8s.result == 'success'
 
     defaults:
       run:
