@@ -65,12 +65,25 @@ if [[ "$TF_ACTION" == apply ]]; then
     exit 1
   fi
 
-  review_url=$plan_url
-  review_label="${stack_label} plan"
-  review_intro="Review the Terraform Plan step in the linked successful ${stack_label} plan job before approving."
+  : "${PLAN_ARTIFACT_URL:?Readable plan artifact URL is required}"
+  artifact_prefix="${GITHUB_SERVER_URL}/${GH_REPO}/actions/runs/${GITHUB_RUN_ID}/artifacts/"
+  case "$PLAN_ARTIFACT_URL" in
+    "$artifact_prefix"*)
+      artifact_id="${PLAN_ARTIFACT_URL#"$artifact_prefix"}"
+      if [[ ! "$artifact_id" =~ ^[0-9]+$ ]]; then
+        printf 'Plan artifact URL must end with a numeric artifact ID.\n' >&2
+        exit 1
+      fi
+      ;;
+    *) printf 'Plan artifact must belong to this repository and run.\n' >&2; exit 1 ;;
+  esac
+
+  review_url=$PLAN_ARTIFACT_URL
+  review_label="${stack_label} plan file (download)"
+  review_intro="Download the linked artifact, open tfplan.txt, and review the changes before approving. GitHub sign-in and repository access are required."
   approval_scope="- Applies the **saved ${stack_label} plan** from this run attempt.
-- Does not authorize another stack or destruction.
-- Review plan contents in the linked job; they are not copied into this issue."
+- The download contains tfplan.txt rendered from that saved plan; it expires after seven days.
+- Does not authorize another stack or destruction."
 else
   if [[ -n "${PLAN_JOB_NAME:-}" ]]; then
     printf 'Do not set PLAN_JOB_NAME for destroy authorization; no saved destroy plan is reviewed.\n' >&2

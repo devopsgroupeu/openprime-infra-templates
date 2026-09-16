@@ -149,6 +149,8 @@ jobs:
     name: "plan:aws"
     runs-on: ubuntu-latest
     needs: [validate-aws]
+    outputs:
+      plan-text-url: ${{ steps.upload-plan-text.outputs.artifact-url }}
 
     defaults:
       run:
@@ -191,6 +193,18 @@ jobs:
           name: tfplan-aws
           path: ./terraform/aws/tfplan
           retention-days: 7
+
+      - name: Export readable Terraform plan
+        run: terraform show -no-color tfplan > tfplan.txt
+
+      - name: Upload readable Terraform plan
+        id: upload-plan-text
+        uses: actions/upload-artifact@v7
+        with:
+          name: tfplan-text-aws-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ./terraform/aws/tfplan.txt
+          retention-days: 90
+          if-no-files-found: error
 
   # ========================================================================
   # APPLY JOB - Applies the saved AWS plan after issue approval.
@@ -244,6 +258,7 @@ jobs:
           TF_ACTION: apply
           TF_STACK: aws
           PLAN_JOB_NAME: 'plan:aws'
+          PLAN_ARTIFACT_URL: ${{ needs.plan-aws.outputs.plan-text-url }}
         run: bash .github/scripts/wait-for-approval.sh
 
       - name: Setup Terraform
@@ -427,6 +442,8 @@ jobs:
     name: "plan:k8s"
     runs-on: ubuntu-latest
     needs: [validate-k8s, apply-aws]
+    outputs:
+      plan-text-url: ${{ steps.upload-plan-text.outputs.artifact-url }}
 
     defaults:
       run:
@@ -469,6 +486,18 @@ jobs:
           name: tfplan-k8s
           path: ./terraform/kubernetes/tfplan
           retention-days: 7
+
+      - name: Export readable Terraform plan
+        run: terraform show -no-color tfplan > tfplan.txt
+
+      - name: Upload readable Terraform plan
+        id: upload-plan-text
+        uses: actions/upload-artifact@v7
+        with:
+          name: tfplan-text-k8s-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ./terraform/kubernetes/tfplan.txt
+          retention-days: 90
+          if-no-files-found: error
 
   # ========================================================================
   # APPLY KUBERNETES JOB - Protected by manual approval via GitHub issue
@@ -521,6 +550,7 @@ jobs:
           TF_ACTION: apply
           TF_STACK: kubernetes
           PLAN_JOB_NAME: 'plan:k8s'
+          PLAN_ARTIFACT_URL: ${{ needs.plan-k8s.outputs.plan-text-url }}
         run: bash .github/scripts/wait-for-approval.sh
 
       - name: Setup Terraform
