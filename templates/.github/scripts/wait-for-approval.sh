@@ -82,7 +82,7 @@ if [[ "$TF_ACTION" == apply ]]; then
   review_label="${stack_label} plan file (download)"
   review_intro="Download the linked artifact, open tfplan.txt, and review the changes before approving. GitHub sign-in and repository access are required."
   approval_scope="- Applies the **saved ${stack_label} plan** from this run attempt.
-- The download contains tfplan.txt rendered from that saved plan; it expires after seven days.
+- The download contains tfplan.txt rendered from that saved plan; it expires after 90 days.
 - Does not authorize another stack or destruction."
 else
   if [[ -n "${PLAN_JOB_NAME:-}" ]]; then
@@ -205,7 +205,7 @@ while (( SECONDS < deadline )); do
       printf 'Approval rejected: %s\n' "$issue_url" >&2
       exit 1
       ;;
-    pending) sleep 15 ;;
+    pending) sleep 30 ;;
     *) printf 'Unexpected approval state: %s\n' "$decision" >&2; exit 1 ;;
   esac
 done

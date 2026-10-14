@@ -224,11 +224,6 @@ jobs:
         github.event.inputs.terraform_action == 'apply' &&
         needs.plan-aws.result == 'success'
 
-    # Required-reviewer gate. Configure reviewers on the 'production'
-    # environment in repo Settings -> Environments, otherwise this applies
-    # without approval.
-    environment: production
-
     defaults:
       run:
         working-directory: ./terraform/aws
@@ -485,7 +480,7 @@ jobs:
         with:
           name: tfplan-k8s
           path: ./terraform/kubernetes/tfplan
-          retention-days: 7
+          retention-days: 90
 
       - name: Export readable Terraform plan
         run: terraform show -no-color tfplan > tfplan.txt
@@ -515,11 +510,6 @@ jobs:
       github.event.inputs.terraform_action == 'apply' &&
       needs.plan-k8s.result == 'success' &&
       needs.apply-aws.result == 'success' 
-
-    # Required-reviewer gate. Configure reviewers on the 'production'
-    # environment in repo Settings -> Environments, otherwise this applies
-    # without approval.
-    environment: production
 
     defaults:
       run:
