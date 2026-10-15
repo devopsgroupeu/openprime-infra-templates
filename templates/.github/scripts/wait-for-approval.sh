@@ -80,6 +80,7 @@ if [[ "$TF_ACTION" == apply ]]; then
 
   review_url=$PLAN_ARTIFACT_URL
   review_label="${stack_label} plan file (download)"
+  plan_log_link=" · [View plan job log](${plan_url})"
   review_intro="Download the linked artifact, open tfplan.txt, and review the changes before approving. GitHub sign-in and repository access are required."
   approval_scope="- Applies the **saved ${stack_label} plan** from this run attempt.
 - The download contains tfplan.txt rendered from that saved plan; it expires after 90 days.
@@ -91,6 +92,7 @@ else
   fi
   review_url=$run_url
   review_label="${stack_label} destroy request"
+  plan_log_link=""
   review_intro="Review the stack, commit, and destruction scope below before authorizing this job."
   approval_scope="- Authorizes **Terraform destroy for ${stack_label}**.
 - Terraform calculates deletions when the job runs; **this is not approval of a reviewed saved plan**.
@@ -112,7 +114,7 @@ body="## Terraform ${TF_ACTION} — ${stack_label}
 
 ${review_intro}
 
-**[Review ${review_label}](${review_url})** · [View workflow run](${run_url})
+**[Review ${review_label}](${review_url})**${plan_log_link} · [View workflow run](${run_url})
 
 ### Request details
 

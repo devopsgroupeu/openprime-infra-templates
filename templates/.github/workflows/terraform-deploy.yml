@@ -302,7 +302,7 @@ jobs:
 
   # ========================================================================
   # DESTROY AWS JOB - Manual workflow_dispatch only
-  # Runs after successful Kubernetes destruction and AWS validation. (with if: always() to handle skipped K8s).
+  # Runs only after destroy:k8s succeeds.
   # Waits for AWS issue approval before database teardown changes and destruction.
   # ========================================================================
 
@@ -311,7 +311,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [destroy-k8s]
     if: >-
-      always() &&
+      !cancelled() &&
        github.event_name == 'workflow_dispatch' && 
        github.event.inputs.terraform_action == 'destroy' &&
        needs.destroy-k8s.result == 'success'
@@ -480,7 +480,7 @@ jobs:
         with:
           name: tfplan-k8s
           path: ./terraform/kubernetes/tfplan
-          retention-days: 90
+          retention-days: 7
 
       - name: Export readable Terraform plan
         run: terraform show -no-color tfplan > tfplan.txt
@@ -573,7 +573,8 @@ jobs:
 
   # ========================================================================
   # DESTROY KUBERNETES JOB - Manual workflow_dispatch only
-  # Waits for Kubernetes issue approval inside this job before destruction. (runs with if: always() to handle skipped applies).
+  # Waits for Kubernetes issue approval inside this job before destruction.
+  # Runs after validate:k8s finishes, even if it fails, unless the run is cancelled.
   # Destroys Kubernetes infrastructure first, then AWS infrastructure.
   # ========================================================================
 
@@ -582,9 +583,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [validate-k8s]
 
-    if: always() && 
-        github.event_name == 'workflow_dispatch' && 
-        github.event.inputs.terraform_action == 'destroy'
+    if: >-
+      !cancelled() &&
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.terraform_action == 'destroy'
 
     defaults:
       run:
