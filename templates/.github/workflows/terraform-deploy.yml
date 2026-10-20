@@ -178,6 +178,10 @@ jobs:
       - name: Terraform Init
         run: terraform init -reconfigure
 
+      - name: Check backend
+        working-directory: ${{ github.workspace }}
+        run: sh .github/scripts/check-backend.sh
+
       - name: Terraform Plan
         id: plan
         run: terraform plan -no-color -out=tfplan
@@ -465,6 +469,10 @@ jobs:
 
       - name: Terraform Init
         run: terraform init -reconfigure
+
+      - name: Check backend
+        working-directory: ${{ github.workspace }}
+        run: sh .github/scripts/check-backend.sh
 
       - name: Terraform Plan
         id: plan

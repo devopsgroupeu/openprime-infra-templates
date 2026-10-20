@@ -139,6 +139,7 @@ plan:aws:
   stage: plan:aws
   needs: [validate:aws]
   script:
+    - (cd "$CI_PROJECT_DIR" && sh .github/scripts/check-backend.sh)
     - terraform plan -out=tfplan -no-color | tee plan.txt
     - terraform show -no-color tfplan > tfplan.txt
     - terraform show -json tfplan > tfplan.json
@@ -204,6 +205,7 @@ plan:k8s:
     - job: apply:aws
       optional: true
   script:
+    - (cd "$CI_PROJECT_DIR" && sh .github/scripts/check-backend.sh)
     - terraform plan -out=tfplan -no-color | tee plan.txt
     - terraform show -no-color tfplan > tfplan.txt
     - terraform show -json tfplan > tfplan.json
