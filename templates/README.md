@@ -16,6 +16,19 @@ native locking. Nothing here needs a DynamoDB table.
 Push to `main` runs `plan`. To apply, run the **Terraform Deployment** workflow manually
 and pick `apply`. The AWS stack goes first; the Kubernetes stack follows.
 
+### If this repository is on GitLab
+
+The pipeline is `.gitlab-ci.yml`. Two GitLab defaults can stop it:
+
+- **CI/CD variables are protected by default**, so they only reach protected branches.
+  On an unprotected branch `plan:aws` fails with `No valid credential sources found`.
+  Protect the branch you deploy from (Settings → Repository → Protected branches), or
+  clear "Protect variable" on `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and
+  `TF_VAR_git_repo_ssh_key`.
+- **New gitlab.com accounts must verify their identity** (phone or card) before GitLab
+  runs any pipeline. Until then the pipeline shows as failed with 0 jobs. Self-managed
+  GitLab instances do not ask for this.
+
 ## Destroying
 
 Run the same workflow with `destroy`. It tears down Kubernetes first, then AWS — and the
