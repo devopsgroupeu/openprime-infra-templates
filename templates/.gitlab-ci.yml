@@ -99,7 +99,7 @@ validate:aws:
   script:
     - cd ${TF_ROOT}/aws
     - terraform --version
-    - terraform init -backend=false
+    - (cd "$CI_PROJECT_DIR" && sh .github/scripts/check-backend.sh)
     - terraform validate
     - wget -qO /tmp/tflint.zip "https://github.com/terraform-linters/tflint/releases/download/v${TFLINT_VERSION}/tflint_linux_amd64.zip"
     - unzip -o /tmp/tflint.zip -d /usr/local/bin
@@ -120,7 +120,7 @@ validate:k8s:
   script:
     - cd ${TF_ROOT}/kubernetes
     - terraform --version
-    - terraform init -backend=false
+    - (cd "$CI_PROJECT_DIR" && sh .github/scripts/check-backend.sh)
     - terraform validate
     - wget -qO /tmp/tflint.zip "https://github.com/terraform-linters/tflint/releases/download/v${TFLINT_VERSION}/tflint_linux_amd64.zip"
     - unzip -o /tmp/tflint.zip -d /usr/local/bin
@@ -139,7 +139,6 @@ plan:aws:
   stage: plan:aws
   needs: [validate:aws]
   script:
-    - (cd "$CI_PROJECT_DIR" && sh .github/scripts/check-backend.sh)
     - terraform plan -out=tfplan -no-color | tee plan.txt
     - terraform show -no-color tfplan > tfplan.txt
     - terraform show -json tfplan > tfplan.json
@@ -205,7 +204,6 @@ plan:k8s:
     - job: apply:aws
       optional: true
   script:
-    - (cd "$CI_PROJECT_DIR" && sh .github/scripts/check-backend.sh)
     - terraform plan -out=tfplan -no-color | tee plan.txt
     - terraform show -no-color tfplan > tfplan.txt
     - terraform show -json tfplan > tfplan.json
