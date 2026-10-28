@@ -1,4 +1,14 @@
 set -eu
+
+if ! command -v jq >/dev/null 2>&1; then
+  if command -v apk >/dev/null 2>&1; then
+    apk add --no-cache jq
+  else
+    printf '%s\n' 'ERROR: jq is required to check the Terraform backend.' >&2
+    exit 1
+  fi
+fi
+
 for root in terraform/aws terraform/kubernetes; do
   (
     cd "$root"
