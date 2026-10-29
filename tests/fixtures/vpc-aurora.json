@@ -1,0 +1,70 @@
+{
+  "name": "ci-vpc-aurora",
+  "globalPrefix": "ci-gate-",
+  "provider": "aws",
+  "region": "eu-central-1",
+  "domain": "ci.example.com",
+  "backend": true,
+  "terraformBackend": {
+    "enabled": true,
+    "bucketName": "ci-gate-terraform-state",
+    "encrypt": true,
+    "useLockfile": true,
+    "awsStateKey": "ci-vpc-aurora/aws.tfstate",
+    "kubernetesStateKey": "ci-vpc-aurora/kubernetes.tfstate"
+  },
+  "gitRepository": {
+    "url": "git@github.com:example-org/ci-gate-infra.git",
+    "branch": "ci-main",
+    "branches": [
+      "ci-main"
+    ]
+  },
+  "services": {
+    "aurora": {
+      "enabled": true,
+      "engine": "ci-aurora-mysql",
+      "engineVersion": "ci-8.0.mysql_aurora.3.08.0",
+      "instances": {
+        "ci-one": {},
+        "ci-two": {}
+      },
+      "serverlessv2MinCapacity": 1,
+      "serverlessv2MaxCapacity": 12,
+      "serverlessv2SecondsUntilAutoPause": 7200,
+      "backupRetention": 9,
+      "deletionProtection": true,
+      "manageMasterUserPassword": true,
+      "enableHttpEndpoint": false,
+      "iamDatabaseAuthenticationEnabled": false,
+      "monitoringInterval": 30,
+      "applyImmediately": false,
+      "skipFinalSnapshot": false,
+      "deleteAutomatedBackups": false
+    },
+    "vpc": {
+      "enabled": true,
+      "azCount": 9,
+      "cidr": "10.42.0.0/16",
+      "createDatabaseSubnetGroup": false,
+      "createDatabaseSubnets": true,
+      "createIntraSubnets": true,
+      "createPrivateSubnets": false,
+      "createPublicSubnets": false,
+      "enableDnsHostnames": false,
+      "enableDnsSupport": false,
+      "enableFlowLogs": true,
+      "enableVpnGateway": true,
+      "natGateway": "ci-SINGLE",
+      "publicSubnetTags": {
+        "ci-gate": "public"
+      },
+      "privateSubnetTags": {
+        "ci-gate": "private"
+      },
+      "databaseSubnetTags": {
+        "ci-gate": "database"
+      }
+    }
+  }
+}

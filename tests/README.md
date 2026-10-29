@@ -64,6 +64,8 @@ carried over untouched, so the CI markers and the values pinned by
 Manual until OP-208 hydrates the wizard from the runtime catalog, after which the
 two cannot disagree.
 
+**One service set cannot catch a template that depends on a service the customer left off.** The backend sends only enabled services, and Injecto comments out every `@section` whose service is absent, so a reference from an enabled section into a disabled one is invalid Terraform that `standard.json` (EKS and RDS on) never sees. `vpc-only`, `vpc-aurora` (Aurora without RDS) and `vpc-eks-no-karpenter` carry the same top-level keys as `standard.json` and differ only in the service set; CI runs `terraform validate` on each (OP-268).
+
 ## Baselines
 
 Two files record known debt so the gate fails on *new* problems instead of

@@ -154,7 +154,7 @@ The top-level keys the templates actually read:
 | `argocd.*` | git repo URL and target revision for the app-of-apps |
 | `helmCharts.*` | which charts the app-of-apps includes |
 
-`tests/fixtures/standard.json` is a worked example in exactly this shape and is what the CI gate generates from.
+`tests/fixtures/standard.json` is a worked example in exactly this shape. The CI gate generates from it and from the service-combination fixtures beside it (`vpc-only`, `vpc-aurora`, `vpc-eks-no-karpenter`), and runs `terraform validate` on each.
 
 ## Testing
 
