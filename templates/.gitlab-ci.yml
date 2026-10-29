@@ -104,7 +104,7 @@ validate:aws:
   script:
     - cd ${TF_ROOT}/aws
     - terraform --version
-    - terraform init -backend=false
+    - (cd "$CI_PROJECT_DIR" && sh .github/scripts/check-backend.sh terraform/aws)
     - terraform validate
     - wget -qO /tmp/tflint.zip "https://github.com/terraform-linters/tflint/releases/download/v${TFLINT_VERSION}/tflint_linux_amd64.zip"
     - unzip -o /tmp/tflint.zip -d /usr/local/bin
@@ -125,7 +125,7 @@ validate:k8s:
   script:
     - cd ${TF_ROOT}/kubernetes
     - terraform --version
-    - terraform init -backend=false
+    - (cd "$CI_PROJECT_DIR" && sh .github/scripts/check-backend.sh terraform/kubernetes)
     - terraform validate
     - wget -qO /tmp/tflint.zip "https://github.com/terraform-linters/tflint/releases/download/v${TFLINT_VERSION}/tflint_linux_amd64.zip"
     - unzip -o /tmp/tflint.zip -d /usr/local/bin

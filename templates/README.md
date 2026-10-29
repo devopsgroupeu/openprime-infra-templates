@@ -21,7 +21,8 @@ and pick `apply`. The AWS stack goes first; the Kubernetes stack follows.
 The pipeline is `.gitlab-ci.yml`. Two GitLab defaults can stop it:
 
 - **CI/CD variables are protected by default**, so they only reach protected branches.
-  On an unprotected branch `plan:aws` fails with `No valid credential sources found`.
+  On an unprotected branch `validate:aws` and `validate:k8s` fail with
+  `No valid credential sources found`, because the backend check initialises the state backend.
   Protect the branch you deploy from (Settings → Repository → Protected branches), or
   clear "Protect variable" on `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and
   `TF_VAR_git_repo_ssh_key`.
