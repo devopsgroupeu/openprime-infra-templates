@@ -67,6 +67,8 @@ two cannot disagree.
 
 **One service set cannot catch a template that depends on a service the customer left off.** The backend sends only enabled services, and Injecto comments out every `@section` whose service is absent, so a reference from an enabled section into a disabled one is invalid Terraform that `standard.json` (EKS and RDS on) never sees. `vpc-only`, `vpc-aurora` (Aurora without RDS) and `vpc-eks-no-karpenter` carry the same top-level keys as `standard.json` and differ only in the service set; CI runs `terraform validate` on each (OP-268).
 
+**A wizard value is data, never code.** `hostile-strings` is `vpc-only` with values that would become code if Injecto wrote them unescaped: `${...}` and `%{...}` (which Terraform evaluates inside any HCL string) and a pre-quoted value that closes the string and appends a `resource` block (which Injecto before 0.13.3 passed through verbatim, OP-259). They reach `.tf`, `.tfvars`, a nested map and `.gitlab-ci.yml`. `NOT_SUBSTITUTED` asserts Injecto's exact escaping (`format_expected`); `HCL_READBACK` asserts the outcome independently, by having Terraform evaluate each substituted value. `terraform validate` cannot do this job: it never loads `*.tfvars`, so an injected block there passes it.
+
 ## Baselines
 
 Two files record known debt so the gate fails on *new* problems instead of
