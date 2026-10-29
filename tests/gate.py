@@ -88,11 +88,13 @@ def materialize_clean_templates(dest):
         raise RuntimeError("git ls-files returned no template files")
     for name in names:
         src = REPO_ROOT / name
-        if not src.is_file():
+        if not (src.is_file() or src.is_symlink()):
             continue  # deleted-but-tracked
         target = dest / Path(name).relative_to("templates")
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(src, target)
+        # A symlink stays one: production clones the repo, and Injecto >= 0.13.3
+        # refuses the whole tree if it contains a symlink (OP-259).
+        shutil.copy2(src, target, follow_symlinks=False)
     return len(names)
 
 
