@@ -34,6 +34,9 @@ VALUE_LINE_RE = re.compile(r"^(\s*(?:-\s+)?[\w.-]+\s*[:=])(.*)$")
 NOT_FOUND_RE = re.compile(r"Path '([\w.-]+)' not found in the data values")
 FILE_ERROR_RE = re.compile(r"An unexpected error occurred processing (\S+)")
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+# Mirrors Injecto processing.HCL_TEMPLATE_SUFFIXES: files whose strings are HCL
+# templates, so Injecto escapes `${` and `%{` in values written to them.
+HCL_TEMPLATE_SUFFIXES = {".tf", ".tfvars", ".tftpl", ".hcl"}
 
 # Mirrors the `validation` block on global_prefix in
 # templates/terraform/aws/_variables.tf, which is the real enforcement point.
@@ -157,23 +160,26 @@ def is_enabled(data, param):
     return bool(service) and bool(service.get("enabled"))
 
 
-def format_expected(value):
-    """Mirror Injecto processing.format_value_for_file exactly.
+def format_expected(value, suffix):
+    """Mirror Injecto >= 0.13.3 processing.format_value_for_file and escape_hcl_templates.
 
     Kept in the same order as the original so the two cannot drift apart
-    silently: str (with already-quoted passthrough) -> bool -> list/dict -> str().
+    silently: str -> bool -> list/dict -> str(), then `${`/`%{` made literal in
+    HCL files. Every string goes through json.dumps, including one that already
+    starts and ends with a quote: Injecto < 0.13.3 passed those through verbatim,
+    so a wizard value could close the string and append code (OP-259).
     """
     if isinstance(value, str):
-        if (value.startswith('"') and value.endswith('"')) or (
-            value.startswith("'") and value.endswith("'")
-        ):
-            return value
-        return f'"{value}"'
-    if isinstance(value, bool):
-        return str(value).lower()
-    if isinstance(value, (list, dict)):
-        return json.dumps(value)
-    return str(value)
+        rendered = json.dumps(value)
+    elif isinstance(value, bool):
+        rendered = str(value).lower()
+    elif isinstance(value, (list, dict)):
+        rendered = json.dumps(value)
+    else:
+        rendered = str(value)
+    if suffix in HCL_TEMPLATE_SUFFIXES:
+        rendered = rendered.replace("${", "$${").replace("%{", "%%{")
+    return rendered
 
 
 def hcl_spacing(text):
@@ -269,7 +275,7 @@ def check_substituted(substitutable, data, out_dir, failures):
             actual = lines[value_line_no]
             if actual.lstrip().startswith("#"):
                 continue  # section-disabled; nothing to substitute
-            rendered = format_expected(expected)
+            rendered = format_expected(expected, Path(rel).suffix)
             if isinstance(expected, (list, dict)):
                 # Injecto writes json.dumps() output, then terraform fmt rewrites it
                 # into canonical HCL spacing ({"a": "b"} -> { "a" : "b" }). Compare
