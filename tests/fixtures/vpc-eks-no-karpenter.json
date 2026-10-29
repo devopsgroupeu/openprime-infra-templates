@@ -1,0 +1,71 @@
+{
+  "name": "ci-vpc-eks-no-karpenter",
+  "globalPrefix": "ci-gate-",
+  "provider": "aws",
+  "region": "eu-central-1",
+  "domain": "ci.example.com",
+  "backend": true,
+  "terraformBackend": {
+    "enabled": true,
+    "bucketName": "ci-gate-terraform-state",
+    "encrypt": true,
+    "useLockfile": true,
+    "awsStateKey": "ci-vpc-eks-no-karpenter/aws.tfstate",
+    "kubernetesStateKey": "ci-vpc-eks-no-karpenter/kubernetes.tfstate"
+  },
+  "gitRepository": {
+    "url": "git@github.com:example-org/ci-gate-infra.git",
+    "branch": "ci-main",
+    "branches": [
+      "ci-main"
+    ]
+  },
+  "services": {
+    "eks": {
+      "enabled": true,
+      "authenticationMode": "ci-API",
+      "defaultNodeGroupAmiType": "ci-BOTTLEROCKET_ARM_64",
+      "defaultNodeGroupCapacityType": "ci-ON_DEMAND",
+      "defaultNodeGroupDesiredSize": 9,
+      "defaultNodeGroupMaxSize": 17,
+      "defaultNodeGroupMaxUnavailable": 8,
+      "defaultNodeGroupMinSize": 8,
+      "enableClusterCreatorAdminPermissions": false,
+      "enableIrsa": false,
+      "endpointPublicAccess": false,
+      "karpenterNodepoolArch": "ci-arm64",
+      "karpenterNodepoolCapacityType": "ci-spot",
+      "kubernetesVersion": "ci-1.33",
+      "defaultNodeGroupInstanceTypes": [
+        "t4g.medium"
+      ],
+      "helmCharts": {},
+      "networkPolicyEnabled": true,
+      "karpenterEnabled": false
+    },
+    "vpc": {
+      "enabled": true,
+      "azCount": 9,
+      "cidr": "10.42.0.0/16",
+      "createDatabaseSubnetGroup": false,
+      "createDatabaseSubnets": true,
+      "createIntraSubnets": true,
+      "createPrivateSubnets": false,
+      "createPublicSubnets": false,
+      "enableDnsHostnames": false,
+      "enableDnsSupport": false,
+      "enableFlowLogs": true,
+      "enableVpnGateway": true,
+      "natGateway": "ci-SINGLE",
+      "publicSubnetTags": {
+        "ci-gate": "public"
+      },
+      "privateSubnetTags": {
+        "ci-gate": "private"
+      },
+      "databaseSubnetTags": {
+        "ci-gate": "database"
+      }
+    }
+  }
+}

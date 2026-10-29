@@ -37,14 +37,18 @@ module "vpc" {
   create_database_subnet_group = var.create_database_subnet_group
 
   public_subnet_tags = merge({
+    # @section services.eks.enabled begin
     "kubernetes.io/cluster/${local.cluster_name}" = "shared"
     "kubernetes.io/role/elb"                      = "1"
+    # @section services.eks.enabled end
   }, var.public_subnet_tags)
 
   private_subnet_tags = merge({
+    # @section services.eks.enabled begin
     "karpenter.sh/discovery"                      = local.cluster_name
     "kubernetes.io/cluster/${local.cluster_name}" = "shared"
     "kubernetes.io/role/internal-elb"             = "1"
+    # @section services.eks.enabled end
   }, var.private_subnet_tags)
 
   database_subnet_tags = var.database_subnet_tags

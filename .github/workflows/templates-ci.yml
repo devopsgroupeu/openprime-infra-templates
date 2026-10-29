@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        fixture: [standard]
+        fixture: [standard, vpc-only, vpc-aurora, vpc-eks-no-karpenter]
 
     steps:
       - uses: actions/checkout@v4

@@ -15,6 +15,7 @@ locals {
   aurora_database_name = "${local.global_prefix_sanitized}auroradb${var.environment}"
   aurora_username      = "${local.global_prefix_sanitized}aurorauser${var.environment}"
   aurora_port          = var.aurora_engine == "aurora-postgresql" ? 5432 : 3306
+  aurora_logs_exports  = var.aurora_engine == "aurora-postgresql" ? ["postgresql"] : ["error", "general", "slowquery"]
   # @section services.aurora.enabled end
 }
 
@@ -158,7 +159,7 @@ module "aurora" {
 
   create_monitoring_role          = true
   cluster_monitoring_interval     = var.aurora_monitoring_interval
-  enabled_cloudwatch_logs_exports = local.cloudwatch_logs_exports
+  enabled_cloudwatch_logs_exports = local.aurora_logs_exports
   create_cloudwatch_log_group     = true
   apply_immediately               = var.aurora_apply_immediately
   deletion_protection             = var.aurora_deletion_protection
