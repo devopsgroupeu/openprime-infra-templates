@@ -17,7 +17,7 @@ python tests/gate.py \
   --out-dir generated          # optional; keeps the generated tree
 ```
 
-Exit `0` pass, `1` gate failure, `2` harness error.
+Exit `0` pass, `1` gate failure, `2` harness error. `terraform` must be on `PATH`: Injecto formats the output with it and `HCL_READBACK` evaluates values with it.
 
 The gate always runs against a clean `git ls-files` export of `templates/`, not
 your working tree — otherwise `.terraform/` provider caches and vendored module
@@ -30,6 +30,7 @@ checkouts flood it with phantom failures.
 | `DROPPED_FILE` | a file threw during processing and is missing from the output |
 | `UNRESOLVED_PARAM` | an `@param` of an **enabled** service is unset, so the template default ships |
 | `NOT_SUBSTITUTED` | the param resolved but the output still does not carry the value |
+| `HCL_READBACK` | Terraform reads a substituted `.tf`/`.tfvars` value as something other than what the wizard sent, e.g. an unescaped `${...}` that it interpolates |
 | `NEW_INERT_PARAM` | a decorator sits above a line Injecto can never rewrite — it parameterizes nothing |
 | `STALE_BASELINE` | a baselined entry no longer exists; remove it |
 | `UNKNOWN_PATH` | a path was looked up that is neither an `@param` nor an `@section` |
