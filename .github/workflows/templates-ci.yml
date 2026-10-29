@@ -11,8 +11,8 @@ permissions:
 env:
   # Pinned deliberately: the gate asserts Injecto's substitution semantics, so an
   # unpinned Injecto would turn an upstream change into a mysterious red here.
-  # Bump together with a gate run.
-  INJECTO_REF: v0.11.0
+  # Bump together with a gate run, to the version production runs.
+  INJECTO_REF: v0.13.4
   TERRAFORM_VERSION: 1.11.4
 
 jobs:
