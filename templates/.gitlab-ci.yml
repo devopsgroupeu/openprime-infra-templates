@@ -12,6 +12,11 @@ variables:
   # Backend configuration
   # @param terraformBackend.bucketName
   TF_STATE_BUCKET: ${TF_STATE_BUCKET}
+  # Branch the customer configured in the wizard. Every rules: block compares
+  # against it, so the pipeline fires on the branch the product pushes to, not
+  # only on main (the GitLab half of OP-235).
+  # @param gitRepository.branch
+  DEPLOY_BRANCH: main
 
 # Cache Terraform plugins between jobs for faster execution
 cache:
@@ -70,7 +75,7 @@ format:aws:
     - terraform fmt -check -recursive
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == $DEPLOY_BRANCH'
 
 format:k8s:
   stage: format
@@ -82,7 +87,7 @@ format:k8s:
     - terraform fmt -check -recursive
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == $DEPLOY_BRANCH'
 
 # ========================================================================
 # VALIDATE STAGE - Validate Terraform configuration
@@ -107,7 +112,7 @@ validate:aws:
     - tflint --format compact --no-color
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == $DEPLOY_BRANCH'
 
 validate:k8s:
   stage: validate
@@ -128,7 +133,7 @@ validate:k8s:
     - tflint --format compact --no-color
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == $DEPLOY_BRANCH'
 
 # ========================================================================
 # PLAN AWS STAGE
@@ -154,7 +159,7 @@ plan:aws:
       terraform: ${TF_ROOT}/aws/tfplan.json
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == $DEPLOY_BRANCH'
 
 # ========================================================================
 # APPLY AWS STAGE - Requires manual approval
@@ -189,7 +194,7 @@ apply:aws:
       - ${TF_ROOT}/aws/outputs.json
     expire_in: 30 days
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == $DEPLOY_BRANCH'
       when: manual
 
 # ========================================================================
@@ -218,7 +223,7 @@ plan:k8s:
     reports:
       terraform: ${TF_ROOT}/kubernetes/tfplan.json
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == $DEPLOY_BRANCH'
       when: manual
 
 # ========================================================================
@@ -244,7 +249,7 @@ apply:k8s:
       - ${TF_ROOT}/kubernetes/outputs.json
     expire_in: 30 days
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == $DEPLOY_BRANCH'
       when: manual
 
 # ========================================================================
@@ -260,7 +265,7 @@ destroy:k8s:
     - terraform destroy -auto-approve
   dependencies: []
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == $DEPLOY_BRANCH'
       when: manual
 
 destroy:aws:
@@ -291,5 +296,5 @@ destroy:aws:
     - job: destroy:k8s
       artifacts: false
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == $DEPLOY_BRANCH'
       when: manual
