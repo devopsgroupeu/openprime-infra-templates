@@ -37,9 +37,16 @@ provider "aws" {
 
   default_tags {
     tags = merge({
-      "OpenPrime"  = "true"
-      "Terraform"  = "true"
-      "aws-apn-id" = "pc:4lhqeluzjfvpd9gxqab2fs3y0"
-    }, var.global_tags)
+      "OpenPrime" = "true"
+      "Terraform" = "true"
+    }, var.global_tags, local.apn_tags)
+  }
+}
+
+locals {
+  ## AWS Partner Network attribution tag. Also passed explicitly to AWS resources that do not
+  ## inherit provider default_tags (EKS node launch templates, Karpenter nodes, EBS CSI volumes, ELBs)
+  apn_tags = {
+    "aws-apn-id-381790627163" = "pc:4lhqeluzjfvpd9gxqab2fs3y0"
   }
 }

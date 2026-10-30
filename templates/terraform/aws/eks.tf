@@ -140,6 +140,11 @@ module "eks" {
     aws-ebs-csi-driver = {
       service_account_role_arn = module.ebs_csi_irsa_role.arn
       most_recent              = var.eks_addon_ebs_csi_most_recent
+      configuration_values = jsonencode({
+        controller = {
+          extraVolumeTags = local.apn_tags
+        }
+      })
     }
     aws-efs-csi-driver = {
       service_account_role_arn = module.efs_csi_irsa_role.arn
@@ -184,5 +189,8 @@ module "eks" {
     ## (i.e. - at most, only one security group should have this tag in your account)
     "karpenter.sh/discovery" = local.cluster_name
   }
+
+  ## Provider default_tags do not reach node group launch template tag_specifications (instances, volumes, ENIs)
+  tags = merge(var.global_tags, local.apn_tags)
 }
 # @section services.eks.enabled end
