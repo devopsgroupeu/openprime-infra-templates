@@ -17,7 +17,7 @@ python tests/gate.py \
   --out-dir generated          # optional; keeps the generated tree
 ```
 
-Exit `0` pass, `1` gate failure, `2` harness error.
+Exit `0` pass, `1` gate failure, `2` harness error. `terraform` must be on `PATH`: Injecto formats the output with it and `HCL_READBACK` evaluates values with it.
 
 The gate always runs against a clean `git ls-files` export of `templates/`, not
 your working tree — otherwise `.terraform/` provider caches and vendored module
@@ -30,6 +30,7 @@ checkouts flood it with phantom failures.
 | `DROPPED_FILE` | a file threw during processing and is missing from the output |
 | `UNRESOLVED_PARAM` | an `@param` of an **enabled** service is unset, so the template default ships |
 | `NOT_SUBSTITUTED` | the param resolved but the output still does not carry the value |
+| `HCL_READBACK` | Terraform reads a substituted `.tf`/`.tfvars` value as something other than what the wizard sent, e.g. an unescaped `${...}` that it interpolates |
 | `NEW_INERT_PARAM` | a decorator sits above a line Injecto can never rewrite — it parameterizes nothing |
 | `STALE_BASELINE` | a baselined entry no longer exists; remove it |
 | `UNKNOWN_PATH` | a path was looked up that is neither an `@param` nor an `@section` |
@@ -65,6 +66,8 @@ Manual until OP-208 hydrates the wizard from the runtime catalog, after which th
 two cannot disagree.
 
 **One service set cannot catch a template that depends on a service the customer left off.** The backend sends only enabled services, and Injecto comments out every `@section` whose service is absent, so a reference from an enabled section into a disabled one is invalid Terraform that `standard.json` (EKS and RDS on) never sees. `vpc-only`, `vpc-aurora` (Aurora without RDS) and `vpc-eks-no-karpenter` carry the same top-level keys as `standard.json` and differ only in the service set; CI runs `terraform validate` on each (OP-268).
+
+**A wizard value is data, never code.** `hostile-strings` is `vpc-only` with values that would become code if Injecto wrote them unescaped: `${...}` and `%{...}` (which Terraform evaluates inside any HCL string) and a pre-quoted value that closes the string and appends a `resource` block (which Injecto before 0.13.3 passed through verbatim, OP-259). They reach `.tf`, `.tfvars`, a nested map and `.gitlab-ci.yml`. `NOT_SUBSTITUTED` asserts Injecto's exact escaping (`format_expected`); `HCL_READBACK` asserts the outcome independently, by having Terraform evaluate each substituted value. `terraform validate` cannot do this job: it never loads `*.tfvars`, so an injected block there passes it.
 
 ## Baselines
 

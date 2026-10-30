@@ -1,0 +1,49 @@
+{
+  "name": "\"x\"\nresource \"terraform_data\" \"injected\" {}\n# \"",
+  "globalPrefix": "ci-gate-",
+  "provider": "aws",
+  "region": "eu-central-1",
+  "domain": "ci-${path.cwd}.example.com",
+  "backend": true,
+  "terraformBackend": {
+    "enabled": true,
+    "bucketName": "ci-${path.module}-%{if true}state%{endif}",
+    "encrypt": true,
+    "useLockfile": true,
+    "awsStateKey": "\"x\"\nresource \"terraform_data\" \"injected\" {}\n# \"",
+    "kubernetesStateKey": "ci-vpc-only/kubernetes.tfstate"
+  },
+  "gitRepository": {
+    "url": "git@github.com:example-org/ci-gate-infra.git",
+    "branch": "ci-main",
+    "branches": [
+      "ci-main"
+    ]
+  },
+  "services": {
+    "vpc": {
+      "enabled": true,
+      "azCount": 9,
+      "cidr": "10.42.0.0/16",
+      "createDatabaseSubnetGroup": false,
+      "createDatabaseSubnets": true,
+      "createIntraSubnets": true,
+      "createPrivateSubnets": false,
+      "createPublicSubnets": false,
+      "enableDnsHostnames": false,
+      "enableDnsSupport": false,
+      "enableFlowLogs": true,
+      "enableVpnGateway": true,
+      "natGateway": "ci-SINGLE",
+      "publicSubnetTags": {
+        "ci-gate": "${path.module}"
+      },
+      "privateSubnetTags": {
+        "ci-gate": "private"
+      },
+      "databaseSubnetTags": {
+        "ci-gate": "database"
+      }
+    }
+  }
+}

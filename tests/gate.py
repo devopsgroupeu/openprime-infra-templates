@@ -34,6 +34,9 @@ VALUE_LINE_RE = re.compile(r"^(\s*(?:-\s+)?[\w.-]+\s*[:=])(.*)$")
 NOT_FOUND_RE = re.compile(r"Path '([\w.-]+)' not found in the data values")
 FILE_ERROR_RE = re.compile(r"An unexpected error occurred processing (\S+)")
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+# Mirrors Injecto processing.HCL_TEMPLATE_SUFFIXES: files whose strings are HCL
+# templates, so Injecto escapes `${` and `%{` in values written to them.
+HCL_TEMPLATE_SUFFIXES = {".tf", ".tfvars", ".tftpl", ".hcl"}
 
 # Mirrors the `validation` block on global_prefix in
 # templates/terraform/aws/_variables.tf, which is the real enforcement point.
@@ -85,11 +88,13 @@ def materialize_clean_templates(dest):
         raise RuntimeError("git ls-files returned no template files")
     for name in names:
         src = REPO_ROOT / name
-        if not src.is_file():
+        if not (src.is_file() or src.is_symlink()):
             continue  # deleted-but-tracked
         target = dest / Path(name).relative_to("templates")
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(src, target)
+        # A symlink stays one: production clones the repo, and Injecto >= 0.13.3
+        # refuses the whole tree if it contains a symlink (OP-259).
+        shutil.copy2(src, target, follow_symlinks=False)
     return len(names)
 
 
@@ -157,23 +162,26 @@ def is_enabled(data, param):
     return bool(service) and bool(service.get("enabled"))
 
 
-def format_expected(value):
-    """Mirror Injecto processing.format_value_for_file exactly.
+def format_expected(value, suffix):
+    """Mirror Injecto >= 0.13.3 processing.format_value_for_file and escape_hcl_templates.
 
     Kept in the same order as the original so the two cannot drift apart
-    silently: str (with already-quoted passthrough) -> bool -> list/dict -> str().
+    silently: str -> bool -> list/dict -> str(), then `${`/`%{` made literal in
+    HCL files. Every string goes through json.dumps, including one that already
+    starts and ends with a quote: Injecto < 0.13.3 passed those through verbatim,
+    so a wizard value could close the string and append code (OP-259).
     """
     if isinstance(value, str):
-        if (value.startswith('"') and value.endswith('"')) or (
-            value.startswith("'") and value.endswith("'")
-        ):
-            return value
-        return f'"{value}"'
-    if isinstance(value, bool):
-        return str(value).lower()
-    if isinstance(value, (list, dict)):
-        return json.dumps(value)
-    return str(value)
+        rendered = json.dumps(value)
+    elif isinstance(value, bool):
+        rendered = str(value).lower()
+    elif isinstance(value, (list, dict)):
+        rendered = json.dumps(value)
+    else:
+        rendered = str(value)
+    if suffix in HCL_TEMPLATE_SUFFIXES:
+        rendered = rendered.replace("${", "$${").replace("%{", "%%{")
+    return rendered
 
 
 def hcl_spacing(text):
@@ -269,7 +277,7 @@ def check_substituted(substitutable, data, out_dir, failures):
             actual = lines[value_line_no]
             if actual.lstrip().startswith("#"):
                 continue  # section-disabled; nothing to substitute
-            rendered = format_expected(expected)
+            rendered = format_expected(expected, Path(rel).suffix)
             if isinstance(expected, (list, dict)):
                 # Injecto writes json.dumps() output, then terraform fmt rewrites it
                 # into canonical HCL spacing ({"a": "b"} -> { "a" : "b" }). Compare
@@ -283,6 +291,60 @@ def check_substituted(substitutable, data, out_dir, failures):
                     "NOT_SUBSTITUTED",
                     f"{rel}:{value_line_no + 1} {param} -> expected {rendered}, line reads: {actual.strip()}",
                 )
+
+
+def check_hcl_readback(substitutable, data, out_dir, failures):
+    """Terraform must read every substituted HCL value back exactly as the wizard sent it.
+
+    format_expected mirrors Injecto, so it would share a mistake Injecto makes.
+    This asks Terraform instead: each substituted right-hand side in an HCL file
+    becomes an output of a scratch root module and must come back from
+    `terraform output -json` equal to the fixture value. An unescaped `${...}`
+    reads back interpolated; a pre-quoted value that closed the string early
+    reads back truncated, the rest of it having become code. `terraform validate`
+    sees neither: it never loads *.tfvars, where nearly every @param lands.
+    """
+    sites = []
+    for param, rel, value_line_no in substitutable:
+        expected = lookup(data, param)
+        out_file = out_dir / rel
+        if Path(rel).suffix not in HCL_TEMPLATE_SUFFIXES or expected is None or not out_file.exists():
+            continue  # unset or missing; already judged by the checks above
+        lines = out_file.read_text(encoding="utf-8").splitlines()
+        if value_line_no >= len(lines) or lines[value_line_no].lstrip().startswith("#"):
+            continue
+        match = VALUE_LINE_RE.match(lines[value_line_no])
+        if match:
+            sites.append((f"{rel}:{value_line_no + 1} {param}", match.group(2).strip(), expected))
+    if not sites:
+        return
+    if not shutil.which("terraform"):
+        failures.add("HCL_READBACK", "terraform is not on PATH, so substituted values cannot be read back")
+        return
+
+    with tempfile.TemporaryDirectory(prefix="injecto-gate-readback-") as root:
+        # Three lines per output: an error's line number then names its site, and a
+        # trailing `# comment` carried over from the template cannot eat the brace.
+        Path(root, "main.tf").write_text(
+            "".join(f'output "v{n}" {{\n  value = {rhs}\n}}\n' for n, (_, rhs, _) in enumerate(sites)),
+            encoding="utf-8",
+        )
+        terraform = ["terraform", f"-chdir={root}"]
+        apply = subprocess.run(terraform + ["apply", "-auto-approve", "-input=false", "-no-color"], capture_output=True, text=True)
+        if apply.returncode != 0:
+            broken = sorted({(int(n) - 1) // 3 for n in re.findall(r"main\.tf line (\d+)", apply.stderr)})
+            for n in broken:
+                failures.add("HCL_READBACK", f"{sites[n][0]} -> Terraform cannot evaluate {sites[n][1]}")
+            if not broken:
+                failures.add("HCL_READBACK", f"terraform apply failed: {apply.stderr.strip()}")
+            return
+        outputs = json.loads(subprocess.run(terraform + ["output", "-json"], capture_output=True, text=True, check=True).stdout)
+
+    for n, (site, _, expected) in enumerate(sites):
+        actual = outputs[f"v{n}"]["value"]
+        # Compared as JSON, not with ==, so `1` cannot pass for `true`.
+        if json.dumps(actual, sort_keys=True) != json.dumps(expected, sort_keys=True):
+            failures.add("HCL_READBACK", f"{site} -> Terraform reads {actual!r}, the wizard sent {expected!r}")
 
 
 def check_inert_baseline(inert, failures):
@@ -484,6 +546,7 @@ def run_gate(args, templates_dir, tracked):
         check_dropped_files(log, failures)
         section_only = check_unresolved(log, data, param_paths, sections, failures)
         check_substituted(substitutable, data, out_dir, failures)
+        check_hcl_readback(substitutable, data, out_dir, failures)
         check_inert_baseline(inert, failures)
         check_secure_defaults(out_dir, failures)
         check_network_policy_enforcement(out_dir, failures)
