@@ -16,6 +16,9 @@ spec:
         karpenter.sh/discovery: ${cluster_name}
   tags:
     karpenter.sh/discovery: ${cluster_name}
+%{ for key, value in apn_tags ~}
+    ${key}: "${value}"
+%{ endfor ~}
 ---
 apiVersion: karpenter.sh/v1
 kind: NodePool

@@ -61,6 +61,7 @@ locals {
         vpc_id               = module.vpc.vpc_id
         replica_count        = var.aws_lb_replica_count
         pdb_max_unavailable  = var.aws_lb_pdb_max_unavailable
+        default_tags         = local.apn_tags
       }
     }
     # @section services.eks.helmCharts.awsLoadBalancerController.enabled end

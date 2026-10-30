@@ -22,6 +22,7 @@ resource "local_file" "karpenter_support_resources" {
       node_iam_role_name = module.karpenter.node_iam_role_name
       arch               = var.karpenter_nodepool_arch
       capacity_type      = var.karpenter_nodepool_capacity_type
+      apn_tags           = local.apn_tags
     }
   )
   filename = trimsuffix("${path.module}/../../argocd/support-resources/karpenter.yaml.tftpl", ".tftpl")
