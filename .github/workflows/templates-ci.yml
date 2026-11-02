@@ -25,10 +25,10 @@ jobs:
         fixture: [standard, vpc-only, vpc-aurora, vpc-eks-no-karpenter, hostile-strings]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Check out pinned Injecto
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: devopsgroupeu/Injecto
           ref: ${{ env.INJECTO_REF }}
@@ -91,10 +91,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Check out pinned Injecto
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: devopsgroupeu/Injecto
           ref: ${{ env.INJECTO_REF }}
