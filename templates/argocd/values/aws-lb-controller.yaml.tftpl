@@ -10,3 +10,8 @@ vpcId: ${vpc_id}
 replicaCount: ${replica_count}
 podDisruptionBudget:
   maxUnavailable: ${pdb_max_unavailable}
+
+defaultTags:
+%{ for key, value in default_tags ~}
+  ${key}: "${value}"
+%{ endfor ~}
