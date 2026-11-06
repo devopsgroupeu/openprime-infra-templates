@@ -23,7 +23,16 @@ root="${1:?usage: relax-database-guards.sh <terraform root, e.g. terraform/aws>}
 cd "$root"
 
 # Default to keeping the snapshot: an empty input must not read as "skip".
+# Only true/false: Terraform would read "1" as true while this script would
+# take it as "keep the snapshot".
 skip="${SKIP_FINAL_SNAPSHOT:-false}"
+case "$skip" in
+  true | false) ;;
+  *)
+    printf 'ERROR: SKIP_FINAL_SNAPSHOT must be true or false, got: %s\n' "$skip" >&2
+    exit 1
+    ;;
+esac
 
 state="$(terraform state list)"
 databases="$(printf '%s\n' "$state" |

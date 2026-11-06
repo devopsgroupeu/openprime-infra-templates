@@ -58,9 +58,10 @@ RDS instance and Aurora cluster in the state. It clears deletion protection and 
 window. You do not need to edit anything.
 
 Because that apply touches only the databases, it also works on an environment whose last
-apply stopped half-way. If it fails anyway, the teardown still runs and the job ends as
-failed: a database that kept its deletion protection is not deleted, so you can deal with
-it and run destroy again.
+apply stopped half-way. If it fails anyway and you asked for a final snapshot (the
+default), nothing is destroyed and the job fails, so no database can be deleted without
+its snapshot; fix the cause and run destroy again. If you chose to skip the snapshot, the
+teardown still runs and the job ends as failed.
 
 **A final snapshot is taken by default.** If you want the database gone with no
 recoverable copy, tick **Destroy without taking a final DB snapshot** when you start the

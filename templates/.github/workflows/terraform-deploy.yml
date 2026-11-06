@@ -377,17 +377,20 @@ jobs:
       # Clears deletion protection on the databases in the state, and only on
       # them; the script explains why destroy cannot do this itself.
       - name: Relax database teardown guards
+        id: relax
         working-directory: ${{ github.workspace }}
         env:
           SKIP_FINAL_SNAPSHOT: ${{ inputs.skip_final_snapshot }}
           RUN_ID: ${{ github.run_id }}
         run: sh .github/scripts/relax-database-guards.sh terraform/aws
 
-      # Runs even if relaxing the guards failed: a database that kept its
-      # deletion protection is not deleted, everything else still is, and the
-      # job ends as failed. A rejected or expired approval still stops it.
+      # A failed relax leaves the state's old snapshot setting in place, and
+      # destroy reads it from there. So destroy continues past a failed relax
+      # only when no final snapshot was requested; otherwise a database whose
+      # state already says "skip" would be deleted without the snapshot the
+      # approval promised. A rejected or expired approval always stops it.
       - name: Terraform Destroy
-        if: ${{ !cancelled() && steps.authorize.outcome == 'success' && steps.init.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.authorize.outcome == 'success' && steps.init.outcome == 'success' && (steps.relax.outcome == 'success' || inputs.skip_final_snapshot) }}
         run: terraform destroy -auto-approve
 
   # ========================================================================

@@ -289,9 +289,15 @@ destroy:aws:
     # them; the script explains why destroy cannot do this itself. Set
     # SKIP_FINAL_SNAPSHOT=true to tear down without a final snapshot.
     - (cd "$CI_PROJECT_DIR" && RUN_ID="$CI_PIPELINE_ID" sh .github/scripts/relax-database-guards.sh terraform/aws) || relax_failed=true
-    # Runs even if relaxing the guards failed: a database that kept its
-    # deletion protection is not deleted, everything else still is, and the
-    # job ends as failed below.
+    # A failed relax leaves the state's old snapshot setting in place, and
+    # destroy reads it from there. So destroy continues past a failed relax
+    # only when SKIP_FINAL_SNAPSHOT=true; otherwise it stops here and nothing
+    # is deleted.
+    - |
+      if [ "${relax_failed:-}" = "true" ] && [ "${SKIP_FINAL_SNAPSHOT:-false}" != "true" ]; then
+        echo "ERROR: A final snapshot was requested, but the database teardown settings could not be applied (see above). Nothing was destroyed, so no database is deleted without its snapshot." >&2
+        exit 1
+      fi
     - terraform destroy -auto-approve
     - |
       if [ "${relax_failed:-}" = "true" ]; then
