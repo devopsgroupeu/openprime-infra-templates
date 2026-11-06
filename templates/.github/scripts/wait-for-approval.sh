@@ -8,8 +8,12 @@ set -euo pipefail
 # Use an outer timeout over 55 minutes. AWS destroy needs SKIP_FINAL_SNAPSHOT.
 # TF_STACK is aws (default) or kubernetes; PLAN_JOB_NAME must match that stack.
 # The workflow must apply the same saved plan. This script never reads plan data.
+# DEPLOY_BRANCH is the only branch apply and destroy may run from.
+# REQUIRE_SECOND_APPROVER=true makes the requester's own approval not count
+# (default: single-operator mode, where the requester may approve).
 for name in GH_TOKEN GH_REPO TF_ACTION GITHUB_SERVER_URL GITHUB_RUN_ID \
-  GITHUB_RUN_ATTEMPT GITHUB_REF_NAME GITHUB_SHA GITHUB_ACTOR; do
+  GITHUB_RUN_ATTEMPT GITHUB_REF_NAME GITHUB_REF_TYPE GITHUB_SHA GITHUB_ACTOR \
+  DEPLOY_BRANCH; do
   if [[ -z "${!name:-}" ]]; then
     printf 'Missing required environment variable: %s\n' "$name" >&2
     exit 1
@@ -23,6 +27,27 @@ esac
 
 command -v gh >/dev/null
 command -v jq >/dev/null
+
+# workflow_dispatch can start any ref; only the delivery branch may change the
+# environment. Checked before any issue is created.
+if [[ "$GITHUB_REF_TYPE" != branch || "$GITHUB_REF_NAME" != "$DEPLOY_BRANCH" ]]; then
+  printf 'Terraform %s runs only from the %s branch, not from %s %s. No approval issue was created.\n' \
+    "$TF_ACTION" "$DEPLOY_BRANCH" "$GITHUB_REF_TYPE" "$GITHUB_REF_NAME" >&2
+  exit 1
+fi
+
+case "${REQUIRE_SECOND_APPROVER:-false}" in
+  true) second_approver=true ;;
+  false | "") second_approver=false ;;
+  *) printf 'REQUIRE_SECOND_APPROVER must be true or false.\n' >&2; exit 1 ;;
+esac
+# A re-run is requested by whoever started it, not only by the original dispatcher.
+requester=${GITHUB_TRIGGERING_ACTOR:-$GITHUB_ACTOR}
+if [[ "$second_approver" == true ]]; then
+  approver_rule="- **Second-approver mode:** approvals from @${GITHUB_ACTOR} or @${requester} do not count. A rejection from anyone with that access still does."
+else
+  approver_rule="- **Single-operator mode:** the requester may approve their own request. To require a second person, set the repository variable \`OPENPRIME_REQUIRE_SECOND_APPROVER\` to \`true\`."
+fi
 
 run_url="${GITHUB_SERVER_URL}/${GH_REPO}/actions/runs/${GITHUB_RUN_ID}/attempts/${GITHUB_RUN_ATTEMPT}"
 stack=${TF_STACK:-aws}
@@ -125,7 +150,7 @@ ${review_intro}
 | Repository | ${GH_REPO} |
 | Branch | ${GITHUB_REF_NAME} |
 | Commit | [${GITHUB_SHA}](${GITHUB_SERVER_URL}/${GH_REPO}/commit/${GITHUB_SHA}) |
-| Requested by | @${GITHUB_ACTOR} |
+| Requested by | @${requester} |
 | Run / attempt | ${GITHUB_RUN_ID} / ${GITHUB_RUN_ATTEMPT} |
 
 ### What you are approving
@@ -142,7 +167,7 @@ Post a comment containing **one** of these words:
 | Reject | \`reject\`, \`rejected\`, \`deny\`, \`denied\`, \`no\` |
 
 - **One human approval** with current **Write, Maintain, or Admin** repository access is required.
-- The requester **may also approve**.
+${approver_rule}
 - Closing this issue cancels the request.
 
 > **Time limit:** this request expires after 55 minutes. Rejection or expiry blocks the requested operation."
@@ -191,7 +216,11 @@ while (( SECONDS < deadline )); do
         approver=$login
         break
         ;;
-      *) decision=approved; approver=$login ;;
+      *)
+        if [[ "$second_approver" == true && ( "$login" == "$GITHUB_ACTOR" || "$login" == "$requester" ) ]]; then
+          continue
+        fi
+        decision=approved; approver=$login ;;
     esac
   done <<< "$comments"
 
