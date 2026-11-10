@@ -16,9 +16,13 @@ native locking. Nothing here needs a DynamoDB table.
 Push to `main` runs `plan`. To apply, run the **Terraform Deployment** workflow manually
 and pick `apply`. The AWS stack goes first; the Kubernetes stack follows.
 
+After the AWS apply, the pipeline commits the Argo CD values it generated back to the
+branch. If that push is refused, the job fails rather than let Argo CD deploy the
+previous values.
+
 ### If this repository is on GitLab
 
-The pipeline is `.gitlab-ci.yml`. Two GitLab defaults can stop it:
+The pipeline is `.gitlab-ci.yml`. Three GitLab defaults can stop it:
 
 - **CI/CD variables are protected by default**, so they only reach protected branches.
   On an unprotected branch `validate:aws` and `validate:k8s` fail with
@@ -29,6 +33,9 @@ The pipeline is `.gitlab-ci.yml`. Two GitLab defaults can stop it:
 - **New gitlab.com accounts must verify their identity** (phone or card) before GitLab
   runs any pipeline. Until then the pipeline shows as failed with 0 jobs. Self-managed
   GitLab instances do not ask for this.
+- **The CI job token cannot push by default**, so `apply:aws` fails when it pushes the
+  generated Argo CD values back. Before the first apply, enable Settings → CI/CD →
+  Job token permissions → **Allow Git push requests to the repository**.
 
 ## Destroying
 
@@ -45,9 +52,16 @@ accident. `terraform destroy` on its own cannot get past that — destroy only p
 deletions, it never changes an attribute first, so AWS refuses `DeleteDBInstance` and the
 failure cascades to the DB subnets, the internet gateway and finally the VPC.
 
-The destroy job therefore runs one `terraform apply` before the teardown, which clears
-deletion protection and sets `apply_immediately` so the change takes effect now rather
-than at the next maintenance window. You do not need to edit anything.
+The destroy job therefore runs one `terraform apply` before the teardown, limited to the
+RDS instance and Aurora cluster in the state. It clears deletion protection and sets
+`apply_immediately` so the change takes effect now rather than at the next maintenance
+window. You do not need to edit anything.
+
+Because that apply touches only the databases, it also works on an environment whose last
+apply stopped half-way. If it fails anyway and you asked for a final snapshot (the
+default), nothing is destroyed and the job fails, so no database can be deleted without
+its snapshot; fix the cause and run destroy again. If you chose to skip the snapshot, the
+teardown still runs and the job ends as failed.
 
 **A final snapshot is taken by default.** If you want the database gone with no
 recoverable copy, tick **Destroy without taking a final DB snapshot** when you start the

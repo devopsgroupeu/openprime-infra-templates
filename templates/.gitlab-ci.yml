@@ -171,6 +171,9 @@ apply:aws:
   needs:
     - job: plan:aws
       artifacts: true
+  # Every job that changes the environment shares this group, so GitLab runs
+  # only one of them at a time, across pipelines; the others wait.
+  resource_group: terraform
   environment:
     name: production
   script:
@@ -185,8 +188,13 @@ apply:aws:
         echo "No generated ArgoCD files changed."
       else
         git commit -m "ci: regenerate ArgoCD configs from Terraform outputs [skip ci]"
-        # Requires CI_JOB_TOKEN write access: Settings → CI/CD → Token Access
-        git push "https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git" HEAD:${CI_COMMIT_REF_NAME} || echo "Warning: Failed to push ArgoCD configs"
+        # Needs Settings → CI/CD → Job token permissions → "Allow Git push
+        # requests to the repository". A refused push fails the job: Argo CD
+        # would otherwise keep deploying the previous values.
+        git push "https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git" HEAD:${CI_COMMIT_REF_NAME} || {
+          echo "ERROR: Could not push the regenerated ArgoCD configs. Enable Settings → CI/CD → Job token permissions → Allow Git push requests to the repository, then run a new pipeline." >&2
+          exit 1
+        }
       fi
   artifacts:
     name: "terraform-outputs-aws-${CI_COMMIT_SHORT_SHA}"
@@ -238,6 +246,7 @@ apply:k8s:
       artifacts: true
     - job: apply:aws
       optional: true
+  resource_group: terraform
   environment:
     name: production
   script:
@@ -259,6 +268,7 @@ apply:k8s:
 destroy:k8s:
   extends: .terraform_base_k8s
   stage: destroy
+  resource_group: terraform
   environment:
     name: production
   script:
@@ -271,26 +281,29 @@ destroy:k8s:
 destroy:aws:
   extends: .terraform_base
   stage: destroy
+  resource_group: terraform
   environment:
     name: production
   script:
-    # destroy plans deletions only and never updates an attribute first, so
-    # deletion_protection has to be cleared by an apply or DeleteDBInstance is
-    # refused. Set SKIP_FINAL_SNAPSHOT=true to tear down without a snapshot.
+    # Clears deletion protection on the databases in the state, and only on
+    # them; the script explains why destroy cannot do this itself. Set
+    # SKIP_FINAL_SNAPSHOT=true to tear down without a final snapshot.
+    - (cd "$CI_PROJECT_DIR" && RUN_ID="$CI_PIPELINE_ID" sh .github/scripts/relax-database-guards.sh terraform/aws) || relax_failed=true
+    # A failed relax leaves the state's old snapshot setting in place, and
+    # destroy reads it from there. So destroy continues past a failed relax
+    # only when SKIP_FINAL_SNAPSHOT=true; otherwise it stops here and nothing
+    # is deleted.
     - |
-      SNAP_ID=""
-      if [ "${SKIP_FINAL_SNAPSHOT:-false}" != "true" ]; then
-        SNAP_ID="aurora-final-${CI_PIPELINE_ID}"
+      if [ "${relax_failed:-}" = "true" ] && [ "${SKIP_FINAL_SNAPSHOT:-false}" != "true" ]; then
+        echo "ERROR: A final snapshot was requested, but the database teardown settings could not be applied (see above). Nothing was destroyed, so no database is deleted without its snapshot." >&2
+        exit 1
       fi
-      terraform apply -auto-approve \
-        -var rds_deletion_protection=false \
-        -var rds_apply_immediately=true \
-        -var rds_skip_final_snapshot=${SKIP_FINAL_SNAPSHOT:-false} \
-        -var aurora_deletion_protection=false \
-        -var aurora_apply_immediately=true \
-        -var aurora_skip_final_snapshot=${SKIP_FINAL_SNAPSHOT:-false} \
-        -var aurora_final_snapshot_identifier="${SNAP_ID}"
     - terraform destroy -auto-approve
+    - |
+      if [ "${relax_failed:-}" = "true" ]; then
+        echo "ERROR: Relaxing the database teardown guards failed (see above). A database that kept its deletion protection was not deleted." >&2
+        exit 1
+      fi
   dependencies: []
   needs:
     - job: destroy:k8s

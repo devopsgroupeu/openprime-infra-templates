@@ -37,6 +37,14 @@ on:
         default: false
         type: boolean
 
+# One run at a time per branch, so an apply and a destroy of this environment
+# never overlap (a run can hold its saved plan through the 55-minute approval
+# wait). The run in progress is never cancelled; of the runs queued behind it,
+# GitHub keeps only the newest.
+concurrency:
+  group: terraform-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   TF_VERSION: "1.11"
   TF_IN_AUTOMATION: "true"
@@ -291,18 +299,22 @@ jobs:
           retention-days: 30
           archive: false
 
+      # A refused push fails the job: Argo CD would otherwise keep deploying the
+      # previous values. git authenticates with the token actions/checkout
+      # stored, so the token never goes into the remote URL.
       - name: Commit generated ArgoCD config files
-        continue-on-error: true
         run: |
           git config user.email "ci-bot@openprime.io"
           git config user.name "OpenPrime CI"
-          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
           git add argocd/values/ argocd/support-resources/ || true
           if git diff --cached --quiet; then
             echo "No generated ArgoCD files changed."
           else
             git commit -m "ci: regenerate ArgoCD configs from Terraform outputs [skip ci]"
-            git push origin HEAD:${{ github.ref_name }}
+            git push origin "HEAD:$GITHUB_REF_NAME" || {
+              echo "::error::Could not push the regenerated ArgoCD configs to $GITHUB_REF_NAME. Allow this workflow to push to the branch, then run the workflow again."
+              exit 1
+            }
           fi
         working-directory: ${{ github.workspace }}
 
@@ -342,6 +354,7 @@ jobs:
           fetch-depth: 1
 
       - name: Authorize AWS destruction
+        id: authorize
         timeout-minutes: 60
         working-directory: ${{ github.workspace }}
         env:
@@ -358,37 +371,26 @@ jobs:
           terraform_version: ${{ env.TF_VERSION }}
 
       - name: Terraform Init
+        id: init
         run: terraform init -reconfigure
 
-      # terraform destroy plans deletions only - it never updates an attribute
-      # first. deletion_protection therefore has to be cleared by an apply, or
-      # DeleteDBInstance is refused and the failure cascades to the DB subnets,
-      # the internet gateway and finally the VPC. apply_immediately matters for
-      # the same reason: without it the modify waits for the maintenance window.
+      # Clears deletion protection on the databases in the state, and only on
+      # them; the script explains why destroy cannot do this itself.
       - name: Relax database teardown guards
+        id: relax
+        working-directory: ${{ github.workspace }}
         env:
           SKIP_FINAL_SNAPSHOT: ${{ inputs.skip_final_snapshot }}
           RUN_ID: ${{ github.run_id }}
-        run: |
-          # The rds module derives its own snapshot name; the aurora module passes
-          # ours straight through and aws_rds_cluster rejects an empty one unless
-          # the snapshot is skipped.
-          # Default to keeping the snapshot: an empty input must not read as "skip".
-          SKIP="${SKIP_FINAL_SNAPSHOT:-false}"
-          SNAPSHOT_ID=""
-          if [ "$SKIP" != "true" ]; then
-            SNAPSHOT_ID="aurora-final-${RUN_ID}"
-          fi
-          terraform apply -auto-approve \
-            -var rds_deletion_protection=false \
-            -var rds_apply_immediately=true \
-            -var rds_skip_final_snapshot="$SKIP" \
-            -var aurora_deletion_protection=false \
-            -var aurora_apply_immediately=true \
-            -var aurora_skip_final_snapshot="$SKIP" \
-            -var aurora_final_snapshot_identifier="$SNAPSHOT_ID"
+        run: sh .github/scripts/relax-database-guards.sh terraform/aws
 
+      # A failed relax leaves the state's old snapshot setting in place, and
+      # destroy reads it from there. So destroy continues past a failed relax
+      # only when no final snapshot was requested; otherwise a database whose
+      # state already says "skip" would be deleted without the snapshot the
+      # approval promised. A rejected or expired approval always stops it.
       - name: Terraform Destroy
+        if: ${{ !cancelled() && steps.authorize.outcome == 'success' && steps.init.outcome == 'success' && (steps.relax.outcome == 'success' || inputs.skip_final_snapshot) }}
         run: terraform destroy -auto-approve
 
   # ========================================================================
