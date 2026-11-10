@@ -37,6 +37,29 @@ The pipeline is `.gitlab-ci.yml`. Three GitLab defaults can stop it:
   generated Argo CD values back. Before the first apply, enable Settings → CI/CD →
   Job token permissions → **Allow Git push requests to the repository**.
 
+### Argo CD reads the repository with its own key
+
+Argo CD only pulls this repository, so give it a deploy key without write access, not the
+key OpenPrime pushes with. The Kubernetes stack copies the private key from
+`TF_VAR_git_repo_ssh_key` into the cluster and into its Terraform state. Whoever can read
+it there can then only read the repository. With a write key they could push changes that
+Argo CD syncs straight away, with no approval.
+
+```sh
+ssh-keygen -t ed25519 -N "" -f argocd-deploy-key
+```
+
+1. Add `argocd-deploy-key.pub` as a deploy key and leave write access off
+   (GitHub: Settings → Deploy keys; GitLab: Settings → Repository → Deploy keys).
+2. Put the contents of `argocd-deploy-key` into `TF_VAR_git_repo_ssh_key`
+   (GitHub: Settings → Secrets and variables → Actions;
+   GitLab: Settings → CI/CD → Variables).
+3. Leave OpenPrime's own deploy key as it is: it needs write access to push the
+   generated code.
+
+An environment that already runs with the write key: change the secret and run `apply`.
+The Kubernetes stack replaces the key in the cluster.
+
 ## Destroying
 
 Run the same workflow with `destroy`. It tears down Kubernetes first, then AWS — and the
