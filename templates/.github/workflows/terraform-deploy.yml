@@ -37,17 +37,27 @@ on:
         default: false
         type: boolean
 
-# One run at a time per branch, so an apply and a destroy of this environment
-# never overlap (a run can hold its saved plan through the 55-minute approval
-# wait). The run in progress is never cancelled; of the runs queued behind it,
-# GitHub keeps only the newest.
+# Manual runs (plan, apply, destroy) go one at a time per branch, so an apply
+# and a destroy of this environment never overlap (a run can hold its saved
+# plan through the 55-minute approval wait). The run in progress is never
+# cancelled; of the manual runs queued behind it, GitHub keeps only the newest.
+# Push and pull-request runs only plan, so each gets a group of its own: they
+# never queue and so never push a waiting apply or destroy out of the queue
+# (every "Push to Git" from OpenPrime starts one). If one overlaps an apply,
+# Terraform waits for the state lock instead (TF_CLI_ARGS_* below).
 concurrency:
-  group: terraform-${{ github.ref }}
+  group: ${{ github.event_name == 'workflow_dispatch' && format('terraform-{0}', github.ref) || format('plan-{0}', github.run_id) }}
   cancel-in-progress: false
 
 env:
   TF_VERSION: "1.11"
   TF_IN_AUTOMATION: "true"
+  # Wait for the state lock instead of failing at once when two runs overlap
+  # (a push plan during an apply, or an apply during a push plan). Creating
+  # or destroying a cluster can hold the lock for 20 minutes or more.
+  TF_CLI_ARGS_plan: "-lock-timeout=30m"
+  TF_CLI_ARGS_apply: "-lock-timeout=30m"
+  TF_CLI_ARGS_destroy: "-lock-timeout=30m"
   # The branch OpenPrime delivers to. Apply and destroy run only from it: the
   # approval script refuses any other ref before asking for approval.
   # @param gitRepository.branch
