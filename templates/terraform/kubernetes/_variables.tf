@@ -42,7 +42,7 @@ variable "git_target_revision" {
 
 variable "git_repo_ssh_key" {
   type        = string
-  description = "Private SSH Key of the Git repository to be used by ArgoCD"
+  description = "Private key of a read-only deploy key on the Git repository. Argo CD pulls the repository with it; use a different key from the one OpenPrime pushes with."
   sensitive   = true
 }
 
