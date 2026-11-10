@@ -48,7 +48,10 @@ concurrency:
 env:
   TF_VERSION: "1.11"
   TF_IN_AUTOMATION: "true"
-  TF_VAR_git_repo_ssh_key: ${{ secrets.TF_VAR_GIT_REPO_SSH_KEY }}
+  # The branch OpenPrime delivers to. Apply and destroy run only from it: the
+  # approval script refuses any other ref before asking for approval.
+  # @param gitRepository.branch
+  DEPLOY_BRANCH: main
 
 jobs:
   # ========================================================================
@@ -201,13 +204,6 @@ jobs:
         if: steps.plan.outcome == 'failure'
         run: exit 1
 
-      - name: Upload Terraform Plan
-        uses: actions/upload-artifact@v7
-        with:
-          name: tfplan-aws
-          path: ./terraform/aws/tfplan
-          retention-days: 7
-
       - name: Export readable Terraform plan
         run: terraform show -no-color tfplan > tfplan.txt
 
@@ -218,6 +214,25 @@ jobs:
           name: tfplan-text-aws-${{ github.run_id }}-${{ github.run_attempt }}
           path: ./terraform/aws/tfplan.txt
           retention-days: 90
+          if-no-files-found: error
+
+      # The saved plan holds sensitive values (deploy key, generated passwords)
+      # in plain text, and repository readers can download artifacts. Only an
+      # encrypted copy leaves this job, and only for the apply that uses it.
+      - name: Encrypt Terraform Plan
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.terraform_action == 'apply'
+        working-directory: ${{ github.workspace }}
+        env:
+          PLAN_KEY_CONTEXT: ${{ github.run_id }}
+        run: sh .github/scripts/plan-crypt.sh encrypt terraform/aws
+
+      - name: Upload Terraform Plan
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.terraform_action == 'apply'
+        uses: actions/upload-artifact@v7
+        with:
+          name: tfplan-aws
+          path: ./terraform/aws/tfplan.enc
+          retention-days: 1
           if-no-files-found: error
 
   # ========================================================================
@@ -264,6 +279,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          REQUIRE_SECOND_APPROVER: ${{ vars.OPENPRIME_REQUIRE_SECOND_APPROVER }}
           TF_ACTION: apply
           TF_STACK: aws
           PLAN_JOB_NAME: 'plan:aws'
@@ -284,20 +300,15 @@ jobs:
           name: tfplan-aws
           path: ./terraform/aws
 
+      - name: Decrypt Terraform Plan
+        working-directory: ${{ github.workspace }}
+        env:
+          PLAN_KEY_CONTEXT: ${{ github.run_id }}
+        run: sh .github/scripts/plan-crypt.sh decrypt terraform/aws
+
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
-
-      - name: Export Terraform Outputs
-        run: terraform output -json > tf-outputs-aws.json
-
-      - name: Upload Terraform Outputs
-        uses: actions/upload-artifact@v7
-        with:
-          name: tf-outputs-aws
-          path: ./terraform/aws/tf-outputs-aws.json
-          retention-days: 30
-          archive: false
 
       # A refused push fails the job: Argo CD would otherwise keep deploying the
       # previous values. git authenticates with the token actions/checkout
@@ -360,6 +371,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          REQUIRE_SECOND_APPROVER: ${{ vars.OPENPRIME_REQUIRE_SECOND_APPROVER }}
           TF_ACTION: destroy
           TF_STACK: aws
           SKIP_FINAL_SNAPSHOT: ${{ inputs.skip_final_snapshot }}
@@ -465,6 +477,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+      TF_VAR_git_repo_ssh_key: ${{ secrets.TF_VAR_GIT_REPO_SSH_KEY }}
 
     steps:
       - name: Checkout Repository
@@ -489,13 +502,6 @@ jobs:
         if: steps.plan.outcome == 'failure'
         run: exit 1
 
-      - name: Upload Terraform Plan
-        uses: actions/upload-artifact@v7
-        with:
-          name: tfplan-k8s
-          path: ./terraform/kubernetes/tfplan
-          retention-days: 7
-
       - name: Export readable Terraform plan
         run: terraform show -no-color tfplan > tfplan.txt
 
@@ -506,6 +512,23 @@ jobs:
           name: tfplan-text-k8s-${{ github.run_id }}-${{ github.run_attempt }}
           path: ./terraform/kubernetes/tfplan.txt
           retention-days: 90
+          if-no-files-found: error
+
+      # The saved plan holds sensitive values (deploy key, generated passwords)
+      # in plain text, and repository readers can download artifacts. Only an
+      # encrypted copy leaves this job, and only for the apply that uses it.
+      - name: Encrypt Terraform Plan
+        working-directory: ${{ github.workspace }}
+        env:
+          PLAN_KEY_CONTEXT: ${{ github.run_id }}
+        run: sh .github/scripts/plan-crypt.sh encrypt terraform/kubernetes
+
+      - name: Upload Terraform Plan
+        uses: actions/upload-artifact@v7
+        with:
+          name: tfplan-k8s
+          path: ./terraform/kubernetes/tfplan.enc
+          retention-days: 1
           if-no-files-found: error
 
   # ========================================================================
@@ -538,6 +561,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+      TF_VAR_git_repo_ssh_key: ${{ secrets.TF_VAR_GIT_REPO_SSH_KEY }}
 
     steps:
       - name: Checkout Repository
@@ -551,6 +575,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          REQUIRE_SECOND_APPROVER: ${{ vars.OPENPRIME_REQUIRE_SECOND_APPROVER }}
           TF_ACTION: apply
           TF_STACK: kubernetes
           PLAN_JOB_NAME: 'plan:k8s'
@@ -571,19 +596,14 @@ jobs:
           name: tfplan-k8s
           path: ./terraform/kubernetes
 
+      - name: Decrypt Terraform Plan
+        working-directory: ${{ github.workspace }}
+        env:
+          PLAN_KEY_CONTEXT: ${{ github.run_id }}
+        run: sh .github/scripts/plan-crypt.sh decrypt terraform/kubernetes
+
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
-
-      - name: Export Terraform Outputs
-        run: terraform output -json > tf-outputs-k8s.json
-
-      - name: Upload Terraform Outputs
-        uses: actions/upload-artifact@v7
-        with:
-          name: tf-outputs-k8s
-          path: ./terraform/kubernetes/tf-outputs-k8s.json
-          retention-days: 30
-          archive: false
 
   # ========================================================================
   # DESTROY KUBERNETES JOB - Manual workflow_dispatch only
@@ -614,6 +634,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+      TF_VAR_git_repo_ssh_key: ${{ secrets.TF_VAR_GIT_REPO_SSH_KEY }}
 
     steps:
       - name: Checkout Repository
@@ -627,6 +648,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          REQUIRE_SECOND_APPROVER: ${{ vars.OPENPRIME_REQUIRE_SECOND_APPROVER }}
           TF_ACTION: destroy
           TF_STACK: kubernetes
         run: bash .github/scripts/wait-for-approval.sh
