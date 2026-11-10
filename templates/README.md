@@ -20,6 +20,25 @@ After the AWS apply, the pipeline commits the Argo CD values it generated back t
 branch. If that push is refused, the job fails rather than let Argo CD deploy the
 previous values.
 
+### Approvals
+
+Every apply and destroy waits for an approval: the job opens a GitHub issue, and someone
+with Write, Maintain or Admin access comments `approve` or `reject` within 55 minutes.
+
+- **Single-operator mode (default).** The person who started the run may approve it.
+  This lets one person run the environment on their own.
+- **Second-approver mode.** Set the repository variable
+  (Settings → Secrets and variables → Actions → Variables)
+  `OPENPRIME_REQUIRE_SECOND_APPROVER` to `true`. Approvals from the person who started
+  or re-ran the run then do not count; a rejection from anyone still does.
+
+Apply and destroy run only from the branch OpenPrime delivers to. Started from any other
+branch or a tag, the job stops before asking for approval.
+
+On GitLab, apply and destroy are manual jobs on that branch. To require a second person
+there, protect the `production` environment and choose who may deploy to it
+(Settings → CI/CD → Protected environments; GitLab Premium).
+
 ### If this repository is on GitLab
 
 The pipeline is `.gitlab-ci.yml`. Three GitLab defaults can stop it:

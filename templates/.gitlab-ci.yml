@@ -9,6 +9,12 @@ variables:
   TF_VERSION: "1.11"
   TF_ROOT: ${CI_PROJECT_DIR}/terraform
   TF_IN_AUTOMATION: "true"
+  # Plan jobs are not in the `terraform` resource_group, so one can overlap an
+  # apply or destroy. Wait for the state lock instead of failing at once.
+  # Creating or destroying a cluster can hold the lock for 20 minutes or more.
+  TF_CLI_ARGS_plan: "-lock-timeout=30m"
+  TF_CLI_ARGS_apply: "-lock-timeout=30m"
+  TF_CLI_ARGS_destroy: "-lock-timeout=30m"
   # Backend configuration
   # @param terraformBackend.bucketName
   TF_STATE_BUCKET: ${TF_STATE_BUCKET}
@@ -146,17 +152,26 @@ plan:aws:
   script:
     - terraform plan -out=tfplan -no-color | tee plan.txt
     - terraform show -no-color tfplan > tfplan.txt
-    - terraform show -json tfplan > tfplan.json
+    # The saved plan and `terraform show -json` hold sensitive values (deploy
+    # key, generated passwords) in plain text, and pipeline viewers can download
+    # artifacts. Publish only change counts for the MR widget, and keep an
+    # encrypted plan only on the deploy branch, where apply uses it.
+    - (cd "$CI_PROJECT_DIR" && sh .github/scripts/plan-summary.sh terraform/aws)
+    - |
+      if [ "${CI_COMMIT_BRANCH:-}" = "$DEPLOY_BRANCH" ]; then
+        (cd "$CI_PROJECT_DIR" && PLAN_KEY_CONTEXT="$CI_PIPELINE_ID" sh .github/scripts/plan-crypt.sh encrypt terraform/aws)
+      else
+        rm -f tfplan
+      fi
   artifacts:
     name: "terraform-plan-aws-${CI_COMMIT_SHORT_SHA}"
     paths:
-      - ${TF_ROOT}/aws/tfplan
+      - ${TF_ROOT}/aws/tfplan.enc
       - ${TF_ROOT}/aws/tfplan.txt
-      - ${TF_ROOT}/aws/tfplan.json
       - ${TF_ROOT}/aws/plan.txt
     expire_in: 7 days
     reports:
-      terraform: ${TF_ROOT}/aws/tfplan.json
+      terraform: ${TF_ROOT}/aws/plan-summary.json
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == $DEPLOY_BRANCH'
@@ -177,8 +192,8 @@ apply:aws:
   environment:
     name: production
   script:
+    - (cd "$CI_PROJECT_DIR" && PLAN_KEY_CONTEXT="$CI_PIPELINE_ID" sh .github/scripts/plan-crypt.sh decrypt terraform/aws)
     - terraform apply -auto-approve tfplan
-    - terraform output -json > outputs.json
     - |
       git config user.email "ci-bot@openprime.io"
       git config user.name "OpenPrime CI"
@@ -196,11 +211,6 @@ apply:aws:
           exit 1
         }
       fi
-  artifacts:
-    name: "terraform-outputs-aws-${CI_COMMIT_SHORT_SHA}"
-    paths:
-      - ${TF_ROOT}/aws/outputs.json
-    expire_in: 30 days
   rules:
     - if: '$CI_COMMIT_BRANCH == $DEPLOY_BRANCH'
       when: manual
@@ -219,17 +229,26 @@ plan:k8s:
   script:
     - terraform plan -out=tfplan -no-color | tee plan.txt
     - terraform show -no-color tfplan > tfplan.txt
-    - terraform show -json tfplan > tfplan.json
+    # The saved plan and `terraform show -json` hold sensitive values (deploy
+    # key, generated passwords) in plain text, and pipeline viewers can download
+    # artifacts. Publish only change counts for the MR widget, and keep an
+    # encrypted plan only on the deploy branch, where apply uses it.
+    - (cd "$CI_PROJECT_DIR" && sh .github/scripts/plan-summary.sh terraform/kubernetes)
+    - |
+      if [ "${CI_COMMIT_BRANCH:-}" = "$DEPLOY_BRANCH" ]; then
+        (cd "$CI_PROJECT_DIR" && PLAN_KEY_CONTEXT="$CI_PIPELINE_ID" sh .github/scripts/plan-crypt.sh encrypt terraform/kubernetes)
+      else
+        rm -f tfplan
+      fi
   artifacts:
     name: "terraform-plan-k8s-${CI_COMMIT_SHORT_SHA}"
     paths:
-      - ${TF_ROOT}/kubernetes/tfplan
+      - ${TF_ROOT}/kubernetes/tfplan.enc
       - ${TF_ROOT}/kubernetes/tfplan.txt
-      - ${TF_ROOT}/kubernetes/tfplan.json
       - ${TF_ROOT}/kubernetes/plan.txt
     expire_in: 7 days
     reports:
-      terraform: ${TF_ROOT}/kubernetes/tfplan.json
+      terraform: ${TF_ROOT}/kubernetes/plan-summary.json
   rules:
     - if: '$CI_COMMIT_BRANCH == $DEPLOY_BRANCH'
       when: manual
@@ -250,13 +269,8 @@ apply:k8s:
   environment:
     name: production
   script:
+    - (cd "$CI_PROJECT_DIR" && PLAN_KEY_CONTEXT="$CI_PIPELINE_ID" sh .github/scripts/plan-crypt.sh decrypt terraform/kubernetes)
     - terraform apply -auto-approve tfplan
-    - terraform output -json > outputs.json
-  artifacts:
-    name: "terraform-outputs-k8s-${CI_COMMIT_SHORT_SHA}"
-    paths:
-      - ${TF_ROOT}/kubernetes/outputs.json
-    expire_in: 30 days
   rules:
     - if: '$CI_COMMIT_BRANCH == $DEPLOY_BRANCH'
       when: manual
