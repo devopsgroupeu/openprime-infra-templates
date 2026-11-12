@@ -1,4 +1,8 @@
 # @section services.eks.karpenterEnabled begin | displayName=Enable Karpenter | default=true
+locals {
+  karpenter_ami_alias = "bottlerocket@v1.69.0"
+}
+
 module "karpenter" {
   source  = "terraform-aws-modules/eks/aws//modules/karpenter"
   version = "~> 21.0"
@@ -23,6 +27,7 @@ resource "local_file" "karpenter_support_resources" {
       arch               = var.karpenter_nodepool_arch
       capacity_type      = var.karpenter_nodepool_capacity_type
       apn_tags           = local.apn_tags
+      ami_alias          = local.karpenter_ami_alias
     }
   )
   filename = trimsuffix("${path.module}/../../argocd/support-resources/karpenter.yaml.tftpl", ".tftpl")
