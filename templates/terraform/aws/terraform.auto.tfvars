@@ -76,8 +76,6 @@ default_node_group_max_size = 10
 default_node_group_desired_size = 2
 # @param services.eks.defaultNodeGroupMaxUnavailable | displayName=Max Unavailable | description=Max unavailable nodes during updates | type=number | min=1 | max=10
 default_node_group_max_unavailable = 1
-# @param services.eks.defaultNodeGroupUseLatestAmi | displayName=Use Latest Node AMI | description=Launch node groups on the newest AMI Amazon publishes for the cluster version | type=toggle
-default_node_group_use_latest_ami = true
 # NOT parameterized (OP-221): Injecto rewrites only the single line following a
 # decorator, so decorating this multi-line map would emit the new value and
 # orphan the body plus its closing brace. Injecto now refuses that outright

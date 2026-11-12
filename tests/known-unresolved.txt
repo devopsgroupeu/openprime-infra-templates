@@ -50,4 +50,3 @@
 # so from the wizard OP-208 generates.
 services.eks.addonPodIdentityBeforeCompute
 services.eks.addonVpcCniBeforeCompute
-services.eks.defaultNodeGroupUseLatestAmi

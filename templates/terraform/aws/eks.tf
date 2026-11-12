@@ -38,8 +38,28 @@ locals {
       efs_csi      = "v3.5.4-eksbuild.1"
     }
   }
-
   eks_addon_version = local.eks_addon_versions[var.kubernetes_version]
+}
+
+locals {
+  ## Node group AMI release versions, pinned per Kubernetes minor version and ami_type.
+  ## The value is what the eks module resolves from SSM for the same ami_type:
+  ## aws ssm get-parameter --name /aws/service/bottlerocket/aws-k8s-<version>/<arm64|x86_64>/latest/image_version
+  eks_node_ami_release_versions = {
+    "1.36" = {
+      BOTTLEROCKET_ARM_64 = "1.69.0-be6a1e85"
+      BOTTLEROCKET_x86_64 = "1.69.0-be6a1e85"
+    }
+    "1.35" = {
+      BOTTLEROCKET_ARM_64 = "1.69.0-be6a1e85"
+      BOTTLEROCKET_x86_64 = "1.69.0-be6a1e85"
+    }
+    "1.34" = {
+      BOTTLEROCKET_ARM_64 = "1.69.0-be6a1e85"
+      BOTTLEROCKET_x86_64 = "1.69.0-be6a1e85"
+    }
+  }
+  eks_node_ami_release_version = local.eks_node_ami_release_versions[var.kubernetes_version][var.default_node_group_ami_type]
 }
 
 ## use_name_prefix governs the policy name as well as the role name. Left at false
@@ -197,7 +217,8 @@ module "eks" {
       ami_type                       = var.default_node_group_ami_type
       instance_types                 = var.default_node_group_instance_types
       capacity_type                  = var.default_node_group_capacity_type
-      use_latest_ami_release_version = var.default_node_group_use_latest_ami
+      ami_release_version            = local.eks_node_ami_release_version
+      use_latest_ami_release_version = false
 
       iam_role_additional_policies = var.default_node_group_iam_additional_policies
 

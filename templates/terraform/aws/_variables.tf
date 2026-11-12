@@ -254,12 +254,6 @@ variable "eks_addon_vpc_cni_before_compute" {
   default     = true
 }
 
-variable "default_node_group_use_latest_ami" {
-  type        = bool
-  description = "Whether to use latest AMI release version for default node group"
-  default     = true
-}
-
 variable "default_node_group_iam_additional_policies" {
   type        = map(string)
   description = "Additional IAM policies to attach to default node group"
