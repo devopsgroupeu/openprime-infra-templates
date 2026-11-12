@@ -48,12 +48,6 @@
 # De-decorating them instead -- the terraform.version precedent above -- was the
 # alternative, and was rejected because it would remove them from the catalog and
 # so from the wizard OP-208 generates.
-services.eks.addonCorednsMostRecent
-services.eks.addonEbsCsiMostRecent
-services.eks.addonEfsCsiMostRecent
-services.eks.addonKubeProxyMostRecent
 services.eks.addonPodIdentityBeforeCompute
-services.eks.addonPodIdentityMostRecent
 services.eks.addonVpcCniBeforeCompute
-services.eks.addonVpcCniMostRecent
 services.eks.defaultNodeGroupUseLatestAmi

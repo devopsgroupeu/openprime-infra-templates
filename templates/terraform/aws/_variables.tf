@@ -242,51 +242,15 @@ variable "aws_lb_pdb_max_unavailable" {
   default     = 1
 }
 
-variable "eks_addon_coredns_most_recent" {
-  type        = bool
-  description = "Whether to use most recent version of CoreDNS addon"
-  default     = true
-}
-
-variable "eks_addon_pod_identity_most_recent" {
-  type        = bool
-  description = "Whether to use most recent version of Pod Identity addon"
-  default     = true
-}
-
 variable "eks_addon_pod_identity_before_compute" {
   type        = bool
   description = "Whether to install Pod Identity addon before compute"
   default     = true
 }
 
-variable "eks_addon_kube_proxy_most_recent" {
-  type        = bool
-  description = "Whether to use most recent version of kube-proxy addon"
-  default     = true
-}
-
-variable "eks_addon_vpc_cni_most_recent" {
-  type        = bool
-  description = "Whether to use most recent version of VPC CNI addon"
-  default     = true
-}
-
 variable "eks_addon_vpc_cni_before_compute" {
   type        = bool
   description = "Whether to install VPC CNI addon before compute"
-  default     = true
-}
-
-variable "eks_addon_ebs_csi_most_recent" {
-  type        = bool
-  description = "Whether to use most recent version of EBS CSI driver"
-  default     = true
-}
-
-variable "eks_addon_efs_csi_most_recent" {
-  type        = bool
-  description = "Whether to use most recent version of EFS CSI driver"
   default     = true
 }
 
