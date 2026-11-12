@@ -41,18 +41,6 @@ appProjects:
         syncWave: -1100
   # @section services.eks.helmCharts.externalDns.enabled end
 
-  # @section services.eks.helmCharts.ingressNginx.enabled begin
-  ## Ingress
-  - namespace: ingress-nginx
-    applications:
-      - name: ingress-nginx
-        repoURL: https://kubernetes.github.io/ingress-nginx
-        chart: ingress-nginx
-        targetRevision: 4.13.0
-        autoSync: true
-        syncWave: -900
-  # @section services.eks.helmCharts.ingressNginx.enabled end
-
   ## Observability Stack
   - namespace: monitoring
     applications:
@@ -91,7 +79,6 @@ appProjects:
 
   # Gateway API (Uncomment when IRSA is configured)
   # Gateway API provides next-generation ingress with VPC Lattice integration
-  # Run in parallel with ingress-nginx for gradual migration
   # - namespace: gateway-system
   #   applications:
   #     - name: gateway-api-crds

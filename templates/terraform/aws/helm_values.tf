@@ -97,27 +97,6 @@ locals {
     }
     # @section services.eks.helmCharts.certManager.enabled end
 
-    # @section services.eks.helmCharts.ingressNginx.enabled begin
-    ingress_nginx = {
-      enabled              = try(local.helm_chart_selections["ingressNginx"]["enabled"], false)
-      template_values_file = "${path.module}/../../argocd/values/ingress-nginx.yaml.tftpl"
-      values = {
-        cpu_request                       = "100m"
-        memory_request                    = "128Mi"
-        metrics_enabled                   = true
-        autoscaling_enabled               = true
-        autoscaling_min_replicas          = 1
-        autoscaling_max_replicas          = 5
-        autoscaling_target_cpu_percentage = 80
-        lb_backend_protocol               = "http"
-        lb_connection_idle_timeout        = "3600"
-        lb_type                           = "external"
-        lb_nlb_target_type                = "ip"
-        lb_scheme                         = "internet-facing"
-      }
-    }
-    # @section services.eks.helmCharts.ingressNginx.enabled end
-
     # @section services.eks.helmCharts.externalDns.enabled begin
     external_dns = {
       enabled              = try(local.helm_chart_selections["externalDns"]["enabled"], false)
