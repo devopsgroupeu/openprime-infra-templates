@@ -54,10 +54,10 @@ appProjects:
       # @section services.eks.helmCharts.prometheusStack.enabled end
 
       # @section services.eks.helmCharts.promtail.enabled begin
-      - name: promtail
+      - name: alloy
         repoURL: https://grafana.github.io/helm-charts
-        chart: promtail
-        targetRevision: 6.17.0
+        chart: alloy
+        targetRevision: 1.16.0
         autoSync: true
       # @section services.eks.helmCharts.promtail.enabled end
 

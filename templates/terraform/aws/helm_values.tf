@@ -41,11 +41,11 @@ locals {
     # @section services.eks.helmCharts.prometheusStack.enabled end
 
     # @section services.eks.helmCharts.promtail.enabled begin
-    promtail = {
+    alloy = {
       enabled              = try(local.helm_chart_selections["promtail"]["enabled"], false)
-      template_values_file = "${path.module}/../../argocd/values/promtail.yaml.tftpl"
+      template_values_file = "${path.module}/../../argocd/values/alloy.yaml.tftpl"
       values = {
-        logLevel = "info"
+        loki_push_url = "http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push"
       }
     }
     # @section services.eks.helmCharts.promtail.enabled end
