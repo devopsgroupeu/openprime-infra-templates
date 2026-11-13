@@ -65,9 +65,10 @@ spec:
   ingress:
     - from:
         - podSelector: {}
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: ingress-nginx
+%{~ for cidr in load_balancer_cidrs }
+        - ipBlock:
+            cidr: ${cidr}
+%{~ endfor }
 %{~ for cidr in control_plane_cidrs }
         - ipBlock:
             cidr: ${cidr}

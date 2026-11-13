@@ -1164,3 +1164,9 @@ variable "ingress_domain" {
   description = "Domain the cluster publishes ingresses on, e.g. example.com. Empty means no host-based ingress is created, rather than defaulting to a domain the customer does not own (OP-244)."
   default     = ""
 }
+
+variable "ingress_waf_acl_arn" {
+  type        = string
+  description = "ARN of a regional AWS WAFv2 web ACL attached to the monitoring ALB ingress"
+  default     = ""
+}

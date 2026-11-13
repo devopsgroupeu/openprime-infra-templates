@@ -53,6 +53,8 @@ enable_flow_logs = false
 kubernetes_version = "1.36"
 # @param domain
 ingress_domain = ""
+# Regional WAFv2 web ACL ARN for the monitoring ALB ingresses
+ingress_waf_acl_arn = ""
 # @param services.eks.enableClusterCreatorAdminPermissions | displayName=Cluster Creator Admin | description=Enable cluster creator admin permissions | type=toggle
 enable_cluster_creator_admin_permissions = true
 # @param services.eks.endpointPublicAccess | displayName=Public Endpoint | description=Enable public access to cluster endpoint | type=toggle

@@ -31,10 +31,11 @@ locals {
       enabled              = try(local.helm_chart_selections["prometheusStack"]["enabled"], false)
       template_values_file = "${path.module}/../../argocd/values/kube-prometheus-stack.yaml.tftpl"
       values = {
-        ingress_enabled    = local.ingress_domain_set
-        alertmanager_hosts = local.monitoring_ingress_hosts["alertmanager"]
-        grafana_hosts      = local.monitoring_ingress_hosts["grafana"]
-        prometheus_hosts   = local.monitoring_ingress_hosts["prometheus"]
+        ingress_enabled     = local.ingress_domain_set
+        alertmanager_hosts  = local.monitoring_ingress_hosts["alertmanager"]
+        grafana_hosts       = local.monitoring_ingress_hosts["grafana"]
+        prometheus_hosts    = local.monitoring_ingress_hosts["prometheus"]
+        ingress_waf_acl_arn = var.ingress_waf_acl_arn
       }
     }
     # @section services.eks.helmCharts.prometheusStack.enabled end
