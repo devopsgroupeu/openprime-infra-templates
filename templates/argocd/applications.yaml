@@ -24,7 +24,7 @@ appProjects:
       - name: cert-manager
         repoURL: https://charts.jetstack.io
         chart: cert-manager
-        targetRevision: 1.18.2
+        targetRevision: 1.21.3
         autoSync: true
         syncWave: -800
   # @section services.eks.helmCharts.certManager.enabled end
