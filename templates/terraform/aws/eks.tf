@@ -8,6 +8,60 @@ locals {
   aws_lb_service_account_name  = "aws-lb-controller-sa"
 }
 
+locals {
+  ## EKS add-on versions are pinned per Kubernetes minor version so an apply never
+  ## changes them on its own. Bump deliberately, in dev first. List candidates with:
+  ## aws eks describe-addon-versions --addon-name <addon> --kubernetes-version <version>
+  eks_addon_versions = {
+    "1.36" = {
+      coredns      = "v1.14.7-eksbuild.35"
+      pod_identity = "v1.4.1-eksbuild.3"
+      kube_proxy   = "v1.36.0-eksbuild.65"
+      vpc_cni      = "v1.23.3-eksbuild.1"
+      ebs_csi      = "v1.68.0-eksbuild.1"
+      efs_csi      = "v3.5.4-eksbuild.1"
+    }
+    "1.35" = {
+      coredns      = "v1.14.7-eksbuild.35"
+      pod_identity = "v1.4.1-eksbuild.3"
+      kube_proxy   = "v1.35.3-eksbuild.69"
+      vpc_cni      = "v1.23.3-eksbuild.1"
+      ebs_csi      = "v1.68.0-eksbuild.1"
+      efs_csi      = "v3.5.4-eksbuild.1"
+    }
+    "1.34" = {
+      coredns      = "v1.13.2-eksbuild.75"
+      pod_identity = "v1.4.1-eksbuild.3"
+      kube_proxy   = "v1.34.6-eksbuild.69"
+      vpc_cni      = "v1.23.3-eksbuild.1"
+      ebs_csi      = "v1.68.0-eksbuild.1"
+      efs_csi      = "v3.5.4-eksbuild.1"
+    }
+  }
+  eks_addon_version = local.eks_addon_versions[var.kubernetes_version]
+}
+
+locals {
+  ## Node group AMI release versions, pinned per Kubernetes minor version and ami_type.
+  ## The value is what the eks module resolves from SSM for the same ami_type:
+  ## aws ssm get-parameter --name /aws/service/bottlerocket/aws-k8s-<version>/<arm64|x86_64>/latest/image_version
+  eks_node_ami_release_versions = {
+    "1.36" = {
+      BOTTLEROCKET_ARM_64 = "1.69.0-be6a1e85"
+      BOTTLEROCKET_x86_64 = "1.69.0-be6a1e85"
+    }
+    "1.35" = {
+      BOTTLEROCKET_ARM_64 = "1.69.0-be6a1e85"
+      BOTTLEROCKET_x86_64 = "1.69.0-be6a1e85"
+    }
+    "1.34" = {
+      BOTTLEROCKET_ARM_64 = "1.69.0-be6a1e85"
+      BOTTLEROCKET_x86_64 = "1.69.0-be6a1e85"
+    }
+  }
+  eks_node_ami_release_version = local.eks_node_ami_release_versions[var.kubernetes_version][var.default_node_group_ami_type]
+}
+
 ## use_name_prefix governs the policy name as well as the role name. Left at false
 ## with no policy_name the module falls back to a constant ("EBS_CSI", "VPC_CNI_IPv4",
 ## ...), which is account-global: a second environment in the same AWS account then
@@ -115,18 +169,18 @@ module "eks" {
 
   addons = {
     coredns = {
-      most_recent = var.eks_addon_coredns_most_recent
+      addon_version = local.eks_addon_version.coredns
     }
     eks-pod-identity-agent = {
-      most_recent    = var.eks_addon_pod_identity_most_recent
+      addon_version  = local.eks_addon_version.pod_identity
       before_compute = var.eks_addon_pod_identity_before_compute
     }
     kube-proxy = {
-      most_recent = var.eks_addon_kube_proxy_most_recent
+      addon_version = local.eks_addon_version.kube_proxy
     }
     vpc-cni = {
       service_account_role_arn = module.vpc_cni_irsa_role.arn
-      most_recent              = var.eks_addon_vpc_cni_most_recent
+      addon_version            = local.eks_addon_version.vpc_cni
       before_compute           = var.eks_addon_vpc_cni_before_compute
 
       ## Without this the API server accepts NetworkPolicy objects and the CNI
@@ -139,7 +193,7 @@ module "eks" {
     }
     aws-ebs-csi-driver = {
       service_account_role_arn = module.ebs_csi_irsa_role.arn
-      most_recent              = var.eks_addon_ebs_csi_most_recent
+      addon_version            = local.eks_addon_version.ebs_csi
       configuration_values = jsonencode({
         controller = {
           extraVolumeTags = local.apn_tags
@@ -148,7 +202,7 @@ module "eks" {
     }
     aws-efs-csi-driver = {
       service_account_role_arn = module.efs_csi_irsa_role.arn
-      most_recent              = var.eks_addon_efs_csi_most_recent
+      addon_version            = local.eks_addon_version.efs_csi
     }
   }
 
@@ -163,7 +217,8 @@ module "eks" {
       ami_type                       = var.default_node_group_ami_type
       instance_types                 = var.default_node_group_instance_types
       capacity_type                  = var.default_node_group_capacity_type
-      use_latest_ami_release_version = var.default_node_group_use_latest_ami
+      ami_release_version            = local.eks_node_ami_release_version
+      use_latest_ami_release_version = false
 
       iam_role_additional_policies = var.default_node_group_iam_additional_policies
 
