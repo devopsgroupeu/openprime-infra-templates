@@ -139,7 +139,13 @@ variable "enable_vpn_gateway" {
 variable "enable_flow_logs" {
   description = "Enable VPC Flow Logs"
   type        = bool
-  default     = false
+  default     = true
+}
+
+variable "flow_log_bucket_arn" {
+  description = "ARN of an existing S3 bucket for VPC Flow Logs"
+  type        = string
+  default     = ""
 }
 
 # -------------------------------------------------------------------
@@ -1108,7 +1114,7 @@ variable "sns_content_based_deduplication" {
 variable "sns_enable_encryption" {
   description = "Enable encryption for SNS topics"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "sns_kms_key_id" {

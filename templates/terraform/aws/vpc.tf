@@ -12,6 +12,35 @@ locals {
   }
 }
 
+module "flow_logs_bucket" {
+  source  = "terraform-aws-modules/s3-bucket/aws"
+  version = "~> 5.15"
+
+  count = var.enable_flow_logs && var.flow_log_bucket_arn == "" ? 1 : 0
+
+  bucket        = "${var.global_prefix}vpc-flow-logs-${var.environment}"
+  force_destroy = true
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+
+  server_side_encryption_configuration = {
+    rule = {
+      apply_server_side_encryption_by_default = {
+        sse_algorithm = "AES256"
+      }
+      bucket_key_enabled = true
+    }
+  }
+
+  control_object_ownership = true
+  object_ownership         = "BucketOwnerEnforced"
+
+  tags = var.global_tags
+}
+
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "~> 6.7"
@@ -31,8 +60,10 @@ module "vpc" {
   single_nat_gateway     = local.nat_gateway.single_nat_gateway
   one_nat_gateway_per_az = local.nat_gateway.one_nat_gateway_per_az
 
-  enable_vpn_gateway = var.enable_vpn_gateway
-  enable_flow_log    = var.enable_flow_logs
+  enable_vpn_gateway        = var.enable_vpn_gateway
+  enable_flow_log           = var.enable_flow_logs
+  flow_log_destination_type = "s3"
+  flow_log_destination_arn  = var.flow_log_bucket_arn != "" ? var.flow_log_bucket_arn : one(module.flow_logs_bucket[*].s3_bucket_arn)
 
   create_database_subnet_group = var.create_database_subnet_group
 

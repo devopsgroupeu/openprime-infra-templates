@@ -109,6 +109,14 @@
         "ci-gate-uploads"
       ]
     },
+    "sns": {
+      "enabled": true,
+      "topicNames": ["ci-gate-alerts"],
+      "fifoTopics": false,
+      "contentBasedDeduplication": false,
+      "enableEncryption": true,
+      "kmsKeyId": null
+    },
     "vpc": {
       "enabled": true,
       "azCount": 9,

@@ -42,7 +42,7 @@ create_database_subnet_group = true
 # @param services.vpc.enableVpnGateway | displayName=VPN Gateway | description=Enable VPN Gateway for hybrid cloud connectivity | type=toggle
 enable_vpn_gateway = false
 # @param services.vpc.enableFlowLogs | displayName=VPC Flow Logs | description=Enable flow logs for network traffic analysis | type=toggle
-enable_flow_logs = false
+enable_flow_logs = true
 
 # -------------------------------------------------------------------
 # EKS
@@ -386,7 +386,7 @@ sns_fifo_topics = false
 # @param services.sns.contentBasedDeduplication | displayName=Content-Based Deduplication | description=Auto-deduplicate based on message content | type=toggle
 sns_content_based_deduplication = false
 # @param services.sns.enableEncryption | displayName=Enable Encryption | description=Encrypt messages at rest | type=toggle
-sns_enable_encryption = false
+sns_enable_encryption = true
 # @param services.sns.kmsKeyId | valueType=string | default= | displayName=KMS Key ID | description=KMS key for encryption | type=text
 sns_kms_key_id = null
 

@@ -392,6 +392,8 @@ UNSAFE_DEFAULTS = {
     "rds_manage_master_user_password": "true",
     "aurora_manage_master_user_password": "true",
     "s3_versioning_enabled": "true",
+    "enable_flow_logs": "true",
+    "sns_enable_encryption": "true",
 }
 
 

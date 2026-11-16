@@ -1,4 +1,18 @@
 # @section services.sns.enabled begin
+locals {
+  sns_create_kms_key = var.sns_enable_encryption && (var.sns_kms_key_id == null || var.sns_kms_key_id == "")
+  sns_kms_key_id     = local.sns_create_kms_key ? one(aws_kms_key.sns[*].arn) : var.sns_kms_key_id
+}
+
+resource "aws_kms_key" "sns" {
+  count = local.sns_create_kms_key ? 1 : 0
+
+  description         = "${var.global_prefix}sns-${var.environment}"
+  enable_key_rotation = true
+
+  tags = var.global_tags
+}
+
 module "sns_topics" {
   source  = "terraform-aws-modules/sns/aws"
   version = "~> 7.1"
@@ -8,7 +22,7 @@ module "sns_topics" {
   name         = "${var.global_prefix}-${each.value}-${var.environment}"
   display_name = each.value
 
-  kms_master_key_id = var.sns_enable_encryption ? var.sns_kms_key_id : null
+  kms_master_key_id = var.sns_enable_encryption ? local.sns_kms_key_id : null
 
   delivery_policy = null
   subscriptions   = {}
