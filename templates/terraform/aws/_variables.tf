@@ -821,6 +821,12 @@ variable "opensearch_dedicated_master_count" {
   }
 }
 
+variable "opensearch_allowed_principal_arns" {
+  type        = list(string)
+  description = "IAM role or user ARNs allowed to call the OpenSearch domain"
+  default     = []
+}
+
 variable "opensearch_node_to_node_encryption" {
   type        = bool
   description = "Whether to enable node-to-node encryption"

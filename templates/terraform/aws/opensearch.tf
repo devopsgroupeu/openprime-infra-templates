@@ -6,7 +6,32 @@ module "opensearch" {
   domain_name          = var.opensearch_domain_name
   engine_version       = var.opensearch_version
   create_access_policy = var.opensearch_create_access_policy
-  ip_address_type      = var.opensearch_ip_address_type
+  ip_address_type      = "ipv4"
+
+  vpc_options = {
+    subnet_ids = slice(module.vpc.private_subnets, 0, var.az_count)
+  }
+
+  security_group_rules = {
+    # @section services.eks.enabled begin
+    ingress_https_from_nodes = {
+      type                         = "ingress"
+      description                  = "HTTPS from EKS nodes"
+      from_port                    = 443
+      to_port                      = 443
+      ip_protocol                  = "tcp"
+      referenced_security_group_id = module.eks.node_security_group_id
+    }
+    # @section services.eks.enabled end
+  }
+
+  access_policy_statements = length(var.opensearch_allowed_principal_arns) > 0 ? {
+    app = {
+      effect     = "Allow"
+      actions    = ["es:ESHttp*"]
+      principals = [{ type = "AWS", identifiers = var.opensearch_allowed_principal_arns }]
+    }
+  } : {}
 
   cluster_config = {
     instance_count           = var.opensearch_instance_count
@@ -14,6 +39,8 @@ module "opensearch" {
     dedicated_master_enabled = var.opensearch_dedicated_master_enabled
     dedicated_master_type    = var.opensearch_dedicated_master_enabled ? var.opensearch_dedicated_master_type : null
     dedicated_master_count   = var.opensearch_dedicated_master_enabled ? var.opensearch_dedicated_master_count : null
+    zone_awareness_enabled   = true
+    zone_awareness_config    = { availability_zone_count = var.az_count }
   }
 
   ebs_options = {
