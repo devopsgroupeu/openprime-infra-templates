@@ -146,6 +146,20 @@
       "numberOfBrokerNodes": 4,
       "brokerNodeInstanceType": "ci-kafka.t3.small"
     },
+    "sqs": {
+      "enabled": true,
+      "queueNames": ["ci-gate-jobs"],
+      "fifoQueues": false,
+      "contentBasedDeduplication": false,
+      "visibilityTimeout": 45,
+      "messageRetention": 86400,
+      "maxMessageSize": 131072,
+      "delaySeconds": 5,
+      "receiveWaitTime": 10,
+      "createDeadLetterQueue": true,
+      "maxReceiveCount": 5,
+      "enableEncryption": true
+    },
     "vpc": {
       "enabled": true,
       "azCount": 9,

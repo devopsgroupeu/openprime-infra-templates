@@ -395,6 +395,7 @@ UNSAFE_DEFAULTS = {
     "enable_flow_logs": "true",
     "sns_enable_encryption": "true",
     "rds_delete_automated_backups": "false",
+    "sqs_create_dlq": "true",
 }
 
 

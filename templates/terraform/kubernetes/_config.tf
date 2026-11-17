@@ -41,7 +41,6 @@ provider "aws" {
 
   default_tags {
     tags = merge({
-      "customer"                = "DevOpsGroup"
       "terraform"               = "true"
       "aws-apn-id-381790627163" = "pc:4lhqeluzjfvpd9gxqab2fs3y0"
     }, var.global_tags)

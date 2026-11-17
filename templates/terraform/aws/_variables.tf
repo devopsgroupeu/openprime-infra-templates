@@ -1080,7 +1080,7 @@ variable "sqs_receive_wait_time" {
 variable "sqs_create_dlq" {
   description = "Create dead letter queue for each queue"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "sqs_max_receive_count" {

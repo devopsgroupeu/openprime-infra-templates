@@ -368,7 +368,7 @@ sqs_delay_seconds = 0
 # @param services.sqs.receiveWaitTime | displayName=Receive Wait Time (seconds) | description=Long polling wait time | type=number | min=0 | max=20
 sqs_receive_wait_time = 0
 # @param services.sqs.createDeadLetterQueue | displayName=Dead Letter Queue | description=Capture failed messages for debugging | type=toggle
-sqs_create_dlq = false
+sqs_create_dlq = true
 # @param services.sqs.maxReceiveCount | displayName=Max Receive Count | description=Attempts before moving to DLQ | type=number | min=1 | max=1000
 sqs_max_receive_count = 3
 # @param services.sqs.enableEncryption | displayName=Server-Side Encryption | description=Encrypt messages at rest | type=toggle

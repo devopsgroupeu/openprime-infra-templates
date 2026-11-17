@@ -143,6 +143,7 @@ resource "kubectl_manifest" "repo_secret" {
 
 # Using 'gavinbunney/kubectl' instead of official Kubernetes provider
 # to allow applying manifest without checking for CRDs during plan.
+# @section services.eks.exampleAppsEnabled begin | displayName=Deploy example applications | default=false
 resource "kubectl_manifest" "example_apps" {
   yaml_body = yamlencode({
     apiVersion = "argoproj.io/v1alpha1"
@@ -187,6 +188,7 @@ resource "kubectl_manifest" "example_apps" {
 
   depends_on = [kubectl_manifest.app_of_apps]
 }
+# @section services.eks.exampleAppsEnabled end
 
 resource "kubectl_manifest" "support_resources" {
   yaml_body = yamlencode({
