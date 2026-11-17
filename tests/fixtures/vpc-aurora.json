@@ -65,6 +65,12 @@
       "ipAddressType": "ci-dualstack",
       "allowExplicitIndex": true
     },
+    "msk": {
+      "enabled": true,
+      "kafkaVersion": "ci-3.9.x",
+      "numberOfBrokerNodes": 4,
+      "brokerNodeInstanceType": "ci-kafka.t3.small"
+    },
     "vpc": {
       "enabled": true,
       "azCount": 9,

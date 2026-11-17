@@ -15,6 +15,12 @@ module "msk" {
   broker_node_instance_type   = var.msk_broker_node_instance_type
   broker_node_security_groups = [module.security_group.id]
 
+  client_authentication = {
+    sasl = { iam = true }
+  }
+  encryption_in_transit_client_broker = "TLS"
+  cloudwatch_logs_enabled             = true
+
   tags = {
     Name = local.msk_cluster_name
   }
@@ -31,26 +37,16 @@ module "security_group" {
 
   enable_exclusive_rules = false
 
-  ingress_rules = merge(
-    {
-      for index, cidr in module.vpc.private_subnets_cidr_blocks :
-      "kafka-plaintext-${index}" => {
-        from_port   = 9092
-        to_port     = 9092
-        ip_protocol = "tcp"
-        cidr_ipv4   = cidr
-      }
-    },
-    {
-      for index, cidr in module.vpc.private_subnets_cidr_blocks :
-      "kafka-tls-${index}" => {
-        from_port   = 9094
-        to_port     = 9094
-        ip_protocol = "tcp"
-        cidr_ipv4   = cidr
-      }
+  ingress_rules = {
+    # @section services.eks.enabled begin
+    kafka-iam-from-nodes = {
+      from_port                    = 9098
+      to_port                      = 9098
+      ip_protocol                  = "tcp"
+      referenced_security_group_id = module.eks.node_security_group_id
     }
-  )
+    # @section services.eks.enabled end
+  }
 
   egress_rules = {
     all = {
