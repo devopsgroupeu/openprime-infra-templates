@@ -170,7 +170,7 @@ rds_performance_insights_retention_period = 7
 # @param services.rds.monitoringInterval | displayName=Enhanced Monitoring (seconds) | description=OS metrics collection frequency | type=dropdown | options=[{"value":0,"label":"Disabled"},{"value":1,"label":"1 second (Most detailed)"},{"value":5,"label":"5 seconds"},{"value":10,"label":"10 seconds"},{"value":15,"label":"15 seconds"},{"value":30,"label":"30 seconds"},{"value":60,"label":"60 seconds (Recommended)"}]
 rds_monitoring_interval = 60
 # @param services.rds.deleteAutomatedBackups | displayName=Delete Automated Backups | description=Delete backups when instance is deleted | type=toggle
-rds_delete_automated_backups = true
+rds_delete_automated_backups = false
 
 # @module services.aurora | displayName=Aurora Serverless | category=Database | description=Serverless relational database with auto-scaling
 # @param services.aurora.engine | displayName=Database Engine | description=Aurora database engine | type=dropdown | options=[{"value":"aurora-postgresql","label":"Aurora PostgreSQL"},{"value":"aurora-mysql","label":"Aurora MySQL"}]

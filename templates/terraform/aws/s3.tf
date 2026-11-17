@@ -19,6 +19,8 @@ module "s3_buckets" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 
+  attach_deny_insecure_transport_policy = true
+
   versioning = {
     enabled = var.s3_versioning_enabled
   }
@@ -31,6 +33,17 @@ module "s3_buckets" {
       bucket_key_enabled = true
     }
   }
+
+  lifecycle_rule = var.s3_versioning_enabled ? [
+    {
+      id      = "expire-noncurrent-versions"
+      enabled = true
+
+      noncurrent_version_expiration = {
+        days = var.s3_noncurrent_version_expiration_days
+      }
+    }
+  ] : []
 
   control_object_ownership = true
   object_ownership         = "BucketOwnerEnforced"

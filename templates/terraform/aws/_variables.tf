@@ -503,7 +503,7 @@ variable "rds_skip_final_snapshot" {
 variable "rds_delete_automated_backups" {
   type        = bool
   description = "Whether to delete automated backups"
-  default     = true
+  default     = false
 }
 
 variable "rds_backup_retention_period" {
@@ -1207,6 +1207,12 @@ variable "s3_versioning_enabled" {
   type        = bool
   description = "Keep previous object versions so an overwrite or delete is recoverable"
   default     = true
+}
+
+variable "s3_noncurrent_version_expiration_days" {
+  type        = number
+  description = "Days after which noncurrent object versions are permanently deleted"
+  default     = 90
 }
 
 # -------------------------------------------------------------------

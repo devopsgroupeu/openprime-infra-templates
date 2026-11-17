@@ -394,6 +394,7 @@ UNSAFE_DEFAULTS = {
     "s3_versioning_enabled": "true",
     "enable_flow_logs": "true",
     "sns_enable_encryption": "true",
+    "rds_delete_automated_backups": "false",
 }
 
 

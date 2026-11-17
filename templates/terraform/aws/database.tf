@@ -105,12 +105,12 @@ module "rds_sg" {
   enable_exclusive_rules = false
 
   ingress_rules = {
-    database-from-vpc = {
-      description = "VPC RDS ${var.rds_engine} access"
+    for index, cidr in module.vpc.private_subnets_cidr_blocks : "database-from-private-${index}" => {
+      description = "Private subnet RDS ${var.rds_engine} access"
       from_port   = local.rds_port
       to_port     = local.rds_port
       ip_protocol = "tcp"
-      cidr_ipv4   = module.vpc.vpc_cidr_block
+      cidr_ipv4   = cidr
     }
   }
 
