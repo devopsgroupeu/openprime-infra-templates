@@ -57,7 +57,11 @@
       "defaultNodeGroupInstanceTypes": [
         "t4g.medium"
       ],
-      "helmCharts": {},
+      "helmCharts": {
+        "externalDns": {
+          "enabled": true
+        }
+      },
       "networkPolicyEnabled": true,
       "karpenterEnabled": true
     },

@@ -11,6 +11,11 @@ serviceAccount:
 # external-dns act on every zone in the account.
 domainFilters: ${domain_filters}
 
+# Every record this cluster creates is tagged with its owner ID, and external-dns
+# only changes records carrying its own ID. Without it every cluster is owner
+# "default", so dev and prod sharing one zone overwrite each other's records.
+txtOwnerId: ${txt_owner_id}
+
 provider: aws
 
 env:

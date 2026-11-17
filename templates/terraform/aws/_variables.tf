@@ -1176,3 +1176,9 @@ variable "ingress_domain" {
   description = "Domain the cluster publishes ingresses on, e.g. example.com. Empty means no host-based ingress is created, rather than defaulting to a domain the customer does not own (OP-244)."
   default     = ""
 }
+
+variable "external_dns_hosted_zone_ids" {
+  type        = list(string)
+  description = "Route53 hosted zone IDs external-dns may change records in"
+  default     = []
+}

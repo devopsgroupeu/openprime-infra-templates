@@ -1,11 +1,12 @@
 # @section services.eks.enabled begin
 locals {
-  cluster_name                 = "${var.global_prefix}eks-${var.environment}"
-  service_account_namespace    = "kube-system"
-  ebs_csi_service_account_name = "ebs-csi-controller-sa"
-  efs_csi_service_account_name = "efs-csi-controller-sa"
-  vpc_cni_service_account_name = "aws-node"
-  aws_lb_service_account_name  = "aws-lb-controller-sa"
+  cluster_name                  = "${var.global_prefix}eks-${var.environment}"
+  service_account_namespace     = "kube-system"
+  ebs_csi_service_account_name  = "ebs-csi-controller-sa"
+  efs_csi_service_account_name  = "efs-csi-controller-sa"
+  vpc_cni_service_account_name  = "aws-node"
+  aws_lb_service_account_name   = "aws-lb-controller-sa"
+  external_dns_hosted_zone_arns = [for id in var.external_dns_hosted_zone_ids : "arn:aws:route53:::hostedzone/${id}"]
 }
 
 ## use_name_prefix governs the policy name as well as the role name. Left at false
@@ -88,9 +89,9 @@ module "external_dns_irsa_role" {
   name                       = "${local.cluster_name}-external-dns"
   use_name_prefix            = false
   policy_name                = "${local.cluster_name}-external-dns"
-  attach_external_dns_policy = true
+  attach_external_dns_policy = length(local.external_dns_hosted_zone_arns) > 0
 
-  external_dns_hosted_zone_arns = ["arn:aws:route53:::hostedzone/*"]
+  external_dns_hosted_zone_arns = local.external_dns_hosted_zone_arns
 
   oidc_providers = {
     default = {

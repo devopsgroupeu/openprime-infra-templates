@@ -127,6 +127,7 @@ locals {
         external_dns_role_arn = module.external_dns_irsa_role.arn
         region                = var.region
         domain_filters        = local.external_dns_domain_filters
+        txt_owner_id          = local.cluster_name
       }
     }
     # @section services.eks.helmCharts.externalDns.enabled end

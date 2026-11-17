@@ -53,6 +53,8 @@ enable_flow_logs = true
 kubernetes_version = "1.36"
 # @param domain
 ingress_domain = ""
+# Route53 hosted zone IDs external-dns may write to.
+external_dns_hosted_zone_ids = []
 # @param services.eks.enableClusterCreatorAdminPermissions | displayName=Cluster Creator Admin | description=Enable cluster creator admin permissions | type=toggle
 enable_cluster_creator_admin_permissions = true
 # @param services.eks.endpointPublicAccess | displayName=Public Endpoint | description=Enable public access to cluster endpoint | type=toggle
