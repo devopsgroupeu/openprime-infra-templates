@@ -410,48 +410,6 @@ variable "ecr_repository_encryption_type" {
   }
 }
 
-variable "ecr_lifecycle_policy_rule_priority" {
-  description = "Use ecr_repositories object. Priority for lifecycle policy rule"
-  type        = number
-  default     = 1
-}
-
-variable "ecr_lifecycle_policy_description" {
-  description = "Use ecr_repositories object. Description for lifecycle policy"
-  type        = string
-  default     = "Keep last 25 images"
-}
-
-variable "ecr_lifecycle_policy_tag_status" {
-  description = "Use ecr_repositories object. Tag status for lifecycle policy"
-  type        = string
-  default     = "tagged"
-}
-
-variable "ecr_lifecycle_policy_tag_prefix_list" {
-  description = "Use ecr_repositories object. Tag prefix list for lifecycle policy"
-  type        = list(string)
-  default     = ["v"]
-}
-
-variable "ecr_lifecycle_policy_count_type" {
-  description = "Use ecr_repositories object. Count type for lifecycle policy"
-  type        = string
-  default     = "imageCountMoreThan"
-}
-
-variable "ecr_lifecycle_policy_count_number" {
-  description = "Use ecr_repositories object. Count number for lifecycle policy"
-  type        = number
-  default     = 25
-}
-
-variable "ecr_lifecycle_policy_action_type" {
-  description = "Use ecr_repositories object. Action type for lifecycle policy"
-  type        = string
-  default     = "expire"
-}
-
 # -------------------------------------------------------------------
 # RDS
 # -------------------------------------------------------------------
@@ -953,12 +911,6 @@ variable "elasticache_node_type" {
   description = "ElastiCache node instance type"
   type        = string
   default     = "cache.t4g.small"
-}
-
-variable "elasticache_num_cache_nodes" {
-  description = "Number of cache nodes (for non-cluster mode)"
-  type        = number
-  default     = 1
 }
 
 variable "elasticache_parameter_group_family" {

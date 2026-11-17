@@ -261,8 +261,6 @@ elasticache_engine = "valkey"
 elasticache_engine_version = "7.2"
 # @param services.elasticache.nodeType | displayName=Node Type | description=Instance type for cache nodes | type=dropdown | options=[{"value":"cache.t4g.micro","label":"t4g.micro - 0.5GB (Graviton, cost-effective)"},{"value":"cache.t4g.small","label":"t4g.small - 1.37GB (Graviton, recommended)"},{"value":"cache.t4g.medium","label":"t4g.medium - 3.09GB (Graviton)"},{"value":"cache.t3.micro","label":"t3.micro - 0.5GB (x86)"},{"value":"cache.t3.small","label":"t3.small - 1.37GB (x86)"},{"value":"cache.t3.medium","label":"t3.medium - 3.09GB (x86)"},{"value":"cache.r6g.large","label":"r6g.large - 13.07GB (Memory-optimized Graviton)"},{"value":"cache.r7g.large","label":"r7g.large - 13.07GB (Latest Graviton)"}]
 elasticache_node_type = "cache.t4g.small"
-# @param services.elasticache.numCacheNodes | displayName=Number of Cache Nodes | description=Number of cache nodes in the cluster | type=number | min=1 | max=20
-elasticache_num_cache_nodes = 1
 # @param services.elasticache.parameterGroupFamily | displayName=Parameter Group Family | description=Must match your engine and version | type=dropdown | options=[{"value":"valkey7","label":"valkey7"},{"value":"redis7","label":"redis7"},{"value":"redis6.x","label":"redis6.x"},{"value":"memcached1.6","label":"memcached1.6"}]
 elasticache_parameter_group_family = "valkey7"
 # @param services.elasticache.transitEncryption | displayName=Transit Encryption (TLS) | description=Encrypt data in transit | type=toggle
