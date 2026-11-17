@@ -31,6 +31,8 @@ resource "random_password" "rds_password" {
 
 # @section services.aurora.enabled begin
 resource "random_password" "aurora_password" {
+  count = var.aurora_manage_master_user_password ? 0 : 1
+
   length  = 16
   upper   = true
   lower   = true
@@ -148,9 +150,9 @@ module "aurora" {
   enable_http_endpoint   = var.aurora_enable_http_endpoint
 
   master_username             = local.aurora_username
-  master_password_wo          = random_password.aurora_password.result
-  master_password_wo_version  = 1
-  manage_master_user_password = false
+  manage_master_user_password = var.aurora_manage_master_user_password
+  master_password_wo          = var.aurora_manage_master_user_password ? null : random_password.aurora_password[0].result
+  master_password_wo_version  = var.aurora_manage_master_user_password ? null : 1
   port                        = local.aurora_port
 
   storage_encrypted = true
