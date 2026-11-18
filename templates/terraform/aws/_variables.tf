@@ -161,7 +161,19 @@ variable "kubernetes_version" {
 variable "enable_cluster_creator_admin_permissions" {
   type        = bool
   description = "Enable cluster creator admin permissions"
-  default     = true
+  default     = false
+}
+
+variable "eks_admin_principal_arns" {
+  type        = list(string)
+  description = "IAM principal ARNs (roles or users) granted cluster-admin through EKS access entries"
+  default     = []
+}
+
+variable "eks_deletion_protection" {
+  type        = bool
+  description = "Protect the EKS cluster against accidental deletion"
+  default     = false
 }
 
 variable "endpoint_public_access" {

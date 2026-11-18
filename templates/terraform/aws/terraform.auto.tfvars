@@ -56,7 +56,8 @@ ingress_domain = ""
 # Route53 hosted zone IDs external-dns may write to.
 external_dns_hosted_zone_ids = []
 # @param services.eks.enableClusterCreatorAdminPermissions | displayName=Cluster Creator Admin | description=Enable cluster creator admin permissions | type=toggle
-enable_cluster_creator_admin_permissions = true
+enable_cluster_creator_admin_permissions = false
+eks_deletion_protection                  = false
 # @param services.eks.endpointPublicAccess | displayName=Public Endpoint | description=Enable public access to cluster endpoint | type=toggle
 endpoint_public_access = true
 # @param services.eks.authenticationMode | displayName=Authentication Mode | description=Authentication mode for the cluster | type=dropdown | options=[{"value":"API","label":"API"},{"value":"API_AND_CONFIG_MAP","label":"API and ConfigMap"},{"value":"CONFIG_MAP","label":"ConfigMap"}]

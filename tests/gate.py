@@ -396,6 +396,7 @@ UNSAFE_DEFAULTS = {
     "sns_enable_encryption": "true",
     "rds_delete_automated_backups": "false",
     "sqs_create_dlq": "true",
+    "enable_cluster_creator_admin_permissions": "false",
 }
 
 

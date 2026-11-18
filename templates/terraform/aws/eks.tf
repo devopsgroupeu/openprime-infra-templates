@@ -1,6 +1,7 @@
 # @section services.eks.enabled begin
 locals {
   cluster_name                  = "${var.global_prefix}eks-${var.environment}"
+  eks_admin_principal_arns      = distinct(concat(var.enable_cluster_creator_admin_permissions ? [] : [data.aws_iam_session_context.current.issuer_arn], var.eks_admin_principal_arns))
   service_account_namespace     = "kube-system"
   ebs_csi_service_account_name  = "ebs-csi-controller-sa"
   efs_csi_service_account_name  = "efs-csi-controller-sa"
@@ -113,6 +114,24 @@ module "eks" {
   endpoint_public_access                   = var.endpoint_public_access
   authentication_mode                      = var.authentication_mode
   enable_irsa                              = var.enable_irsa
+
+  access_entries = {
+    for index, arn in local.eks_admin_principal_arns : "admin-${index}" => {
+      principal_arn = arn
+      policy_associations = {
+        admin = {
+          policy_arn   = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = { type = "cluster" }
+        }
+      }
+    }
+  }
+
+  upgrade_policy = {
+    support_type = "STANDARD"
+  }
+
+  deletion_protection = var.eks_deletion_protection
 
   addons = {
     coredns = {
