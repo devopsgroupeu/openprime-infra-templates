@@ -23,6 +23,16 @@ variables:
   # only on main (the GitLab half of OP-235).
   # @param gitRepository.branch
   DEPLOY_BRANCH: main
+  # The pipeline signs in to AWS with three roles that terraform/bootstrap
+  # creates once (CI/CD variables AWS_PLAN_ROLE_ARN, AWS_APPLY_ROLE_ARN,
+  # AWS_DESTROY_ROLE_ARN), never with stored access keys. The AWS stack makes
+  # the apply and destroy roles cluster and key admins.
+  # @param region
+  AWS_REGION: eu-west-1
+  TF_VAR_pipeline_apply_role_arn: $AWS_APPLY_ROLE_ARN
+  TF_VAR_pipeline_destroy_role_arn: $AWS_DESTROY_ROLE_ARN
+  # Where a saved plan waits between its plan job and its apply job.
+  PLAN_KEY: openprime-plans/gitlab-${CI_PIPELINE_ID}
 
 # Cache Terraform plugins between jobs for faster execution
 cache:
@@ -47,22 +57,33 @@ stages:
 # SHARED TEMPLATES
 # ========================================================================
 
+# Every job that talks to AWS gets a GitLab ID token. aws-oidc-login.sh trades
+# it for the role named in the job's AWS_ROLE_VARIABLE.
+.aws_id_token:
+  id_tokens:
+    AWS_ID_TOKEN:
+      aud: sts.amazonaws.com
+
 # Base template for AWS Terraform jobs
 .terraform_base:
+  extends: .aws_id_token
   image:
     name: hashicorp/terraform:${TF_VERSION}
     entrypoint: [""]
   before_script:
+    - . "$CI_PROJECT_DIR/.github/scripts/aws-oidc-login.sh"
     - cd ${TF_ROOT}/aws
     - terraform --version
     - terraform init -reconfigure
 
 # Base template for Kubernetes Terraform jobs
 .terraform_base_k8s:
+  extends: .aws_id_token
   image:
     name: hashicorp/terraform:${TF_VERSION}
     entrypoint: [""]
   before_script:
+    - . "$CI_PROJECT_DIR/.github/scripts/aws-oidc-login.sh"
     - cd ${TF_ROOT}/kubernetes
     - terraform --version
     - terraform init -reconfigure
@@ -100,6 +121,7 @@ format:k8s:
 # ========================================================================
 
 validate:aws:
+  extends: .aws_id_token
   stage: validate
   needs: [format:aws]
   image:
@@ -107,10 +129,13 @@ validate:aws:
     entrypoint: [""]
   variables:
     TFLINT_VERSION: "0.61.0"
+    AWS_ROLE_VARIABLE: AWS_PLAN_ROLE_ARN
   script:
     - cd ${TF_ROOT}/aws
     - terraform --version
-    - (cd "$CI_PROJECT_DIR" && sh .github/scripts/check-backend.sh terraform/aws)
+    # Only the backend check needs AWS: the role stays inside this subshell, so
+    # TFLint and its plugins do not get it.
+    - (cd "$CI_PROJECT_DIR" && . .github/scripts/aws-oidc-login.sh && sh .github/scripts/check-backend.sh terraform/aws)
     - terraform validate
     - wget -qO /tmp/tflint.zip "https://github.com/terraform-linters/tflint/releases/download/v${TFLINT_VERSION}/tflint_linux_amd64.zip"
     - unzip -o /tmp/tflint.zip -d /usr/local/bin
@@ -121,6 +146,7 @@ validate:aws:
     - if: '$CI_COMMIT_BRANCH == $DEPLOY_BRANCH'
 
 validate:k8s:
+  extends: .aws_id_token
   stage: validate
   needs: [format:k8s]
   image:
@@ -128,10 +154,13 @@ validate:k8s:
     entrypoint: [""]
   variables:
     TFLINT_VERSION: "0.61.0"
+    AWS_ROLE_VARIABLE: AWS_PLAN_ROLE_ARN
   script:
     - cd ${TF_ROOT}/kubernetes
     - terraform --version
-    - (cd "$CI_PROJECT_DIR" && sh .github/scripts/check-backend.sh terraform/kubernetes)
+    # Only the backend check needs AWS: the role stays inside this subshell, so
+    # TFLint and its plugins do not get it.
+    - (cd "$CI_PROJECT_DIR" && . .github/scripts/aws-oidc-login.sh && sh .github/scripts/check-backend.sh terraform/kubernetes)
     - terraform validate
     - wget -qO /tmp/tflint.zip "https://github.com/terraform-linters/tflint/releases/download/v${TFLINT_VERSION}/tflint_linux_amd64.zip"
     - unzip -o /tmp/tflint.zip -d /usr/local/bin
@@ -154,27 +183,33 @@ plan:aws:
     - terraform show -no-color tfplan > tfplan.txt
     # The saved plan and `terraform show -json` hold sensitive values (deploy
     # key, generated passwords) in plain text, and pipeline viewers can download
-    # artifacts. Publish only change counts for the MR widget, and keep an
-    # encrypted plan only on the deploy branch, where apply uses it.
+    # artifacts. Publish only change counts for the MR widget. On the deploy
+    # branch the saved plan waits in the state bucket, which only the pipeline
+    # roles and account admins can read, and apply:aws deletes it.
     - (cd "$CI_PROJECT_DIR" && sh .github/scripts/plan-summary.sh terraform/aws)
     - |
       if [ "${CI_COMMIT_BRANCH:-}" = "$DEPLOY_BRANCH" ]; then
-        (cd "$CI_PROJECT_DIR" && PLAN_KEY_CONTEXT="$CI_PIPELINE_ID" sh .github/scripts/plan-crypt.sh encrypt terraform/aws)
-      else
-        rm -f tfplan
+        apk add --no-cache aws-cli >/dev/null
+        aws s3 cp tfplan "s3://$TF_STATE_BUCKET/$PLAN_KEY/aws.tfplan" --only-show-errors || exit 1
       fi
+      rm -f tfplan
   artifacts:
     name: "terraform-plan-aws-${CI_COMMIT_SHORT_SHA}"
     paths:
-      - ${TF_ROOT}/aws/tfplan.enc
       - ${TF_ROOT}/aws/tfplan.txt
       - ${TF_ROOT}/aws/plan.txt
     expire_in: 7 days
     reports:
       terraform: ${TF_ROOT}/aws/plan-summary.json
+  # On the deploy branch this plan is the one apply:aws applies, so it is made
+  # by the apply role. Merge-request plans only read.
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      variables:
+        AWS_ROLE_VARIABLE: AWS_PLAN_ROLE_ARN
     - if: '$CI_COMMIT_BRANCH == $DEPLOY_BRANCH'
+      variables:
+        AWS_ROLE_VARIABLE: AWS_APPLY_ROLE_ARN
 
 # ========================================================================
 # APPLY AWS STAGE - Requires manual approval
@@ -191,9 +226,14 @@ apply:aws:
   resource_group: terraform
   environment:
     name: production
+  variables:
+    AWS_ROLE_VARIABLE: AWS_APPLY_ROLE_ARN
   script:
-    - (cd "$CI_PROJECT_DIR" && PLAN_KEY_CONTEXT="$CI_PIPELINE_ID" sh .github/scripts/plan-crypt.sh decrypt terraform/aws)
-    - terraform apply -auto-approve tfplan
+    - apk add --no-cache aws-cli >/dev/null
+    - aws s3 cp "s3://$TF_STATE_BUCKET/$PLAN_KEY/aws.tfplan" tfplan --only-show-errors || { echo "ERROR: No stored plan for this pipeline. It is deleted after every apply attempt; run a new pipeline for a fresh plan." >&2; exit 1; }
+    - terraform apply -auto-approve tfplan || apply_failed=true
+    - aws s3 rm "s3://$TF_STATE_BUCKET/$PLAN_KEY/aws.tfplan" --only-show-errors || echo "WARNING: Could not delete s3://$TF_STATE_BUCKET/$PLAN_KEY/aws.tfplan. Delete it by hand; it holds sensitive values." >&2
+    - if [ "${apply_failed:-}" = "true" ]; then exit 1; fi
     - |
       git config user.email "ci-bot@openprime.io"
       git config user.name "OpenPrime CI"
@@ -226,24 +266,25 @@ plan:k8s:
     - job: validate:k8s
     - job: apply:aws
       optional: true
+  # Runs only on the deploy branch, and apply:k8s applies this plan, so it is
+  # made by the apply role.
+  variables:
+    AWS_ROLE_VARIABLE: AWS_APPLY_ROLE_ARN
   script:
     - terraform plan -out=tfplan -no-color | tee plan.txt
     - terraform show -no-color tfplan > tfplan.txt
     # The saved plan and `terraform show -json` hold sensitive values (deploy
     # key, generated passwords) in plain text, and pipeline viewers can download
-    # artifacts. Publish only change counts for the MR widget, and keep an
-    # encrypted plan only on the deploy branch, where apply uses it.
+    # artifacts. Publish only change counts for the MR widget. The saved plan
+    # waits in the state bucket, which only the pipeline roles and account
+    # admins can read, and apply:k8s deletes it.
     - (cd "$CI_PROJECT_DIR" && sh .github/scripts/plan-summary.sh terraform/kubernetes)
-    - |
-      if [ "${CI_COMMIT_BRANCH:-}" = "$DEPLOY_BRANCH" ]; then
-        (cd "$CI_PROJECT_DIR" && PLAN_KEY_CONTEXT="$CI_PIPELINE_ID" sh .github/scripts/plan-crypt.sh encrypt terraform/kubernetes)
-      else
-        rm -f tfplan
-      fi
+    - apk add --no-cache aws-cli >/dev/null
+    - aws s3 cp tfplan "s3://$TF_STATE_BUCKET/$PLAN_KEY/kubernetes.tfplan" --only-show-errors
+    - rm -f tfplan
   artifacts:
     name: "terraform-plan-k8s-${CI_COMMIT_SHORT_SHA}"
     paths:
-      - ${TF_ROOT}/kubernetes/tfplan.enc
       - ${TF_ROOT}/kubernetes/tfplan.txt
       - ${TF_ROOT}/kubernetes/plan.txt
     expire_in: 7 days
@@ -268,9 +309,14 @@ apply:k8s:
   resource_group: terraform
   environment:
     name: production
+  variables:
+    AWS_ROLE_VARIABLE: AWS_APPLY_ROLE_ARN
   script:
-    - (cd "$CI_PROJECT_DIR" && PLAN_KEY_CONTEXT="$CI_PIPELINE_ID" sh .github/scripts/plan-crypt.sh decrypt terraform/kubernetes)
-    - terraform apply -auto-approve tfplan
+    - apk add --no-cache aws-cli >/dev/null
+    - aws s3 cp "s3://$TF_STATE_BUCKET/$PLAN_KEY/kubernetes.tfplan" tfplan --only-show-errors || { echo "ERROR: No stored plan for this pipeline. It is deleted after every apply attempt; run a new pipeline for a fresh plan." >&2; exit 1; }
+    - terraform apply -auto-approve tfplan || apply_failed=true
+    - aws s3 rm "s3://$TF_STATE_BUCKET/$PLAN_KEY/kubernetes.tfplan" --only-show-errors || echo "WARNING: Could not delete s3://$TF_STATE_BUCKET/$PLAN_KEY/kubernetes.tfplan. Delete it by hand; it holds sensitive values." >&2
+    - if [ "${apply_failed:-}" = "true" ]; then exit 1; fi
   rules:
     - if: '$CI_COMMIT_BRANCH == $DEPLOY_BRANCH'
       when: manual
@@ -285,6 +331,8 @@ destroy:k8s:
   resource_group: terraform
   environment:
     name: production
+  variables:
+    AWS_ROLE_VARIABLE: AWS_DESTROY_ROLE_ARN
   script:
     - terraform destroy -auto-approve
   dependencies: []
@@ -298,6 +346,8 @@ destroy:aws:
   resource_group: terraform
   environment:
     name: production
+  variables:
+    AWS_ROLE_VARIABLE: AWS_DESTROY_ROLE_ARN
   script:
     # Clears deletion protection on the databases in the state, and only on
     # them; the script explains why destroy cannot do this itself. Set

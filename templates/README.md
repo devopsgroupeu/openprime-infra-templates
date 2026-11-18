@@ -20,6 +20,50 @@ After the AWS apply, the pipeline commits the Argo CD values it generated back t
 branch. If that push is refused, the job fails rather than let Argo CD deploy the
 previous values.
 
+### Connecting the pipeline to AWS (once)
+
+The pipeline has no AWS access keys. Each job gets a short-lived token from GitHub or
+GitLab, and AWS lets that token assume one of three roles:
+
+| Role | Used by | Allowed to |
+|---|---|---|
+| plan | validate jobs, plans on pushes and pull/merge requests | read; write only the state lock |
+| apply | the plan and apply jobs of an apply run | administer the account |
+| destroy | the destroy jobs | administer the account |
+
+AWS accepts the apply and destroy roles only from runs on the branch OpenPrime delivers
+to, so a workflow changed on another branch cannot get them.
+
+Create the roles once, with administrator credentials for this AWS account on your
+machine:
+
+```sh
+cd terraform/bootstrap
+terraform init
+terraform apply
+```
+
+Copy the three values it prints into repository **variables** (they are not secrets):
+`AWS_PLAN_ROLE_ARN`, `AWS_APPLY_ROLE_ARN`, `AWS_DESTROY_ROLE_ARN`.
+
+- GitHub: Settings → Secrets and variables → Actions → Variables.
+- GitLab: Settings → CI/CD → Variables. Leave "Protect variable" off, so merge-request
+  pipelines can plan.
+
+Until they are set, every job that needs AWS stops and names the missing variable.
+
+- **Another OpenPrime environment in this AWS account** already registered GitHub or
+  GitLab with AWS: run `terraform apply -var create_oidc_provider=false`.
+- **GitLab on your own server:** AWS must reach it over HTTPS to check the tokens. If its
+  web address is not `https://<SSH host>`, add `-var gitlab_url=https://…`.
+- **Keep `terraform/bootstrap/terraform.tfstate`** (git ignores it) if you want to change
+  or remove the roles later.
+- **Moving from access keys:** once an apply has run on the roles, delete the
+  `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN` secrets and the
+  IAM user behind them. That apply moves cluster admin from the user to the apply and
+  destroy roles; to use `kubectl` yourself, add an access entry for your own IAM identity
+  (EKS console → your cluster → Access).
+
 ### Approvals
 
 Every apply and destroy waits for an approval: the job opens a GitHub issue, and someone
@@ -44,11 +88,11 @@ there, protect the `production` environment and choose who may deploy to it
 The pipeline is `.gitlab-ci.yml`. Three GitLab defaults can stop it:
 
 - **CI/CD variables are protected by default**, so they only reach protected branches.
-  On an unprotected branch `validate:aws` and `validate:k8s` fail with
-  `No valid credential sources found`, because the backend check initialises the state backend.
-  Protect the branch you deploy from (Settings → Repository → Protected branches), or
-  clear "Protect variable" on `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and
-  `TF_VAR_git_repo_ssh_key`.
+  On an unprotected branch `validate:aws` and `validate:k8s` then stop with
+  "CI/CD variable AWS_PLAN_ROLE_ARN is not set", because the backend check needs AWS.
+  Clear "Protect variable" on the three role variables (they are not secrets), and
+  protect the branch you deploy from (Settings → Repository → Protected branches) or clear
+  it on `TF_VAR_git_repo_ssh_key` too.
 - **New gitlab.com accounts must verify their identity** (phone or card) before GitLab
   runs any pipeline. Until then the pipeline shows as failed with 0 jobs. Self-managed
   GitLab instances do not ask for this.

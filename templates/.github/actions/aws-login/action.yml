@@ -1,0 +1,42 @@
+name: AWS login
+description: >-
+  Assumes one of the pipeline roles that terraform/bootstrap created, with this
+  job's GitHub OIDC token. No AWS access keys are stored anywhere. The job needs
+  `permissions: id-token: write`.
+
+inputs:
+  role-variable:
+    description: Name of the repository variable that holds the role ARN (for the error message)
+    required: true
+  role-arn:
+    description: The role ARN, i.e. the value of that variable
+    required: false
+    default: ""
+  aws-region:
+    description: AWS region of this environment
+    required: true
+  duration-seconds:
+    description: How long the credentials last; at most the role's maximum session
+    required: false
+    default: "3600"
+
+runs:
+  using: composite
+  steps:
+    - name: Check the role variable
+      shell: bash
+      env:
+        ROLE_ARN: ${{ inputs.role-arn }}
+        ROLE_VARIABLE: ${{ inputs.role-variable }}
+      run: |
+        if [ -z "$ROLE_ARN" ]; then
+          echo "::error::Repository variable $ROLE_VARIABLE is not set. The pipeline signs in to AWS with roles, not access keys: run terraform/bootstrap once and set the variables it prints (README: Connecting the pipeline to AWS)."
+          exit 1
+        fi
+
+    - name: Assume the role
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        role-to-assume: ${{ inputs.role-arn }}
+        aws-region: ${{ inputs.aws-region }}
+        role-duration-seconds: ${{ inputs.duration-seconds }}

@@ -154,8 +154,20 @@ variable "kubernetes_version" {
 
 variable "enable_cluster_creator_admin_permissions" {
   type        = bool
-  description = "Enable cluster creator admin permissions"
+  description = "Enable cluster creator admin permissions. Ignored when the pipeline roles below are set: they get the access instead."
   default     = true
+}
+
+variable "pipeline_apply_role_arn" {
+  type        = string
+  description = "The pipeline's apply role (terraform/bootstrap output). Set by the pipeline from the AWS_APPLY_ROLE_ARN variable."
+  default     = ""
+}
+
+variable "pipeline_destroy_role_arn" {
+  type        = string
+  description = "The pipeline's destroy role (terraform/bootstrap output). Set by the pipeline from the AWS_DESTROY_ROLE_ARN variable."
+  default     = ""
 }
 
 variable "endpoint_public_access" {

@@ -100,6 +100,20 @@ module "external_dns_irsa_role" {
   }
 }
 
+locals {
+  ## The pipeline's apply and destroy roles (terraform/bootstrap) administer the
+  ## cluster and its secrets key. Named explicitly because the module would
+  ## otherwise pick whoever runs Terraform, and plan, apply and destroy run as
+  ## different roles. Without them (Terraform run by hand), the caller gets
+  ## cluster admin as before.
+  pipeline_admin_roles = {
+    for name, arn in {
+      apply   = var.pipeline_apply_role_arn
+      destroy = var.pipeline_destroy_role_arn
+    } : name => arn
+    if arn != "" && !(name == "destroy" && arn == var.pipeline_apply_role_arn)
+  }
+}
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
@@ -108,10 +122,22 @@ module "eks" {
   name               = local.cluster_name
   kubernetes_version = var.kubernetes_version
 
-  enable_cluster_creator_admin_permissions = var.enable_cluster_creator_admin_permissions
-  endpoint_public_access                   = var.endpoint_public_access
-  authentication_mode                      = var.authentication_mode
-  enable_irsa                              = var.enable_irsa
+  enable_cluster_creator_admin_permissions = var.enable_cluster_creator_admin_permissions && length(local.pipeline_admin_roles) == 0
+  kms_key_administrators                   = values(local.pipeline_admin_roles)
+  access_entries = {
+    for name, arn in local.pipeline_admin_roles : "openprime-pipeline-${name}" => {
+      principal_arn = arn
+      policy_associations = {
+        cluster_admin = {
+          policy_arn   = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = { type = "cluster" }
+        }
+      }
+    }
+  }
+  endpoint_public_access = var.endpoint_public_access
+  authentication_mode    = var.authentication_mode
+  enable_irsa            = var.enable_irsa
 
   addons = {
     coredns = {
