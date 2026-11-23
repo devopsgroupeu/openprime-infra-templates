@@ -150,6 +150,11 @@ variable "kubernetes_version" {
   type        = string
   description = "Kubernetes version for EKS cluster"
   default     = "1.36"
+
+  validation {
+    condition     = contains(["1.34", "1.35", "1.36"], var.kubernetes_version)
+    error_message = "kubernetes_version must be 1.34, 1.35 or 1.36: add-on, node group AMI and Karpenter versions are pinned only for these."
+  }
 }
 
 variable "enable_cluster_creator_admin_permissions" {
