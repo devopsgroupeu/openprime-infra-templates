@@ -11,6 +11,11 @@ output "eks_certificate_authority_data" {
   value = module.eks.cluster_certificate_authority_data
 }
 
+output "eks_kubernetes_version" {
+  value       = var.kubernetes_version
+  description = "Kubernetes version of the EKS cluster for kubernetes module to pick a compatible Karpenter release"
+}
+
 # @section services.eks.karpenterEnabled begin | displayName=Enable Karpenter | default=true
 output "karpenter_interruption_queue_name" {
   value = module.karpenter.queue_name

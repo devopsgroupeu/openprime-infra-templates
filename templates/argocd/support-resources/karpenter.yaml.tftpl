@@ -6,7 +6,7 @@ metadata:
 spec:
   amiFamily: Bottlerocket
   amiSelectorTerms:
-    - alias: bottlerocket@latest
+    - alias: ${ami_alias}
   role: ${node_iam_role_name}
   subnetSelectorTerms:
     - tags:

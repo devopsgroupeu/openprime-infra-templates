@@ -150,6 +150,11 @@ variable "kubernetes_version" {
   type        = string
   description = "Kubernetes version for EKS cluster"
   default     = "1.36"
+
+  validation {
+    condition     = contains(["1.34", "1.35", "1.36"], var.kubernetes_version)
+    error_message = "kubernetes_version must be 1.34, 1.35 or 1.36: add-on, node group AMI and Karpenter versions are pinned only for these."
+  }
 }
 
 variable "enable_cluster_creator_admin_permissions" {
@@ -242,57 +247,15 @@ variable "aws_lb_pdb_max_unavailable" {
   default     = 1
 }
 
-variable "eks_addon_coredns_most_recent" {
-  type        = bool
-  description = "Whether to use most recent version of CoreDNS addon"
-  default     = true
-}
-
-variable "eks_addon_pod_identity_most_recent" {
-  type        = bool
-  description = "Whether to use most recent version of Pod Identity addon"
-  default     = true
-}
-
 variable "eks_addon_pod_identity_before_compute" {
   type        = bool
   description = "Whether to install Pod Identity addon before compute"
   default     = true
 }
 
-variable "eks_addon_kube_proxy_most_recent" {
-  type        = bool
-  description = "Whether to use most recent version of kube-proxy addon"
-  default     = true
-}
-
-variable "eks_addon_vpc_cni_most_recent" {
-  type        = bool
-  description = "Whether to use most recent version of VPC CNI addon"
-  default     = true
-}
-
 variable "eks_addon_vpc_cni_before_compute" {
   type        = bool
   description = "Whether to install VPC CNI addon before compute"
-  default     = true
-}
-
-variable "eks_addon_ebs_csi_most_recent" {
-  type        = bool
-  description = "Whether to use most recent version of EBS CSI driver"
-  default     = true
-}
-
-variable "eks_addon_efs_csi_most_recent" {
-  type        = bool
-  description = "Whether to use most recent version of EFS CSI driver"
-  default     = true
-}
-
-variable "default_node_group_use_latest_ami" {
-  type        = bool
-  description = "Whether to use latest AMI release version for default node group"
   default     = true
 }
 
@@ -1204,5 +1167,11 @@ variable "s3_versioning_enabled" {
 variable "ingress_domain" {
   type        = string
   description = "Domain the cluster publishes ingresses on, e.g. example.com. Empty means no host-based ingress is created, rather than defaulting to a domain the customer does not own (OP-244)."
+  default     = ""
+}
+
+variable "ingress_waf_acl_arn" {
+  type        = string
+  description = "ARN of a regional AWS WAFv2 web ACL attached to the monitoring ALB ingress"
   default     = ""
 }

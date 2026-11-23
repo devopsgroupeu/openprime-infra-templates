@@ -24,7 +24,7 @@ appProjects:
       - name: cert-manager
         repoURL: https://charts.jetstack.io
         chart: cert-manager
-        targetRevision: 1.18.2
+        targetRevision: 1.21.3
         autoSync: true
         syncWave: -800
   # @section services.eks.helmCharts.certManager.enabled end
@@ -41,18 +41,6 @@ appProjects:
         syncWave: -1100
   # @section services.eks.helmCharts.externalDns.enabled end
 
-  # @section services.eks.helmCharts.ingressNginx.enabled begin
-  ## Ingress
-  - namespace: ingress-nginx
-    applications:
-      - name: ingress-nginx
-        repoURL: https://kubernetes.github.io/ingress-nginx
-        chart: ingress-nginx
-        targetRevision: 4.13.0
-        autoSync: true
-        syncWave: -900
-  # @section services.eks.helmCharts.ingressNginx.enabled end
-
   ## Observability Stack
   - namespace: monitoring
     applications:
@@ -66,10 +54,10 @@ appProjects:
       # @section services.eks.helmCharts.prometheusStack.enabled end
 
       # @section services.eks.helmCharts.promtail.enabled begin
-      - name: promtail
+      - name: alloy
         repoURL: https://grafana.github.io/helm-charts
-        chart: promtail
-        targetRevision: 6.17.0
+        chart: alloy
+        targetRevision: 1.16.0
         autoSync: true
       # @section services.eks.helmCharts.promtail.enabled end
 
@@ -91,7 +79,6 @@ appProjects:
 
   # Gateway API (Uncomment when IRSA is configured)
   # Gateway API provides next-generation ingress with VPC Lattice integration
-  # Run in parallel with ingress-nginx for gradual migration
   # - namespace: gateway-system
   #   applications:
   #     - name: gateway-api-crds

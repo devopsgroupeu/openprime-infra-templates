@@ -30,13 +30,31 @@ crds:
 alertmanager:
   ingress:
     enabled: ${ingress_enabled}
-    ingressClassName: nginx
+    ingressClassName: alb
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/backend-protocol: HTTP
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+      alb.ingress.kubernetes.io/ssl-redirect: "443"
+      alb.ingress.kubernetes.io/group.name: default
+      alb.ingress.kubernetes.io/healthcheck-path: /-/healthy%{~ if ingress_waf_acl_arn != "" }
+      alb.ingress.kubernetes.io/wafv2-acl-arn: "${ingress_waf_acl_arn}"%{~ endif}
     hosts: ${alertmanager_hosts}
 
 grafana:
   ingress:
     enabled: ${ingress_enabled}
-    ingressClassName: nginx
+    ingressClassName: alb
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/backend-protocol: HTTP
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+      alb.ingress.kubernetes.io/ssl-redirect: "443"
+      alb.ingress.kubernetes.io/group.name: default
+      alb.ingress.kubernetes.io/healthcheck-path: /api/health%{~ if ingress_waf_acl_arn != "" }
+      alb.ingress.kubernetes.io/wafv2-acl-arn: "${ingress_waf_acl_arn}"%{~ endif}
     hosts: ${grafana_hosts}
 
 # ────────────────────────────────────────────────────────────
@@ -112,7 +130,16 @@ grafana:
 prometheus:
   ingress:
     enabled: ${ingress_enabled}
-    ingressClassName: nginx
+    ingressClassName: alb
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/backend-protocol: HTTP
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+      alb.ingress.kubernetes.io/ssl-redirect: "443"
+      alb.ingress.kubernetes.io/group.name: default
+      alb.ingress.kubernetes.io/healthcheck-path: /-/healthy%{~ if ingress_waf_acl_arn != "" }
+      alb.ingress.kubernetes.io/wafv2-acl-arn: "${ingress_waf_acl_arn}"%{~ endif}
     hosts: ${prometheus_hosts}
 
   thanosService:
