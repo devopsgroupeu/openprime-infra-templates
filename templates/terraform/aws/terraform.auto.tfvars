@@ -64,7 +64,7 @@ authentication_mode = "API"
 # @param services.eks.enableIrsa | displayName=IRSA | description=Enable IAM Roles for Service Accounts | type=toggle
 enable_irsa = true
 
-# @param services.eks.defaultNodeGroupAmiType | displayName=AMI Type | description=AMI type for node group | type=dropdown | options=[{"value":"AL2_x86_64","label":"Amazon Linux 2 (x86_64)"},{"value":"AL2_x86_64_GPU","label":"Amazon Linux 2 GPU (x86_64)"},{"value":"AL2_ARM_64","label":"Amazon Linux 2 (ARM64)"},{"value":"BOTTLEROCKET_ARM_64","label":"Bottlerocket (ARM64)"},{"value":"BOTTLEROCKET_x86_64","label":"Bottlerocket (x86_64)"}]
+# @param services.eks.defaultNodeGroupAmiType | displayName=AMI Type | description=AMI type for node group | type=dropdown | options=[{"value":"BOTTLEROCKET_ARM_64","label":"Bottlerocket (ARM64)"},{"value":"BOTTLEROCKET_x86_64","label":"Bottlerocket (x86_64)"}]
 default_node_group_ami_type = "BOTTLEROCKET_ARM_64"
 # @param services.eks.defaultNodeGroupInstanceTypes | displayName=Instance Types | description=EC2 instance types | type=multiselect | options=[{"value":"t3.micro","label":"t3.micro"},{"value":"t3.small","label":"t3.small"},{"value":"t3.medium","label":"t3.medium"},{"value":"t3.large","label":"t3.large"},{"value":"t4g.medium","label":"t4g.medium"},{"value":"t4g.large","label":"t4g.large"},{"value":"m5.large","label":"m5.large"},{"value":"m5.xlarge","label":"m5.xlarge"}]
 default_node_group_instance_types = ["t4g.large"]
