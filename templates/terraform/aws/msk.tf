@@ -38,14 +38,12 @@ module "security_group" {
   enable_exclusive_rules = false
 
   ingress_rules = {
-    # @section services.eks.enabled begin
-    kafka-iam-from-nodes = {
-      from_port                    = 9098
-      to_port                      = 9098
-      ip_protocol                  = "tcp"
-      referenced_security_group_id = module.eks.node_security_group_id
+    for index, cidr in module.vpc.private_subnets_cidr_blocks : "kafka-iam-from-private-${index}" => {
+      from_port   = 9098
+      to_port     = 9098
+      ip_protocol = "tcp"
+      cidr_ipv4   = cidr
     }
-    # @section services.eks.enabled end
   }
 
   egress_rules = {

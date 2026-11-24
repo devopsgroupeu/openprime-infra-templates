@@ -14,7 +14,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: {{ dig "syncWave" (add $projectBase $aIdx) $application | printf "%v" | quote }}
 spec:
-  project: default # TODO: handle multiple projects correctly
+  project: platform
   sources:
   - targetRevision: {{ $application.targetRevision | default "main" }}
     repoURL: {{ $application.repoURL | default $.Values.globals.repoURL | quote }}

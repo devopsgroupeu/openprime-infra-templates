@@ -13,16 +13,14 @@ module "opensearch" {
   }
 
   security_group_rules = {
-    # @section services.eks.enabled begin
-    ingress_https_from_nodes = {
-      type                         = "ingress"
-      description                  = "HTTPS from EKS nodes"
-      from_port                    = 443
-      to_port                      = 443
-      ip_protocol                  = "tcp"
-      referenced_security_group_id = module.eks.node_security_group_id
+    for index, cidr in module.vpc.private_subnets_cidr_blocks : "ingress-https-from-private-${index}" => {
+      type        = "ingress"
+      description = "HTTPS from the private subnets"
+      from_port   = 443
+      to_port     = 443
+      ip_protocol = "tcp"
+      cidr_ipv4   = cidr
     }
-    # @section services.eks.enabled end
   }
 
   access_policy_statements = length(var.opensearch_allowed_principal_arns) > 0 ? {

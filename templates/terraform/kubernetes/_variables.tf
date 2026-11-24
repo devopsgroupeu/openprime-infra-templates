@@ -51,3 +51,27 @@ variable "ingress_domain" {
   description = "Domain the cluster publishes ingresses on. Empty means no host-based ingress is created (OP-244)."
   default     = ""
 }
+
+variable "argocd_ha_enabled" {
+  type        = bool
+  description = "Run Argo CD with redundant replicas and Redis HA"
+  default     = false
+}
+
+variable "argocd_oidc_issuer" {
+  type        = string
+  description = "OIDC issuer URL for Argo CD single sign-on"
+  default     = ""
+}
+
+variable "argocd_oidc_client_id" {
+  type        = string
+  description = "Public OIDC client (PKCE) registered for Argo CD"
+  default     = ""
+}
+
+variable "argocd_admin_groups" {
+  type        = list(string)
+  description = "SSO groups granted the Argo CD admin role"
+  default     = []
+}
