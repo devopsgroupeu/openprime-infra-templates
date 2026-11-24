@@ -17,6 +17,25 @@ module "loki_s3_buckets" {
   bucket        = "${local.general_name}-${each.value}"
   force_destroy = true
 
+  attach_deny_insecure_transport_policy = true
+
+  lifecycle_rule = each.value == "chunk" ? [
+    {
+      id      = "expire-chunks-after-retention"
+      enabled = true
+
+      filter = {
+        prefix = "fake/"
+      }
+
+      expiration = {
+        days = 35
+      }
+
+      abort_incomplete_multipart_upload_days = 7
+    }
+  ] : []
+
   server_side_encryption_configuration = {
     rule = {
       apply_server_side_encryption_by_default = {
