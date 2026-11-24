@@ -43,6 +43,18 @@ provider "aws" {
   }
 }
 
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
+
+  default_tags {
+    tags = merge({
+      "OpenPrime" = "true"
+      "Terraform" = "true"
+    }, var.global_tags, local.apn_tags)
+  }
+}
+
 locals {
   ## AWS Partner Network attribution tag. Also passed explicitly to AWS resources that do not
   ## inherit provider default_tags (EKS node launch templates, Karpenter nodes, EBS CSI volumes, ELBs)

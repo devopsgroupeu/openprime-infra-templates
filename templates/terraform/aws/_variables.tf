@@ -883,16 +883,6 @@ variable "waf_description" {
   default     = "Default AWS WAF Managed rule set"
 }
 
-variable "waf_scope" {
-  type        = string
-  description = "Scope of the WAF Web ACL (REGIONAL or CLOUDFRONT)"
-  default     = "REGIONAL"
-  validation {
-    condition     = contains(["REGIONAL", "CLOUDFRONT"], var.waf_scope)
-    error_message = "Must be either 'REGIONAL' or 'CLOUDFRONT'"
-  }
-}
-
 variable "waf_cloudwatch_metrics_enabled" {
   type        = bool
   description = "Whether to enable CloudWatch metrics for WAF"

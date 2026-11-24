@@ -172,7 +172,7 @@ module "cloudfront_distributions" {
   }
 
   # @section services.waf.enabled begin
-  web_acl_id = var.cloudfront_enable_waf ? try(aws_wafv2_web_acl.waf, null) : null
+  web_acl_id = var.cloudfront_enable_waf ? aws_wafv2_web_acl.cloudfront[0].arn : null
   # @section services.waf.enabled end
 
   logging_config = var.cloudfront_enable_logging ? {

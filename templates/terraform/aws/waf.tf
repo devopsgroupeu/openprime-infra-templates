@@ -2,7 +2,7 @@
 resource "aws_wafv2_web_acl" "waf" {
   name        = var.waf_name
   description = var.waf_description
-  scope       = var.waf_scope
+  scope       = "REGIONAL"
 
   default_action {
     allow {}
@@ -99,6 +99,115 @@ resource "aws_wafv2_web_acl" "waf" {
   visibility_config {
     cloudwatch_metrics_enabled = var.waf_cloudwatch_metrics_enabled
     metric_name                = var.waf_metric_name
+    sampled_requests_enabled   = var.waf_sampled_requests_enabled
+  }
+}
+
+resource "aws_wafv2_web_acl" "cloudfront" {
+  count = var.cloudfront_enable_waf ? 1 : 0
+
+  provider = aws.us_east_1
+
+  name        = "${var.waf_name}-cloudfront"
+  description = var.waf_description
+  scope       = "CLOUDFRONT"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "AWSManagedRulesCommonRuleSet"
+    priority = 1
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesCommonRuleSet"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "AWSManagedRulesCommonRuleSet-Metrics"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "AWSManagedRulesKnownBadInputsRuleSet"
+    priority = 2
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesKnownBadInputsRuleSet"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "AWSManagedRulesKnownBadInputsRuleSet-Metrics"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "AWSManagedRulesAmazonIpReputationList"
+    priority = 3
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesAmazonIpReputationList"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "AWSManagedRulesAmazonIpReputationList-Metrics"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  ## Blocks an IP address above 2000 requests per 5 minutes (the default evaluation window)
+  rule {
+    name     = "RateLimitPerIp"
+    priority = 4
+
+    action {
+      block {}
+    }
+
+    statement {
+      rate_based_statement {
+        limit              = 2000
+        aggregate_key_type = "IP"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "RateLimitPerIp-Metrics"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = var.waf_cloudwatch_metrics_enabled
+    metric_name                = "${var.waf_metric_name}-cloudfront"
     sampled_requests_enabled   = var.waf_sampled_requests_enabled
   }
 }

@@ -317,8 +317,6 @@ ecr_replication_destinations = []
 waf_name = "waf"
 # @param services.waf.description | displayName=Description | description=Description of the WAF configuration | type=text
 waf_description = "Default AWS WAF Managed rule set"
-# @param services.waf.scope | displayName=Scope | description=Where the WAF will be applied | type=dropdown | options=[{"value":"REGIONAL","label":"Regional - ALB, API Gateway, AppSync"},{"value":"CLOUDFRONT","label":"CloudFront - Global edge locations"}]
-waf_scope = "REGIONAL"
 # @param services.waf.cloudwatchMetricsEnabled | displayName=CloudWatch Metrics | description=Enable detailed metrics | type=toggle
 waf_cloudwatch_metrics_enabled = true
 # @param services.waf.metricName | displayName=Metric Name | description=Name for CloudWatch metrics | type=text
