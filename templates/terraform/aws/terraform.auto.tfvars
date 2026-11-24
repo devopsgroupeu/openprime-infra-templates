@@ -248,8 +248,6 @@ opensearch_advanced_security_enabled = true
 opensearch_internal_user_database_enabled = true
 # @param services.opensearch.createAccessPolicy | displayName=Create Access Policy | description=Create domain access policy | type=toggle
 opensearch_create_access_policy = true
-# @param services.opensearch.ipAddressType | displayName=IP Address Type | description=IP address type for the domain | type=dropdown | options=[{"value":"ipv4","label":"IPv4 only"},{"value":"dualstack","label":"IPv4 and IPv6 (Dual Stack)"}]
-opensearch_ip_address_type = "dualstack"
 # @param services.opensearch.allowExplicitIndex | valueType=string | default=true | displayName=Allow Explicit Index | description=Allow explicit index in multi-action requests | type=toggle
 opensearch_allow_explicit_index = "true"
 

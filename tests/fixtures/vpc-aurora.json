@@ -62,7 +62,6 @@
       "internalUserDatabaseEnabled": true,
       "masterUserName": "ci-admin",
       "createAccessPolicy": true,
-      "ipAddressType": "ci-dualstack",
       "allowExplicitIndex": true
     },
     "msk": {

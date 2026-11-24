@@ -733,12 +733,6 @@ variable "opensearch_create_access_policy" {
   default     = true
 }
 
-variable "opensearch_ip_address_type" {
-  type        = string
-  description = "IP address type for OpenSearch domain"
-  default     = "dualstack"
-}
-
 variable "opensearch_allow_explicit_index" {
   type        = string
   description = "Allow explicit index in REST actions"
